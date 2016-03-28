@@ -1,0 +1,702 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="en-US">
+<head profile="http://gmpg.org/xfn/11">
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+
+  <title>Shaker | The distributed data-plane testing tool for OpenStack</title>
+
+  <!-- LIBS -->
+
+  <script type="application/javascript"
+          src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+  <script type="application/javascript"
+          src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
+  <script type="application/javascript"
+          src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.4/js/bootstrap.js"></script>
+  <script type="text/javascript"
+          src="https://cdn.datatables.net/1.10.2/js/jquery.dataTables.min.js"></script>
+  <script type="text/javascript"
+          src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/3.0.1/handlebars.min.js"></script>
+  <script type="application/javascript"
+          src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/3.2.7/js-yaml.min.js"></script>
+  <script type="application/javascript"
+          src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+  <script type="application/javascript"
+          src="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.10/c3.js"></script>
+
+  <!-- STYLES -->
+
+  <link rel="stylesheet"
+        href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.4/simplex/bootstrap.min.css">
+  <link rel=stylesheet type=text/css
+        href="https://cdn.datatables.net/1.10.2/css/jquery.dataTables.min.css">
+  <link rel=stylesheet type=text/css
+        href="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.10/c3.css">
+  <link rel='stylesheet' type='text/css'
+        href='http://fonts.googleapis.com/css?family=Open+Sans:400,700,400italic&subset=latin,cyrillic'>
+
+  <script type="application/javascript">
+    var report = {"scenarios": {"OpenStack L3 North-South Performance": {"file_name": "/opt/stack/.venv/lib/python2.7/site-packages/shaker/scenarios/networking/perf_l3_north_south.yaml", "title": "OpenStack L3 North-South Performance", "execution": {"tests": [{"title": "Ping", "class": "flent", "time": 10, "sla": ["[type == 'agent'] >> (stats.ping_icmp.mean < 2.0)"], "method": "ping"}, {"title": "TCP", "sla": ["[type == 'agent'] >> (stats.bandwidth.mean > 5000)", "[type == 'agent'] >> (stats.retransmits.max < 10)"], "class": "iperf3"}, {"udp": true, "title": "UDP", "datagram_size": 32, "bandwidth": 0, "class": "iperf3", "sla": ["[type == 'agent'] >> (stats.packets.mean > 100000)"]}]}, "description": "This scenario launches 1 pair of VMs on different compute nodes. VMs are in the different networks connected via different routers, master accesses slave by floating ip", "deployment": {"accommodation": ["pair", "single_room", {"compute_nodes": 4}], "template": "l3_north_south.hot"}}}, "records": {"d972b1ed-d5f5-45d0-b1d2-e682e64ab990": {"stats": {"ping_icmp": {"max": 2.36, "mean": 1.2169114802873433, "unit": "ms", "min": 0.9020290284418042}}, "scenario": "OpenStack L3 North-South Performance", "concurrency": 2, "test": "Ping", "type": "concurrency", "id": "d972b1ed-d5f5-45d0-b1d2-e682e64ab990", "node_chart": [["x", "node-89.domain.tld", "node-60.domain.tld"], ["Mean ping_icmp, ms", 1.1859433037905784, 1.2478796567841084], ["Max ping_icmp, ms", 2.36, 2.35], ["Min ping_icmp, ms", 0.9020290284418042, 1.0101659256549613]]}, "819abf98-a97f-419a-abff-cb6043d16b17": {"meta": [["concurrency", ""], ["packets", "pps"]], "scenario": "OpenStack L3 North-South Performance", "test": "UDP", "type": "test", "chart": [["concurrency", 2], ["packets", 129349]], "id": "819abf98-a97f-419a-abff-cb6043d16b17"}, "e4094cbf-c6e2-4d12-9965-0a62299e271e": {"meta": [["concurrency", ""], ["ping_icmp", "ms"]], "scenario": "OpenStack L3 North-South Performance", "test": "Ping", "type": "test", "chart": [["concurrency", 2], ["ping_icmp", 1.2169114802873433]], "id": "e4094cbf-c6e2-4d12-9965-0a62299e271e"}, "221020d1-c94d-45d5-a152-00832a7350ad": {"meta": [["concurrency", ""], ["bandwidth", "Mbit/s"], ["retransmits", ""]], "scenario": "OpenStack L3 North-South Performance", "test": "TCP", "type": "test", "chart": [["concurrency", 2], ["bandwidth", 449.9361043930054], ["retransmits", 1]], "id": "221020d1-c94d-45d5-a152-00832a7350ad"}, "a39d7f38-cb63-4b52-8d9d-37aa398a1ecb": {"status": "ok", "node": "node-60.domain.tld", "finish": 1458564689.829262, "stats": {"ping_icmp": {"max": 2.35, "mean": 1.2478796567841084, "unit": "ms", "min": 1.0101659256549613}}, "stderr": "", "scenario": "OpenStack L3 North-South Performance", "concurrency": 2, "schedule": 1458564679.484055, "chart": [["time", 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0], ["ping_icmp", 2.35, 1.2404047586248645, 1.1301561423038466, 1.050242471156801, 1.0101659256549613, 1.1094640652742112, 1.0702423883168717, 1.2387430296357744, 1.0120320943842684, 1.2673456924894841]], "agent": "shaker_kszueo_master_0", "start": 1458564679.497556, "meta": [["time", "s"], ["ping_icmp", "ms"]], "command": {"data": "zcat `flent -H 172.16.45.113 -l 10 -s 1 ping 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "samples": [[0.0, 2.35], [1.0, 1.2404047586248645], [2.0, 1.1301561423038466], [3.0, 1.050242471156801], [4.0, 1.0101659256549613], [5.0, 1.1094640652742112], [6.0, 1.0702423883168717], [7.0, 1.2387430296357744], [8.0, 1.0120320943842684], [9.0, 1.2673456924894841]], "executor": "flent", "test": "Ping", "type": "agent", "id": "a39d7f38-cb63-4b52-8d9d-37aa398a1ecb"}, "591029db-d281-4369-b50e-22030cc9f018": {"stats": {"bandwidth": {"max": 525.5012512207031, "mean": 449.9361043930054, "unit": "Mbit/s", "min": 439.9099349975586}, "retransmits": {"max": 83, "mean": 1, "unit": "", "min": 0}}, "scenario": "OpenStack L3 North-South Performance", "concurrency": 2, "test": "TCP", "type": "concurrency", "id": "591029db-d281-4369-b50e-22030cc9f018", "node_chart": [["x", "node-60.domain.tld", "node-89.domain.tld"], ["Mean bandwidth, Mbit/s", 450.0674659729004, 449.80474281311035], ["Max bandwidth, Mbit/s", 525.5012512207031, 489.9635314941406], ["Min bandwidth, Mbit/s", 439.9223327636719, 439.9099349975586], ["Mean retransmits", 1, 1], ["Max retransmits", 73, 83], ["Min retransmits", 0, 0]]}, "cb67b5c7-942c-4121-a55f-951bbf55d513": {"stats": {"packets": {"max": 135150, "mean": 129349, "unit": "pps", "min": 126360}}, "scenario": "OpenStack L3 North-South Performance", "concurrency": 2, "test": "UDP", "type": "concurrency", "id": "cb67b5c7-942c-4121-a55f-951bbf55d513", "node_chart": [["x", "node-60.domain.tld", "node-89.domain.tld"], ["Mean packets, pps", 128411, 130288], ["Max packets, pps", 132630, 135150], ["Min packets, pps", 126490, 126360]]}, "d296cd73-826c-4fb4-9ac8-156c8829affe": {"status": "ok", "node": "node-89.domain.tld", "finish": 1458564853.92238, "stats": {"packets": {"max": 135150, "mean": 130288, "unit": "pps", "min": 126360}}, "verbose": "end:\n  cpu_utilization_percent:\n    host_system: 17.5603\n    host_total: 19.4609\n    host_user: 1.90061\n    remote_system: 26.9951\n    remote_total: 30.8932\n    remote_user: 3.89817\n  streams:\n  - udp:\n      bits_per_second: 33353700.0\n      bytes: 250152960\n      end: 60.0001\n      jitter_ms: 0.0174395\n      lost_packets: 1302887\n      lost_percent: 17.4595\n      packets: 7462339\n      seconds: 60.0001\n      socket: 4\n      start: 0\n  sum:\n    bits_per_second: 33353700.0\n    bytes: 250152960\n    end: 60.0001\n    jitter_ms: 0.0174395\n    lost_packets: 1302887\n    lost_percent: 17.4595\n    packets: 7462339\n    seconds: 60.0001\n    start: 0\nstart:\n  connected:\n  - local_host: 10.1.0.5\n    local_port: 38457\n    remote_host: 172.16.45.114\n    remote_port: 5201\n    socket: 4\n  connecting_to:\n    host: 172.16.45.114\n    port: 5201\n  cookie: shaker-kszueo-master-1.1458564790.35\n  system_info: 'Linux shaker-kszueo-master-1 3.13.0-83-generic #127-Ubuntu SMP Fri\n    Mar 11 00:25:37 UTC 2016 x86_64 x86_64 x86_64 GNU/Linux\n\n    '\n  test_start:\n    blksize: 32\n    blocks: 0\n    bytes: 0\n    duration: 60\n    num_streams: 1\n    omit: 0\n    protocol: UDP\n    reverse: 0\n  timestamp:\n    time: Mon, 21 Mar 2016 12:53:10 GMT\n    timesecs: 1458564790\n  version: iperf 3.0.7\n", "scenario": "OpenStack L3 North-South Performance", "concurrency": 2, "schedule": 1458564790.335872, "chart": [["time", 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0, 20.0, 21.0, 22.0, 23.0, 24.0, 25.0, 26.0, 27.0, 28.0, 29.0, 30.0, 31.0, 32.0, 33.0, 34.0, 35.0, 36.0, 37.0, 38.0, 39.0, 40.0, 41.0, 42.0, 43.0, 44.0, 45.0, 46.0, 47.0, 48.0, 49.0, 50.0, 51.0, 52.0, 53.0, 54.0, 55.0, 56.0, 57.0, 58.0, 59.0, 60.0], ["packets", 127090, 130490, 126610, 130320, 128810, 130790, 126360, 130290, 132330, 133700, 129990, 127490, 129630, 129850, 129930, 130290, 129790, 129830, 129720, 129930, 130490, 130660, 130140, 130430, 130620, 130450, 132480, 130350, 132360, 135150, 131630, 128670, 130270, 131380, 130560, 130620, 131660, 130280, 129190, 130040, 129650, 129690, 129560, 130570, 130320, 131060, 132520, 130820, 129980, 130720, 130240, 128200, 130200, 130690, 130380, 130650, 130110, 130240, 130220, 130790]], "agent": "shaker_kszueo_master_1", "id": "d296cd73-826c-4fb4-9ac8-156c8829affe", "start": 1458564790.34623, "meta": [["time", "s"], ["packets", "pps"]], "command": {"data": "iperf3 --client 172.16.45.114 --format m --udp --bandwidth 0 --len 32 --time 60 --parallel 1 --interval 1 --json", "type": "program"}, "samples": [[1.0, 127090], [2.0, 130490], [3.0, 126610], [4.0, 130320], [5.0, 128810], [6.0, 130790], [7.0, 126360], [8.0, 130290], [9.0, 132330], [10.0, 133700], [11.0, 129990], [12.0, 127490], [13.0, 129630], [14.0, 129850], [15.0, 129930], [16.0, 130290], [17.0, 129790], [18.0, 129830], [19.0, 129720], [20.0, 129930], [21.0, 130490], [22.0, 130660], [23.0, 130140], [24.0, 130430], [25.0, 130620], [26.0, 130450], [27.0, 132480], [28.0, 130350], [29.0, 132360], [30.0, 135150], [31.0, 131630], [32.0, 128670], [33.0, 130270], [34.0, 131380], [35.0, 130560], [36.0, 130620], [37.0, 131660], [38.0, 130280], [39.0, 129190], [40.0, 130040], [41.0, 129650], [42.0, 129690], [43.0, 129560], [44.0, 130570], [45.0, 130320], [46.0, 131060], [47.0, 132520], [48.0, 130820], [49.0, 129980], [50.0, 130720], [51.0, 130240], [52.0, 128200], [53.0, 130200], [54.0, 130690], [55.0, 130380], [56.0, 130650], [57.0, 130110], [58.0, 130240], [59.0, 130220], [60.0, 130790]], "executor": "iperf3", "test": "UDP", "type": "agent", "stderr": ""}, "834d899f-ba38-4b2a-b3dd-49df80b0673a": {"status": "ok", "node": "node-60.domain.tld", "finish": 1458564850.518707, "stats": {"packets": {"max": 132630, "mean": 128411, "unit": "pps", "min": 126490}}, "verbose": "end:\n  cpu_utilization_percent:\n    host_system: 17.0116\n    host_total: 18.9066\n    host_user: 1.89506\n    remote_system: 25.2076\n    remote_total: 28.5832\n    remote_user: 3.37557\n  streams:\n  - udp:\n      bits_per_second: 32873400.0\n      bytes: 246550720\n      end: 60.0001\n      jitter_ms: 0.0162329\n      lost_packets: 3601727\n      lost_percent: 49.781\n      packets: 7235150\n      seconds: 60.0001\n      socket: 4\n      start: 0\n  sum:\n    bits_per_second: 32873400.0\n    bytes: 246550720\n    end: 60.0001\n    jitter_ms: 0.0162329\n    lost_packets: 3601727\n    lost_percent: 49.781\n    packets: 7235150\n    seconds: 60.0001\n    start: 0\nstart:\n  connected:\n  - local_host: 10.1.0.3\n    local_port: 49851\n    remote_host: 172.16.45.113\n    remote_port: 5201\n    socket: 4\n  connecting_to:\n    host: 172.16.45.113\n    port: 5201\n  cookie: shaker-kszueo-master-0.1458564790.35\n  system_info: 'Linux shaker-kszueo-master-0 3.13.0-83-generic #127-Ubuntu SMP Fri\n    Mar 11 00:25:37 UTC 2016 x86_64 x86_64 x86_64 GNU/Linux\n\n    '\n  test_start:\n    blksize: 32\n    blocks: 0\n    bytes: 0\n    duration: 60\n    num_streams: 1\n    omit: 0\n    protocol: UDP\n    reverse: 0\n  timestamp:\n    time: Mon, 21 Mar 2016 12:53:10 GMT\n    timesecs: 1458564790\n  version: iperf 3.0.7\n", "scenario": "OpenStack L3 North-South Performance", "concurrency": 2, "schedule": 1458564790.335872, "chart": [["time", 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0, 20.0, 21.0, 22.0, 23.0, 24.0, 25.0, 26.0, 27.0, 28.0, 29.0, 30.0, 31.0, 32.0, 33.0, 34.0, 35.0, 36.0, 37.0, 38.0, 39.0, 40.0, 41.0, 42.0, 43.0, 44.0, 45.0, 46.0, 47.0, 48.0, 49.0, 50.0, 51.0, 52.0, 53.0, 54.0, 55.0, 56.0, 57.0, 58.0, 59.0, 60.0], ["packets", 127830, 127370, 127300, 127390, 126910, 126970, 127580, 128440, 127580, 127750, 127470, 127340, 127070, 127400, 126490, 127630, 128260, 128250, 128130, 128010, 128190, 130360, 132540, 129460, 128200, 128190, 128190, 128330, 130550, 128180, 128440, 129210, 128540, 128160, 128920, 126630, 127210, 126640, 127300, 127230, 128440, 127810, 128190, 128180, 128280, 128230, 128780, 128070, 128160, 127880, 128090, 128120, 130620, 128240, 128620, 130870, 132630, 130520, 132570, 130770]], "agent": "shaker_kszueo_master_0", "id": "834d899f-ba38-4b2a-b3dd-49df80b0673a", "start": 1458564790.346225, "meta": [["time", "s"], ["packets", "pps"]], "command": {"data": "iperf3 --client 172.16.45.113 --format m --udp --bandwidth 0 --len 32 --time 60 --parallel 1 --interval 1 --json", "type": "program"}, "samples": [[1.0, 127830], [2.0, 127370], [3.0, 127300], [4.0, 127390], [5.0, 126910], [6.0, 126970], [7.0, 127580], [8.0, 128440], [9.0, 127580], [10.0, 127750], [11.0, 127470], [12.0, 127340], [13.0, 127070], [14.0, 127400], [15.0, 126490], [16.0, 127630], [17.0, 128260], [18.0, 128250], [19.0, 128130], [20.0, 128010], [21.0, 128190], [22.0, 130360], [23.0, 132540], [24.0, 129460], [25.0, 128200], [26.0, 128190], [27.0, 128190], [28.0, 128330], [29.0, 130550], [30.0, 128180], [31.0, 128440], [32.0, 129210], [33.0, 128540], [34.0, 128160], [35.0, 128920], [36.0, 126630], [37.0, 127210], [38.0, 126640], [39.0, 127300], [40.0, 127230], [41.0, 128440], [42.0, 127810], [43.0, 128190], [44.0, 128180], [45.0, 128280], [46.0, 128230], [47.0, 128780], [48.0, 128070], [49.0, 128160], [50.0, 127880], [51.0, 128090], [52.0, 128120], [53.0, 130620], [54.0, 128240], [55.0, 128620], [56.0, 130870], [57.0, 132630], [58.0, 130520], [59.0, 132570], [60.0, 130770]], "executor": "iperf3", "test": "UDP", "type": "agent", "stderr": ""}, "88e36d34-6cfe-4dfe-a2d7-02d55798bea0": {"status": "ok", "node": "node-89.domain.tld", "finish": 1458564689.82835, "stats": {"ping_icmp": {"max": 2.36, "mean": 1.1859433037905784, "unit": "ms", "min": 0.9020290284418042}}, "stderr": "", "scenario": "OpenStack L3 North-South Performance", "concurrency": 2, "schedule": 1458564679.484055, "chart": [["time", 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0], ["ping_icmp", 2.36, 1.09021978865467, 1.0200950829213185, 1.1697483815333924, 1.1600297208308687, 0.9020290284418042, 1.1292636766633286, 0.9487741320084111, 1.0096676121397796, 1.069605614712211]], "agent": "shaker_kszueo_master_1", "start": 1458564679.494449, "meta": [["time", "s"], ["ping_icmp", "ms"]], "command": {"data": "zcat `flent -H 172.16.45.114 -l 10 -s 1 ping 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "samples": [[0.0, 2.36], [1.0, 1.09021978865467], [2.0, 1.0200950829213185], [3.0, 1.1697483815333924], [4.0, 1.1600297208308687], [5.0, 0.9020290284418042], [6.0, 1.1292636766633286], [7.0, 0.9487741320084111], [8.0, 1.0096676121397796], [9.0, 1.069605614712211]], "executor": "flent", "test": "Ping", "type": "agent", "id": "88e36d34-6cfe-4dfe-a2d7-02d55798bea0"}, "1c4f69ef-50c9-41ec-bf3b-1c6551cd447a": {"status": "ok", "node": "node-89.domain.tld", "finish": 1458564770.174217, "stats": {"bandwidth": {"max": 489.9635314941406, "mean": 449.80474281311035, "unit": "Mbit/s", "min": 439.9099349975586}, "retransmits": {"max": 83, "mean": 1, "unit": "", "min": 0}}, "verbose": "end:\n  cpu_utilization_percent:\n    host_system: 1.76077\n    host_total: 1.8249\n    host_user: 0.0641338\n    remote_system: 7.07086\n    remote_total: 7.63137\n    remote_user: 0.560514\n  streams:\n  - receiver:\n      bits_per_second: 471242000.0\n      bytes: 3534322008\n      end: 60.0001\n      seconds: 60.0001\n      socket: 4\n      start: 0\n    sender:\n      bits_per_second: 471655000.0\n      bytes: 3537416192\n      end: 60.0001\n      retransmits: 109\n      seconds: 60.0001\n      socket: 4\n      start: 0\n  sum_received:\n    bits_per_second: 471242000.0\n    bytes: 3534322008\n    end: 60.0001\n    seconds: 60.0001\n    start: 0\n  sum_sent:\n    bits_per_second: 471655000.0\n    bytes: 3537416192\n    end: 60.0001\n    retransmits: 109\n    seconds: 60.0001\n    start: 0\nstart:\n  connected:\n  - local_host: 10.1.0.5\n    local_port: 34227\n    remote_host: 172.16.45.114\n    remote_port: 5201\n    socket: 4\n  connecting_to:\n    host: 172.16.45.114\n    port: 5201\n  cookie: shaker-kszueo-master-1.1458564710.00\n  system_info: 'Linux shaker-kszueo-master-1 3.13.0-83-generic #127-Ubuntu SMP Fri\n    Mar 11 00:25:37 UTC 2016 x86_64 x86_64 x86_64 GNU/Linux\n\n    '\n  tcp_mss_default: 8848\n  test_start:\n    blksize: 131072\n    blocks: 0\n    bytes: 0\n    duration: 60\n    num_streams: 1\n    omit: 0\n    protocol: TCP\n    reverse: 0\n  timestamp:\n    time: Mon, 21 Mar 2016 12:51:50 GMT\n    timesecs: 1458564710\n  version: iperf 3.0.7\n", "scenario": "OpenStack L3 North-South Performance", "concurrency": 2, "schedule": 1458564709.992536, "chart": [["time", 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0, 20.0, 21.0, 22.0, 23.0, 24.0, 25.0, 26.0, 27.0, 28.0, 29.0, 30.0, 31.0, 32.0, 33.0, 34.0, 35.0, 36.0, 37.0, 38.0, 39.0, 40.0, 41.0, 42.0, 43.0, 44.0, 45.0, 46.0, 47.0, 48.0, 49.0, 50.0, 51.0, 52.0, 53.0, 54.0, 55.0, 56.0, 57.0, 58.0, 59.0, 60.0], ["bandwidth", 469.38037872314453, 449.9483108520508, 450.0007629394531, 450.0007629394531, 449.981689453125, 439.9099349975586, 449.9082565307617, 449.99027252197266, 450.0007629394531, 450.00171661376953, 450.00171661376953, 449.9177932739258, 450.0007629394531, 439.99481201171875, 449.9998092651367, 450.0007629394531, 449.9540328979492, 450.00743865966797, 449.9359130859375, 450.0150680541992, 450.00171661376953, 439.99195098876953, 450.00267028808594, 449.98291015625, 449.9788284301758, 450.0007629394531, 450.00267028808594, 450.0, 449.9979019165039, 450.00267028808594, 450.00648498535156, 439.98241424560547, 449.92637634277344, 450.00457763671875, 450.00171661376953, 449.9483108520508, 449.9397277832031, 449.97310638427734, 439.9747848510742, 449.9969482421875, 449.97406005859375, 449.95880126953125, 449.9979019165039, 450.00362396240234, 450.0007629394531, 450.00171661376953, 439.99385833740234, 450.00267028808594, 449.9988555908203, 450.00362396240234, 449.97119903564453, 450.0007629394531, 449.93114471435547, 449.9835968017578, 449.81861114501953, 440.1235580444336, 449.95880126953125, 449.97596740722656, 449.9540328979492, 489.9635314941406], ["retransmits", 83, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]], "agent": "shaker_kszueo_master_1", "id": "1c4f69ef-50c9-41ec-bf3b-1c6551cd447a", "start": 1458564710.002891, "meta": [["time", "s"], ["bandwidth", "Mbit/s"], ["retransmits", ""]], "command": {"data": "iperf3 --client 172.16.45.114 --format m --time 60 --parallel 1 --interval 1 --json", "type": "program"}, "samples": [[1.0, 469.38037872314453, 83], [2.0, 449.9483108520508, 0], [3.0, 450.0007629394531, 0], [4.0, 450.0007629394531, 0], [5.0, 449.981689453125, 0], [6.0, 439.9099349975586, 0], [7.0, 449.9082565307617, 0], [8.0, 449.99027252197266, 0], [9.0, 450.0007629394531, 0], [10.0, 450.00171661376953, 0], [11.0, 450.00171661376953, 0], [12.0, 449.9177932739258, 0], [13.0, 450.0007629394531, 0], [14.0, 439.99481201171875, 0], [15.0, 449.9998092651367, 0], [16.0, 450.0007629394531, 0], [17.0, 449.9540328979492, 0], [18.0, 450.00743865966797, 7], [19.0, 449.9359130859375, 0], [20.0, 450.0150680541992, 0], [21.0, 450.00171661376953, 0], [22.0, 439.99195098876953, 0], [23.0, 450.00267028808594, 0], [24.0, 449.98291015625, 7], [25.0, 449.9788284301758, 0], [26.0, 450.0007629394531, 0], [27.0, 450.00267028808594, 0], [28.0, 450.0, 0], [29.0, 449.9979019165039, 0], [30.0, 450.00267028808594, 0], [31.0, 450.00648498535156, 0], [32.0, 439.98241424560547, 0], [33.0, 449.92637634277344, 0], [34.0, 450.00457763671875, 0], [35.0, 450.00171661376953, 0], [36.0, 449.9483108520508, 0], [37.0, 449.9397277832031, 0], [38.0, 449.97310638427734, 0], [39.0, 439.9747848510742, 0], [40.0, 449.9969482421875, 0], [41.0, 449.97406005859375, 9], [42.0, 449.95880126953125, 0], [43.0, 449.9979019165039, 0], [44.0, 450.00362396240234, 0], [45.0, 450.0007629394531, 0], [46.0, 450.00171661376953, 0], [47.0, 439.99385833740234, 0], [48.0, 450.00267028808594, 0], [49.0, 449.9988555908203, 0], [50.0, 450.00362396240234, 0], [51.0, 449.97119903564453, 0], [52.0, 450.0007629394531, 0], [53.0, 449.93114471435547, 0], [54.0, 449.9835968017578, 0], [55.0, 449.81861114501953, 0], [56.0, 440.1235580444336, 0], [57.0, 449.95880126953125, 2], [58.0, 449.97596740722656, 1], [59.0, 449.9540328979492, 0], [60.0, 489.9635314941406, 0]], "executor": "iperf3", "test": "TCP", "type": "agent", "stderr": ""}, "a06f482f-7589-41c4-be96-6c95bd225a55": {"status": "ok", "node": "node-60.domain.tld", "finish": 1458564770.171027, "stats": {"bandwidth": {"max": 525.5012512207031, "mean": 450.0674659729004, "unit": "Mbit/s", "min": 439.9223327636719}, "retransmits": {"max": 73, "mean": 1, "unit": "", "min": 0}}, "verbose": "end:\n  cpu_utilization_percent:\n    host_system: 1.77578\n    host_total: 1.81936\n    host_user: 0.0435767\n    remote_system: 7.74577\n    remote_total: 8.40445\n    remote_user: 0.658682\n  streams:\n  - receiver:\n      bits_per_second: 471522000.0\n      bytes: 3536425096\n      end: 60.0001\n      seconds: 60.0001\n      socket: 4\n      start: 0\n    sender:\n      bits_per_second: 471930000.0\n      bytes: 3539481488\n      end: 60.0001\n      retransmits: 89\n      seconds: 60.0001\n      socket: 4\n      start: 0\n  sum_received:\n    bits_per_second: 471522000.0\n    bytes: 3536425096\n    end: 60.0001\n    seconds: 60.0001\n    start: 0\n  sum_sent:\n    bits_per_second: 471930000.0\n    bytes: 3539481488\n    end: 60.0001\n    retransmits: 89\n    seconds: 60.0001\n    start: 0\nstart:\n  connected:\n  - local_host: 10.1.0.3\n    local_port: 39189\n    remote_host: 172.16.45.113\n    remote_port: 5201\n    socket: 4\n  connecting_to:\n    host: 172.16.45.113\n    port: 5201\n  cookie: shaker-kszueo-master-0.1458564710.00\n  system_info: 'Linux shaker-kszueo-master-0 3.13.0-83-generic #127-Ubuntu SMP Fri\n    Mar 11 00:25:37 UTC 2016 x86_64 x86_64 x86_64 GNU/Linux\n\n    '\n  tcp_mss_default: 8848\n  test_start:\n    blksize: 131072\n    blocks: 0\n    bytes: 0\n    duration: 60\n    num_streams: 1\n    omit: 0\n    protocol: TCP\n    reverse: 0\n  timestamp:\n    time: Mon, 21 Mar 2016 12:51:50 GMT\n    timesecs: 1458564710\n  version: iperf 3.0.7\n", "scenario": "OpenStack L3 North-South Performance", "concurrency": 2, "schedule": 1458564709.992536, "chart": [["time", 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0, 20.0, 21.0, 22.0, 23.0, 24.0, 25.0, 26.0, 27.0, 28.0, 29.0, 30.0, 31.0, 32.0, 33.0, 34.0, 35.0, 36.0, 37.0, 38.0, 39.0, 40.0, 41.0, 42.0, 43.0, 44.0, 45.0, 46.0, 47.0, 48.0, 49.0, 50.0, 51.0, 52.0, 53.0, 54.0, 55.0, 56.0, 57.0, 58.0, 59.0, 60.0], ["bandwidth", 525.5012512207031, 439.9223327636719, 450.0007629394531, 450.00171661376953, 449.9692916870117, 450.0, 450.0, 449.92637634277344, 449.97119903564453, 449.9778747558594, 440.0062561035156, 449.97235107421875, 449.98741149902344, 449.9988555908203, 449.9940872192383, 449.8634338378906, 450.0, 450.00171661376953, 449.99122619628906, 449.9540328979492, 439.9585723876953, 449.9626159667969, 449.9950408935547, 449.9664306640625, 449.9979019165039, 450.00267028808594, 449.96783447265625, 449.99027252197266, 450.0007629394531, 439.9757385253906, 449.98836517333984, 449.9988555908203, 450.0007629394531, 449.8920440673828, 449.95975494384766, 449.99676513671875, 449.95975494384766, 439.9299621582031, 449.9979019165039, 449.85198974609375, 450.00457763671875, 449.9998092651367, 449.97692108154297, 449.9998092651367, 449.9959945678711, 449.94354248046875, 449.8891830444336, 440.0, 449.98836517333984, 449.9988555908203, 449.99122619628906, 449.9969482421875, 450.00267028808594, 449.91851806640625, 449.9979019165039, 449.97119903564453, 439.99671936035156, 449.9807357788086, 449.99151611328125, 449.9692916870117], ["retransmits", 73, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 3]], "agent": "shaker_kszueo_master_0", "id": "a06f482f-7589-41c4-be96-6c95bd225a55", "start": 1458564710.002904, "meta": [["time", "s"], ["bandwidth", "Mbit/s"], ["retransmits", ""]], "command": {"data": "iperf3 --client 172.16.45.113 --format m --time 60 --parallel 1 --interval 1 --json", "type": "program"}, "samples": [[1.0, 525.5012512207031, 73], [2.0, 439.9223327636719, 0], [3.0, 450.0007629394531, 0], [4.0, 450.00171661376953, 0], [5.0, 449.9692916870117, 0], [6.0, 450.0, 0], [7.0, 450.0, 0], [8.0, 449.92637634277344, 0], [9.0, 449.97119903564453, 0], [10.0, 449.9778747558594, 0], [11.0, 440.0062561035156, 0], [12.0, 449.97235107421875, 0], [13.0, 449.98741149902344, 1], [14.0, 449.9988555908203, 0], [15.0, 449.9940872192383, 0], [16.0, 449.8634338378906, 0], [17.0, 450.0, 0], [18.0, 450.00171661376953, 0], [19.0, 449.99122619628906, 0], [20.0, 449.9540328979492, 0], [21.0, 439.9585723876953, 0], [22.0, 449.9626159667969, 1], [23.0, 449.9950408935547, 0], [24.0, 449.9664306640625, 0], [25.0, 449.9979019165039, 0], [26.0, 450.00267028808594, 0], [27.0, 449.96783447265625, 0], [28.0, 449.99027252197266, 0], [29.0, 450.0007629394531, 0], [30.0, 439.9757385253906, 1], [31.0, 449.98836517333984, 0], [32.0, 449.9988555908203, 0], [33.0, 450.0007629394531, 0], [34.0, 449.8920440673828, 0], [35.0, 449.95975494384766, 0], [36.0, 449.99676513671875, 0], [37.0, 449.95975494384766, 0], [38.0, 439.9299621582031, 0], [39.0, 449.9979019165039, 0], [40.0, 449.85198974609375, 0], [41.0, 450.00457763671875, 0], [42.0, 449.9998092651367, 0], [43.0, 449.97692108154297, 0], [44.0, 449.9998092651367, 0], [45.0, 449.9959945678711, 2], [46.0, 449.94354248046875, 0], [47.0, 449.8891830444336, 0], [48.0, 440.0, 0], [49.0, 449.98836517333984, 0], [50.0, 449.9988555908203, 0], [51.0, 449.99122619628906, 0], [52.0, 449.9969482421875, 0], [53.0, 450.00267028808594, 8], [54.0, 449.91851806640625, 0], [55.0, 449.9979019165039, 0], [56.0, 449.97119903564453, 0], [57.0, 439.99671936035156, 0], [58.0, 449.9807357788086, 0], [59.0, 449.99151611328125, 0], [60.0, 449.9692916870117, 3]], "executor": "iperf3", "test": "TCP", "type": "agent", "stderr": ""}}, "tests": {"UDP": {"udp": true, "title": "UDP", "datagram_size": 32, "interval": 1, "class": "iperf3", "bandwidth": 0, "sla": ["[type == 'agent'] >> (stats.packets.mean > 100000)"]}, "Ping": {"sla": ["[type == 'agent'] >> (stats.ping_icmp.mean < 2.0)"], "method": "ping", "time": 10, "class": "flent", "title": "Ping"}, "TCP": {"class": "iperf3", "interval": 1, "sla": ["[type == 'agent'] >> (stats.bandwidth.mean > 5000)", "[type == 'agent'] >> (stats.retransmits.max < 10)"], "title": "TCP"}}, "agents": {"shaker_kszueo_master_0": {"node": "node-60.domain.tld", "slave": {"node": "node-62.domain.tld", "zone": "nova", "availability_zone": "nova:node-62.domain.tld", "ip": "172.16.45.113", "mode": "slave", "master_id": "shaker_kszueo_master_0", "id": "shaker_kszueo_slave_0"}, "zone": "nova", "availability_zone": "nova:node-60.domain.tld", "ip": "10.1.0.3", "mode": "master", "slave_id": "shaker_kszueo_slave_0", "id": "shaker_kszueo_master_0"}, "shaker_kszueo_master_1": {"node": "node-89.domain.tld", "slave": {"node": "node-83.domain.tld", "zone": "nova", "availability_zone": "nova:node-83.domain.tld", "ip": "172.16.45.114", "mode": "slave", "master_id": "shaker_kszueo_master_1", "id": "shaker_kszueo_slave_1"}, "zone": "nova", "availability_zone": "nova:node-89.domain.tld", "ip": "10.1.0.5", "mode": "master", "slave_id": "shaker_kszueo_slave_1", "id": "shaker_kszueo_master_1"}, "shaker_kszueo_slave_0": {"node": "node-62.domain.tld", "zone": "nova", "availability_zone": "nova:node-62.domain.tld", "ip": "172.16.45.113", "master": {"node": "node-60.domain.tld", "zone": "nova", "availability_zone": "nova:node-60.domain.tld", "ip": "10.1.0.3", "mode": "master", "slave_id": "shaker_kszueo_slave_0", "id": "shaker_kszueo_master_0"}, "mode": "slave", "master_id": "shaker_kszueo_master_0", "id": "shaker_kszueo_slave_0"}, "shaker_kszueo_slave_1": {"node": "node-83.domain.tld", "zone": "nova", "availability_zone": "nova:node-83.domain.tld", "ip": "172.16.45.114", "master": {"node": "node-89.domain.tld", "zone": "nova", "availability_zone": "nova:node-89.domain.tld", "ip": "10.1.0.5", "mode": "master", "slave_id": "shaker_kszueo_slave_1", "id": "shaker_kszueo_master_1"}, "mode": "slave", "master_id": "shaker_kszueo_master_1", "id": "shaker_kszueo_slave_1"}}, "sla": [{"record": "d296cd73-826c-4fb4-9ac8-156c8829affe", "state": "OK", "expression": "stats.packets.mean > 100000"}, {"record": "834d899f-ba38-4b2a-b3dd-49df80b0673a", "state": "OK", "expression": "stats.packets.mean > 100000"}, {"record": "a39d7f38-cb63-4b52-8d9d-37aa398a1ecb", "state": "OK", "expression": "stats.ping_icmp.mean < 2.0"}, {"record": "88e36d34-6cfe-4dfe-a2d7-02d55798bea0", "state": "OK", "expression": "stats.ping_icmp.mean < 2.0"}, {"record": "1c4f69ef-50c9-41ec-bf3b-1c6551cd447a", "state": "FAIL", "expression": "stats.bandwidth.mean > 5000"}, {"record": "a06f482f-7589-41c4-be96-6c95bd225a55", "state": "FAIL", "expression": "stats.bandwidth.mean > 5000"}, {"record": "1c4f69ef-50c9-41ec-bf3b-1c6551cd447a", "state": "FAIL", "expression": "stats.retransmits.max < 10"}, {"record": "a06f482f-7589-41c4-be96-6c95bd225a55", "state": "FAIL", "expression": "stats.retransmits.max < 10"}]};
+  </script>
+
+  <script type="text/javascript">
+    "use strict";
+
+    $(function () {
+
+      var fields = ["scenario", "test", "concurrency", "node", "agent"];
+      var state = {
+        scenario: "",
+        test: "",
+        concurrency: "",
+        node: "",
+        agent: ""
+      };
+      var tablePageSize = 10;
+
+      // compiled templates
+      var scenario_source_template = Handlebars.compile($("#scenario_source_template").html());
+      var test_specification_template = Handlebars.compile($("#test_specification_template").html());
+      var agents_table_template = Handlebars.compile($("#agents_table_template").html());
+      var records_table_template = Handlebars.compile($("#records_table_template").html());
+      var executor_template = Handlebars.compile($("#executor_template").html());
+      var concurrency_summary_template = Handlebars.compile($("#concurrency_summary_template").html());
+      var test_summary_template = Handlebars.compile($("#test_summary_template").html());
+      var sla_table_template = Handlebars.compile($("#sla_table_template").html());
+      var errors_template = Handlebars.compile($("#errors_template").html());
+
+      function concatenate(strings) {
+        // returns strings concatenated via comma (like join() but omits empty strings)
+        var f = false;
+        var result = "";
+        $.each(strings, function (_i, string) {
+          if (string.length > 0) {
+            if (f) result += ", ";
+            result += string;
+            f = true;
+          }
+        });
+        return result;
+      }
+
+      function initSingleSelector(name, values) {
+        var selectorId = "#" + name + "_selector";
+
+        var selector_inst = $(selectorId);
+        selector_inst.empty();
+        selector_inst.append($("<option>", {
+          style: "font-style: italic; text-decoration: underline;",
+          value: "",
+          text: selector_inst.data('placeholder')
+        }));
+
+        $.each(values, function (key, item) {
+          selector_inst.append($('<option>', {
+            value: item, //(key + 1),
+            text: item
+          }));
+        });
+
+        selector_inst.val(state[name]);
+
+        selector_inst.
+            on("change", function (e) {
+              state[name] = this.value;
+
+              // convert state -> url
+              var tokens = [];
+              $.each(fields.sort(), function (i, field) {
+                if (state[field] != "") {
+                  tokens.push(field + "=" + state[field]);
+                }
+              });
+              window.location.href = "#" + tokens.join(":");
+            });
+      }
+
+      function getFieldValues(field, records) {
+        var values_set = {};
+
+        $.each(records, function (j, record) {
+          if (record[field]) {
+            values_set["" + record[field]] = true;
+          }
+        });
+
+        return $.map(values_set, function (_i, value) {
+          return value;
+        }).sort();
+      }
+
+      function updateSelectors() {
+        $.each(fields, function (i, field) {
+          var values = getFieldValues(field, filterRecords(report.records, null, field));
+          console.log(values);
+          initSingleSelector(field, values);
+        });
+      }
+
+      function filterRecords(records, type, except_field) {
+        var res = [];
+        $.each(records, function(_i, record){
+          if (!type || typeof type === 'undefined' || record.type == type) {
+            var flag = true;
+            $.each(state, function (key, value) {
+              if (key != except_field && value) {
+                flag &= record[key] == value;
+              }
+            });
+            if (flag) {
+              res.push(record);
+            }
+          }
+        });
+        return res;
+      }
+
+      function getAgentsByIds(agent_ids) {
+        var agents = [];
+        $.each(agent_ids, function(agent_id){
+          agents.push(report.agents[agent_id]);
+        });
+        return agents;
+      }
+
+      /* Template Rendering Funcs */
+
+      function showScenarioSource(contentArea, scenario) {
+        contentArea.append(scenario_source_template(
+            {data: jsyaml.safeDump(scenario)}));
+      }
+
+      function showTestSpecification(contentArea, test) {
+        contentArea.append(test_specification_template(
+            {data: jsyaml.safeDump(test)}
+        ))
+      }
+
+      function showAgentRecord(contentArea, record) {
+        var chart_id = "chart_" + Math.round(Math.random() * 10000);
+        var ext_options = {
+          command_yaml: jsyaml.safeDump(record["command"]),
+          chart_id: chart_id};
+        if (record["stats"]) {
+          ext_options["stats_yaml"] = jsyaml.safeDump(record["stats"]);
+        }
+        contentArea.append(executor_template(
+            {record: $.extend({}, record, ext_options)}
+        ));
+        if (record["chart"]) {
+          var meta = record["meta"];
+          var axes = [];
+          axes[meta[1][0]] = 'y';
+          var axis = {
+            x: {label: concatenate(meta[0])},
+            y: {label: concatenate(meta[1]), min: 0}
+          };
+          if (meta.length > 2) {
+            axes[meta[2][0]] = 'y2';
+            axis['y2'] = {label: concatenate(meta[2]), min: 0, show: true}
+          }
+
+          c3.generate({
+            bindto: "#" + chart_id,
+            data: {
+              x: 'time',
+              columns: record["chart"],
+              axes: axes
+            },
+            axis: axis
+          });
+        }
+      }
+
+      function showConcurrencySummary(contentArea, record) {
+        var chart_id = "chart_" + Math.round(Math.random() * 10000);
+        var node_chart_id = "node_chart_" + Math.round(Math.random() * 10000);
+        var ext_options = { chart_id: chart_id, node_chart_id: node_chart_id };
+        if (record["stats"]) {
+          ext_options["stats_yaml"] = jsyaml.safeDump(record["stats"]);
+        }
+        console.log(record);
+        contentArea.append(concurrency_summary_template(
+            {record: $.extend({}, record, ext_options)}
+        ));
+        if (record["node_chart"]) {
+          c3.generate({
+            bindto: "#" + node_chart_id,
+            data: {
+              x: 'x',
+              columns: record["node_chart"],
+              type: 'step',
+              order: null
+            },
+            axis: {
+              x: { type: 'category' }
+            }
+          });
+        }
+      }
+
+      function showTestSummary(contentArea, record) {
+        console.log(record);
+        var chart_id = "chart_" + Math.round(Math.random() * 10000);
+        var ext_options = { chart_id: chart_id };
+        if (record["stats"]) {
+          ext_options["stats_yaml"] = jsyaml.safeDump(record["stats"]);
+        }
+        contentArea.append(test_summary_template(
+            {record: $.extend({}, record, ext_options)}
+        ));
+        if (record["chart"]) {
+          var meta = record["meta"];
+          var axes = [];
+          axes[meta[1][0]] = 'y';
+          var axis = {
+            x: {label: concatenate(meta[0])},
+            y: {label: concatenate(meta[1]), min: 0}
+          };
+          if (meta.length > 2) {
+            axes[meta[2][0]] = 'y2';
+            axis['y2'] = {label: concatenate(meta[2]), min: 0, show: true}
+          }
+
+          c3.generate({
+            bindto: "#" + chart_id,
+            data: {
+              x: 'concurrency',
+              columns: record["chart"],
+              axes: axes
+            },
+            axis: axis
+          });
+        }
+      }
+
+      function showAgentsTable(contentArea, filteredRecords) {
+        var agent_ids = {};
+        $.each(filteredRecords, function(_i, record){
+          if (record.agent) {
+            agent_ids[record.agent] = true;
+          }
+        });
+
+        var agents = getAgentsByIds(agent_ids);
+        if (agents.length == 0) return;
+
+        // add slave agents
+        var slave_agent_ids = {};
+        $.each(agents, function(_i, agent){
+          if (agent.slave_id) {
+            slave_agent_ids[agent.slave_id] = true;
+          }
+        });
+        agents = $.merge(agents, getAgentsByIds(slave_agent_ids));
+
+        contentArea.append(agents_table_template({
+          agents: agents,
+          table_id: "agents_table"
+        }));
+        $("#agents_table").dataTable({
+          "autoWidth": true,
+          "paging": false,
+          "ordering": true,
+          "info": false
+        });
+      }
+
+      function makeURL(record, s) {
+        var extra = {};
+        extra[s] = record[s];
+        return "#" + $.map($.extend({}, state, extra), function (val, index) {
+          return val? (index + "=" + val) : null;
+        }).join(":")
+      }
+
+      function showRecordsTable(contentArea, filteredRecords) {
+        $.each(filteredRecords, function(_i, record) {
+          $.each(fields, function(_j, field){
+            if (record[field]) {
+              record[field + "_url"] = makeURL(record, field);
+            }
+          });
+        });
+
+        contentArea.append(records_table_template({
+          records: filteredRecords,
+          table_id: "records_table"
+        }));
+        $("#records_table").dataTable({
+          autoWidth: true,
+          paging: filteredRecords.length > tablePageSize,
+          ordering: true,
+          info: false,
+          searching: filteredRecords.length > tablePageSize
+        });
+      }
+
+      function showSlaTable(contentArea, records) {
+        if (records.length == 0) return;
+
+        contentArea.append(sla_table_template({
+          records: records,
+          table_id: "sla_table"
+        }));
+        $("#records_table").dataTable({
+          autoWidth: true,
+          paging: records.length > tablePageSize,
+          ordering: true,
+          info: false,
+          searching: records.length > tablePageSize
+        });
+      }
+
+      function showErrors(contentArea, records) {
+        if (records.length == 0) return;
+
+        contentArea.append(errors_template({
+          records: records,
+          table_id: "errors_list"
+        }));
+      }
+
+      /* Update cycle */
+
+      function update() {
+        var filteredRecords = filterRecords(report.records);
+        console.log(filteredRecords);
+        var slaRecords = [];
+        var errorRecords = [];
+        $.each(filterRecords(report.records), function(_i, record) {
+          if (record["sla_info"]) {
+            slaRecords.push(record);
+          }
+          if (record["is_status_error"]) {
+            errorRecords.push(record);
+          }
+        });
+
+        var contentArea = $("#content_area");
+        contentArea.empty();
+
+        updateSelectors();
+
+        showRecordsTable(contentArea, filteredRecords);
+        showSlaTable(contentArea, slaRecords);
+        showErrors(contentArea, errorRecords);
+
+        if (state["scenario"] != "" && state["test"] != "" &&
+                state["concurrency"] != "" &&
+                state["agent"] != "") {
+          showAgentRecord(contentArea, filteredRecords[0]);
+        }
+        if (state["scenario"] != "" && state["test"] != "" &&
+                state["concurrency"] != "" && state["node"] == "" &&
+                state["agent"] == "") {
+          var agg_recs = filterRecords(report.records, "concurrency");
+          if (agg_recs.length > 0) {
+            showConcurrencySummary(contentArea, agg_recs[0]);
+          }
+        }
+        if (state["scenario"] != "" && state["test"] != "" &&
+                state["concurrency"] == "" && state["node"] == "" &&
+                state["agent"] == "") {
+          var test_recs = filterRecords(report.records, "test");
+          if (test_recs.length > 0) {
+            showTestSummary(contentArea, test_recs[0]);
+          }
+        }
+        if (state["test"] != "") {
+          showTestSpecification(contentArea, report.tests[state["test"]]);
+        }
+        if (state["agent"] == "") {
+          showAgentsTable(contentArea, filteredRecords);
+        }
+        if (state["scenario"] != "") {
+          showScenarioSource(contentArea, report.scenarios[state["scenario"]]);
+        }
+      }
+
+      function parseUrlToState() {
+        var hashUrl = window.location.hash.substr(1);
+
+        $.each(hashUrl.split(":"), function (_i, pair) {
+          var kv = pair.split("=");
+          if (kv.length == 2) {
+            state[kv[0]] = decodeURIComponent(kv[1]);
+          }
+        });
+      }
+
+      // entry-point
+      parseUrlToState();
+      console.log(state);
+
+      // pre-process records
+      $.each(report.records, function(_i, record) {
+        if (record.status) {
+          record["is_status_ok"] = record.status == "ok";
+          record["is_status_lost"] = record.status == "lost";
+          record["is_status_interrupted"] = record.status == "interrupted";
+          record["is_status_error"] = record.status == "error";
+        }
+      });
+
+      // auto-select filters with 1 option
+      $.each(fields, function(_i, field) {
+        var values = getFieldValues(field, report.records);
+        if (values.length == 1) {
+          state[field] = values[0];
+        }
+      });
+
+      update();
+
+      $(window).on('hashchange', function() {
+        parseUrlToState();
+        update()
+      });
+
+      $('[data-toggle="tooltip"]').tooltip();
+    });
+  </script>
+
+  <style type="text/css">
+  </style>
+
+</head>
+
+<body>
+
+<div class="container" id="container">
+  <div class="row text-center">
+    <h1>Shaker | The Report</h1>
+  </div>
+  <hr>
+  <div class="row">
+    <div class="col-md-2">
+      <label for="scenario_selector" title="Scenario name">Scenario</label>
+      <select id="scenario_selector" class="form-control" data-placeholder="- Any scenario -"></select>
+    </div>
+    <div class="col-md-2">
+      <label for="test_selector" title="Test name">Test Case</label>
+      <select id="test_selector" class="form-control" data-placeholder="- Any test case -"></select>
+    </div>
+    <div class="col-md-2">
+      <label for="concurrency_selector" title="Concurrency">Concurrency</label>
+      <select id="concurrency_selector" class="form-control" data-placeholder="- Any concurrency -"></select>
+    </div>
+    <div class="col-md-2">
+      <label for="node_selector" title="Host / Compute node">Host</label>
+      <select id="node_selector" class="form-control" data-placeholder="- Any node -"></select>
+    </div>
+    <div class="col-md-2">
+      <label for="agent_selector" title="Agent">Agent</label>
+      <select id="agent_selector" class="form-control" data-placeholder="- Any agent -"></select>
+    </div>
+  </div>
+
+  <div id="content_area" class="row">
+    <!-- Container for the screen content -->
+  </div>
+
+  <div id="footer" class="row">&nbsp;</div>
+</div>
+
+<!-- TEMPLATES --------------------------------------------------------------->
+
+<!-- Scenario File -->
+<script id="scenario_source_template" type="text/x-handlebars-template">
+  <h3>Scenario</h3>
+  <pre>{{ data }}</pre>
+</script>
+
+<!-- Test Specification -->
+<script id="test_specification_template" type="text/x-handlebars-template">
+  <h3>Test Specification</h3>
+  <pre>{{ data }}</pre>
+</script>
+
+<!-- Executor Result -->
+<script id="executor_template" type="text/x-handlebars-template">
+  <h3>Execution Summary</h3>
+  {{#with record}}
+  <div id="{{ chart_id }}"></div>
+  {{#if is_status_ok}}<span class="label label-success"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span>success</span>{{/if}}
+  {{#if is_status_lost}}<span class="label label-danger"><span class="glyphicon glyphicon-alert" aria-hidden="true"></span>lost</span>{{/if}}
+  {{#if is_status_interrupted}}<span class="label label-warning"><span class="glyphicon glyphicon-stop" aria-hidden="true"></span>interrupted</span>{{/if}}
+  {{#if is_status_error}}<span class="label label-danger"><span class="glyphicon glyphicon-alert" aria-hidden="true"></span>error</span>{{/if}}
+  {{#if stats_yaml}}
+    <h4>Stats</h4>
+    <pre>{{ stats_yaml }}</pre>
+  {{/if}}
+  <h4>Command</h4>
+  <pre>{{ command_yaml }}</pre>
+  {{#if stdout}}
+    <h4>Stdout</h4>
+    <pre>{{ stdout }}</pre>
+  {{/if}}
+  {{#if verbose}}
+    <h4>Verbose Info</h4>
+    <pre>{{ verbose }}</pre>
+  {{/if}}
+  {{#if stderr}}
+    <h4>Stderr</h4>
+    <pre>{{ stderr }}</pre>
+  {{/if}}
+  {{/with}}
+</script>
+
+<!-- Concurrency summary -->
+<script id="concurrency_summary_template" type="text/x-handlebars-template">
+  {{#with record}}
+  <div id="{{ chart_id  }}"></div>
+  <h3>Per-node chart</h3>
+  <div id="{{ node_chart_id  }}"></div>
+  <h3>Stats</h3>
+  <pre>{{ stats_yaml }}</pre>
+  {{/with}}
+</script>
+
+<!-- Test summary -->
+<script id="test_summary_template" type="text/x-handlebars-template">
+  {{#with record}}
+  <div id="{{ chart_id   }}"></div>
+  {{#if stats_yaml}}
+    <h3>Stats</h3>
+    <pre>{{ stats_yaml }}</pre>
+  {{/if}}
+  {{/with}}
+</script>
+
+<!-- Records Table -->
+<script id="records_table_template" type="text/x-handlebars-template">
+  <h3>Records</h3>
+  <table class="table table-striped" id="{{ table_id  }}">
+    <thead>
+    <tr>
+      <th>Scenario</th>
+      <th>Test Case</th>
+      <th>Concurrency</th>
+      <th>Host / Compute Node</th>
+      <th>Agent</th>
+      <th>Status</th>
+    </tr>
+    </thead>
+    <tbody>
+    {{#records}}
+    <tr>
+      <td><a href="{{ scenario_url }}">{{ scenario }}</a></td>
+      <td><a href="{{ test_url }}">{{ test }}</a></td>
+      <td><a href="{{ concurrency_url }}">{{ concurrency }}</a></td>
+      <td><a href="{{ node_url }}">{{ node }}</a></td>
+      <td><a href="{{ agent_url }}">{{ agent }}</a></td>
+      <td>
+        {{#if is_status_ok }}
+          <span class="label label-success">
+            <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+            success
+          </span>
+        {{/if}}
+        {{#if is_status_lost }}
+          <span class="label label-danger">
+            <span class="glyphicon glyphicon-alert" aria-hidden="true"></span>
+            lost
+          </span>
+        {{/if}}
+        {{#if is_status_interrupted }}
+          <span class="label label-warning">
+            <span class="glyphicon glyphicon-stop" aria-hidden="true"></span>
+            interrupted
+          </span>
+        {{/if}}
+        {{#if is_status_error }}
+          <span class="label label-danger">
+            <span class="glyphicon glyphicon-stop" aria-hidden="true"></span>
+            error
+          </span>
+        {{/if}}
+      </td>
+    </tr>
+    {{/records}}
+    </tbody>
+  </table>
+</script>
+
+<!-- Agents List -->
+<script id="agents_table_template" type="text/x-handlebars-template">
+  <h3>Agents</h3>
+  <table class="table table-striped" id="{{ table_id }}">
+    <thead>
+    <tr>
+      <th>Agent</th>
+      <th>Mode</th>
+      <th>IP</th>
+      <th>Node</th>
+      <th>AZ</th>
+    </tr>
+    </thead>
+    <tbody>
+    {{#agents}}
+    <tr>
+      <td>{{ id }}</td>
+      <td>{{ mode }}</td>
+      <td>{{ ip }}</td>
+      <td>{{ node }}</td>
+      <td>{{ zone }}</td>
+    </tr>
+    {{/agents}}
+    </tbody>
+  </table>
+</script>
+
+<!-- SLA List -->
+<script id="sla_table_template" type="text/x-handlebars-template">
+  <h3>Agents</h3>
+  <table class="table table-striped" id="{{  table_id }}">
+    <thead>
+    <tr>
+      <th>Condition</th>
+      <th>Location</th>
+      <th>Status</th>
+    </tr>
+    </thead>
+    <tbody>
+    {{#records}}
+    <tr>
+      <td>{{ sla }}</td>
+      <td>{{ location }}</td>
+      <td>
+        {{#if is_status_ok }}
+          <span class="text-success">
+            <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+            {{ status }}
+          </span>
+        {{else}}
+          <span class="text-danger">
+            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+            {{ status }}
+          </span>
+        {{/if}}
+      </td>
+    </tr>
+    {{/records}}
+    </tbody>
+  </table>
+</script>
+
+<!-- Errors -->
+<script id="errors_template" type="text/x-handlebars-template">
+  <h3>Errors</h3>
+  <div class="text-danger">
+    <ul>
+    {{#records}}
+      <li>{{ info }}{{ stderr }}{{ traceback }}</li>
+    {{/records}}
+    </ul>
+  </div>
+</script>
+
+</body>
+</html>

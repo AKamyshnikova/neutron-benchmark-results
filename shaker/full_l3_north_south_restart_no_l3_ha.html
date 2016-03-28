@@ -1,0 +1,702 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="en-US">
+<head profile="http://gmpg.org/xfn/11">
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+
+  <title>Shaker | The distributed data-plane testing tool for OpenStack</title>
+
+  <!-- LIBS -->
+
+  <script type="application/javascript"
+          src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+  <script type="application/javascript"
+          src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
+  <script type="application/javascript"
+          src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.4/js/bootstrap.js"></script>
+  <script type="text/javascript"
+          src="https://cdn.datatables.net/1.10.2/js/jquery.dataTables.min.js"></script>
+  <script type="text/javascript"
+          src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/3.0.1/handlebars.min.js"></script>
+  <script type="application/javascript"
+          src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/3.2.7/js-yaml.min.js"></script>
+  <script type="application/javascript"
+          src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+  <script type="application/javascript"
+          src="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.10/c3.js"></script>
+
+  <!-- STYLES -->
+
+  <link rel="stylesheet"
+        href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.4/simplex/bootstrap.min.css">
+  <link rel=stylesheet type=text/css
+        href="https://cdn.datatables.net/1.10.2/css/jquery.dataTables.min.css">
+  <link rel=stylesheet type=text/css
+        href="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.10/c3.css">
+  <link rel='stylesheet' type='text/css'
+        href='http://fonts.googleapis.com/css?family=Open+Sans:400,700,400italic&subset=latin,cyrillic'>
+
+  <script type="application/javascript">
+    var report = {"scenarios": {"OpenStack L3 North-South": {"file_name": "/opt/stack/.venv/lib/python2.7/site-packages/shaker/scenarios/networking/full_l3_north_south.yaml", "title": "OpenStack L3 North-South", "execution": {"tests": [{"title": "Download", "method": "tcp_download", "class": "flent"}, {"title": "Upload", "method": "tcp_upload", "class": "flent"}, {"title": "Bi-directional", "method": "tcp_bidirectional", "class": "flent"}], "progression": "quadratic"}, "description": "This scenario launches pairs of VMs on different compute nodes. VMs are in the different networks connected via different routers, master accesses slave by floating ip", "deployment": {"accommodation": ["pair", "single_room"], "template": "l3_north_south.hot"}}}, "records": {"9b4397d0-151a-4a08-afb3-e7fa8d408211": {"status": "lost", "node": "node-61.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720961.411295, "chart": [], "agent": "shaker_trimaz_master_8", "command": {"data": "zcat `flent -H 172.16.45.184 -l 60 -s 1 tcp_bidirectional 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Bi-directional", "type": "agent", "id": "9b4397d0-151a-4a08-afb3-e7fa8d408211"}, "eb531a39-7f0c-4732-8637-e74ef328ec74": {"status": "lost", "node": "node-57.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720961.411295, "chart": [], "agent": "shaker_trimaz_master_5", "command": {"data": "zcat `flent -H 172.16.45.183 -l 60 -s 1 tcp_bidirectional 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Bi-directional", "type": "agent", "id": "eb531a39-7f0c-4732-8637-e74ef328ec74"}, "08fbee97-e387-4931-bb07-c8a01d9e9e08": {"stats": {}, "scenario": "OpenStack L3 North-South", "concurrency": 4, "test": "Upload", "type": "concurrency", "id": "08fbee97-e387-4931-bb07-c8a01d9e9e08", "node_chart": [["x", "node-53.domain.tld", "node-51.domain.tld", "node-61.domain.tld", "node-84.domain.tld"]]}, "c85429b0-2f0e-4a3d-a2dc-55f8e02a4287": {"status": "lost", "node": "node-90.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720592.999129, "chart": [], "agent": "shaker_trimaz_master_6", "command": {"data": "zcat `flent -H 172.16.45.194 -l 60 -s 1 tcp_download 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 9, "executor": "flent", "test": "Download", "type": "agent", "id": "c85429b0-2f0e-4a3d-a2dc-55f8e02a4287"}, "21a12acc-b92d-494b-a885-99d1bd5585ac": {"status": "lost", "node": "node-53.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720821.270846, "chart": [], "agent": "shaker_trimaz_master_2", "command": {"data": "zcat `flent -H 172.16.45.192 -l 60 -s 1 tcp_upload 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 4, "executor": "flent", "test": "Upload", "type": "agent", "id": "21a12acc-b92d-494b-a885-99d1bd5585ac"}, "133ccdd5-35aa-4b19-9fdb-c23486e2f0c5": {"status": "lost", "node": "node-57.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720761.215506, "chart": [], "agent": "shaker_trimaz_master_5", "command": {"data": "zcat `flent -H 172.16.45.183 -l 60 -s 1 tcp_download 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Download", "type": "agent", "id": "133ccdd5-35aa-4b19-9fdb-c23486e2f0c5"}, "9ec0c8f0-2565-4ded-bac8-e80e73f136aa": {"status": "lost", "node": "node-72.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720761.215506, "chart": [], "agent": "shaker_trimaz_master_12", "command": {"data": "zcat `flent -H 172.16.45.180 -l 60 -s 1 tcp_download 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Download", "type": "agent", "id": "9ec0c8f0-2565-4ded-bac8-e80e73f136aa"}, "6410c198-f09d-41d6-9661-34ee5d11bb11": {"status": "lost", "node": "node-84.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720961.411295, "chart": [], "agent": "shaker_trimaz_master_1", "command": {"data": "zcat `flent -H 172.16.45.190 -l 60 -s 1 tcp_bidirectional 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Bi-directional", "type": "agent", "id": "6410c198-f09d-41d6-9661-34ee5d11bb11"}, "38523ca0-6fb0-4687-87f0-825ed5c0e246": {"stats": {"ping_icmp": {"max": 2.45, "mean": 0.6155254160096918, "unit": "ms", "min": 0.32733369290447345}, "tcp_download": {"max": 2776.53, "mean": 1647.07007494085, "unit": "Mbits/s", "min": 741.9548534154892}}, "scenario": "OpenStack L3 North-South", "concurrency": 4, "test": "Download", "type": "concurrency", "id": "38523ca0-6fb0-4687-87f0-825ed5c0e246", "node_chart": [["x", "node-51.domain.tld", "node-84.domain.tld", "node-61.domain.tld", "node-53.domain.tld"], ["Mean ping_icmp, ms", 0.5107552357376626, 0.6799786769653097, 0.6576877528626819, 0.6136799984731133], ["Max ping_icmp, ms", 1.74, 2.45, 2.3693734601902854, 1.59], ["Min ping_icmp, ms", 0.32733369290447345, 0.4490069880568839, 0.3945140442126441, 0.38100531326243897], ["Mean tcp_download, Mbits/s", 1438.762635053578, 851.4460596494038, 1948.617881960227, 2349.4537231001914], ["Max tcp_download, Mbits/s", 1807.42, 1509.49, 2120.13, 2776.53], ["Min tcp_download, Mbits/s", 1320.1778507614135, 741.9548534154892, 1927.2354388308527, 2306.260376610756]]}, "996a95c5-111a-4653-9f19-37395273cbd6": {"status": "lost", "node": "node-56.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720841.2943, "chart": [], "agent": "shaker_trimaz_master_4", "command": {"data": "zcat `flent -H 172.16.45.186 -l 60 -s 1 tcp_upload 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 9, "executor": "flent", "test": "Upload", "type": "agent", "id": "996a95c5-111a-4653-9f19-37395273cbd6"}, "04fc682c-7449-49d3-a66c-5d4f5a46815f": {"status": "lost", "node": "node-55.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720761.215506, "chart": [], "agent": "shaker_trimaz_master_3", "command": {"data": "zcat `flent -H 172.16.45.182 -l 60 -s 1 tcp_download 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Download", "type": "agent", "id": "04fc682c-7449-49d3-a66c-5d4f5a46815f"}, "67257898-9bc9-4588-b46c-7e56555829db": {"status": "lost", "node": "node-51.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720961.411295, "chart": [], "agent": "shaker_trimaz_master_0", "command": {"data": "zcat `flent -H 172.16.45.188 -l 60 -s 1 tcp_bidirectional 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Bi-directional", "type": "agent", "id": "67257898-9bc9-4588-b46c-7e56555829db"}, "32e9a969-d0c6-43d9-b31a-b15c933a9d9b": {"status": "lost", "node": "node-55.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720841.2943, "chart": [], "agent": "shaker_trimaz_master_3", "command": {"data": "zcat `flent -H 172.16.45.182 -l 60 -s 1 tcp_upload 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 9, "executor": "flent", "test": "Upload", "type": "agent", "id": "32e9a969-d0c6-43d9-b31a-b15c933a9d9b"}, "ba87d617-7704-46f1-9373-986db359df69": {"status": "lost", "node": "node-51.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720921.36625, "chart": [], "agent": "shaker_trimaz_master_0", "command": {"data": "zcat `flent -H 172.16.45.188 -l 60 -s 1 tcp_bidirectional 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 4, "executor": "flent", "test": "Bi-directional", "type": "agent", "id": "ba87d617-7704-46f1-9373-986db359df69"}, "f9da348d-6d2a-46f6-a504-afacb4b12048": {"status": "lost", "node": "node-56.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720861.311709, "chart": [], "agent": "shaker_trimaz_master_4", "command": {"data": "zcat `flent -H 172.16.45.186 -l 60 -s 1 tcp_upload 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Upload", "type": "agent", "id": "f9da348d-6d2a-46f6-a504-afacb4b12048"}, "e4ae2bb3-7430-4568-ab84-88485cc0c696": {"status": "lost", "node": "node-56.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720592.999129, "chart": [], "agent": "shaker_trimaz_master_4", "command": {"data": "zcat `flent -H 172.16.45.186 -l 60 -s 1 tcp_download 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 9, "executor": "flent", "test": "Download", "type": "agent", "id": "e4ae2bb3-7430-4568-ab84-88485cc0c696"}, "68f8761e-fcb6-4d2d-9a0b-9990c87993e7": {"status": "lost", "node": "node-68.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720861.311709, "chart": [], "agent": "shaker_trimaz_master_11", "command": {"data": "zcat `flent -H 172.16.45.181 -l 60 -s 1 tcp_upload 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Upload", "type": "agent", "id": "68f8761e-fcb6-4d2d-9a0b-9990c87993e7"}, "6ec3e52f-5128-49e2-8af5-20ac3000f482": {"status": "lost", "node": "node-55.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720592.999129, "chart": [], "agent": "shaker_trimaz_master_3", "command": {"data": "zcat `flent -H 172.16.45.182 -l 60 -s 1 tcp_download 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 9, "executor": "flent", "test": "Download", "type": "agent", "id": "6ec3e52f-5128-49e2-8af5-20ac3000f482"}, "724dc60d-9e22-493b-811a-402af6c64e21": {"status": "lost", "node": "node-57.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720841.2943, "chart": [], "agent": "shaker_trimaz_master_5", "command": {"data": "zcat `flent -H 172.16.45.183 -l 60 -s 1 tcp_upload 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 9, "executor": "flent", "test": "Upload", "type": "agent", "id": "724dc60d-9e22-493b-811a-402af6c64e21"}, "45a755ce-5c1b-43d9-8ec4-05747904c7d0": {"status": "lost", "node": "node-84.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720841.2943, "chart": [], "agent": "shaker_trimaz_master_1", "command": {"data": "zcat `flent -H 172.16.45.190 -l 60 -s 1 tcp_upload 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 9, "executor": "flent", "test": "Upload", "type": "agent", "id": "45a755ce-5c1b-43d9-8ec4-05747904c7d0"}, "f11b9980-37c6-4241-8c5f-aae0deaeefb0": {"stats": {}, "scenario": "OpenStack L3 North-South", "concurrency": 9, "test": "Bi-directional", "type": "concurrency", "id": "f11b9980-37c6-4241-8c5f-aae0deaeefb0", "node_chart": [["x", "node-56.domain.tld", "node-90.domain.tld", "node-53.domain.tld", "node-51.domain.tld", "node-61.domain.tld", "node-55.domain.tld", "node-57.domain.tld", "node-84.domain.tld", "node-88.domain.tld"]]}, "b0d59aef-613b-499e-8549-4a679f667c2c": {"status": "error", "info": "Flent returned no data, stderr: \ngzip: stdin: unexpected end of file\n", "finish": 1458720371.533498, "node": "node-51.domain.tld", "concurrency": 2, "scenario": "OpenStack L3 North-South", "traceback": "Traceback (most recent call last):\n  File \"/opt/stack/.venv/lib/python2.7/site-packages/shaker/engine/quorum.py\", line 97, in process_reply\n    reply = self.executors[agent_id].process_reply(message)\n  File \"/opt/stack/.venv/lib/python2.7/site-packages/shaker/engine/executors/flent.py\", line 48, in process_reply\n    'Flent returned no data, stderr: %s' % result['stderr'])\nExecutorException: Flent returned no data, stderr: \ngzip: stdin: unexpected end of file\n\n", "chart": [], "schedule": 1458720348.092505, "start": 1458720348.103158, "command": {"data": "zcat `flent -H 172.16.45.188 -l 60 -s 1 tcp_download 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "agent": "shaker_trimaz_master_0", "stderr": "\ngzip: stdin: unexpected end of file\n", "executor": "flent", "test": "Download", "stats": {}, "type": "agent", "id": "b0d59aef-613b-499e-8549-4a679f667c2c"}, "3bcf9914-54ec-48b4-b982-74cdf03ca548": {"status": "lost", "node": "node-53.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720921.36625, "chart": [], "agent": "shaker_trimaz_master_2", "command": {"data": "zcat `flent -H 172.16.45.192 -l 60 -s 1 tcp_bidirectional 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 4, "executor": "flent", "test": "Bi-directional", "type": "agent", "id": "3bcf9914-54ec-48b4-b982-74cdf03ca548"}, "fdbe9951-47d9-44f0-a619-8e6e9402be06": {"status": "lost", "node": "node-61.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720841.2943, "chart": [], "agent": "shaker_trimaz_master_8", "command": {"data": "zcat `flent -H 172.16.45.184 -l 60 -s 1 tcp_upload 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 9, "executor": "flent", "test": "Upload", "type": "agent", "id": "fdbe9951-47d9-44f0-a619-8e6e9402be06"}, "fba5310f-5648-45a3-b959-d30c16d0d1ac": {"status": "lost", "node": "node-56.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720941.391526, "chart": [], "agent": "shaker_trimaz_master_4", "command": {"data": "zcat `flent -H 172.16.45.186 -l 60 -s 1 tcp_bidirectional 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 9, "executor": "flent", "test": "Bi-directional", "type": "agent", "id": "fba5310f-5648-45a3-b959-d30c16d0d1ac"}, "b581970b-40d6-48a2-8652-7cefdb3d565a": {"meta": [["concurrency", ""], ["ping_icmp", "ms"], ["tcp_download", "Mbits/s"]], "scenario": "OpenStack L3 North-South", "test": "Download", "type": "test", "chart": [["concurrency", 1, 2, 4, 9, 18], ["ping_icmp", 0.6155254160096918], ["tcp_download", 1647.07007494085]], "id": "b581970b-40d6-48a2-8652-7cefdb3d565a"}, "74ad284e-6c60-4821-a541-e680b76a417c": {"status": "ok", "node": "node-51.domain.tld", "finish": 1458720572.71382, "stats": {"ping_icmp": {"max": 1.74, "mean": 0.5107552357376626, "unit": "ms", "min": 0.32733369290447345}, "tcp_download": {"max": 1807.42, "mean": 1438.762635053578, "unit": "Mbits/s", "min": 1320.1778507614135}}, "stderr": "", "scenario": "OpenStack L3 North-South", "concurrency": 4, "schedule": 1458720502.223637, "chart": [["time", 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0, 20.0, 21.0, 22.0, 23.0, 24.0, 25.0, 26.0, 27.0, 28.0, 29.0, 30.0, 31.0, 32.0, 33.0, 34.0, 35.0, 36.0, 37.0, 38.0, 39.0, 40.0, 41.0, 42.0, 43.0, 44.0, 45.0, 46.0, 47.0, 48.0, 49.0, 50.0, 51.0, 52.0, 53.0, 54.0, 55.0, 56.0, 57.0, 58.0, 59.0, 60.0, 61.0, 62.0, 63.0, 64.0, 65.0, 66.0, 67.0, 68.0, 69.0], ["ping_icmp", 1.74, 0.5564791303721972, 0.6380103909170879, 0.6582203186745399, 0.8046504348730222, 0.6315549223141063, 0.43499285703205265, 0.42991767332665376, 0.3964076916842276, 0.5578933399616607, 0.5127899656076507, 0.42575277889977076, 0.32733369290447345, 0.4558717634845571, 0.40435973672178527, 0.5466930178057733, 0.4170350822150759, 0.43125458267991357, 0.5346622748094152, 0.3932731079285792, 0.500737725644079, 0.3909238888748486, 0.36100509407686604, 0.3635281635601068, 0.5695747243530999, 0.38914991309016383, 0.44802475986979434, 0.4580867968926012, 0.4927251454611958, 0.3806318365031428, 0.629565176541286, 0.44012404200024463, 0.48975525009263393, 0.38894973439005087, 0.3693221421697414, 0.49507495740162677, 0.5258803418477356, 0.47609094498194543, 0.5126652409780905, 0.3741395307753029, 0.42916261633715946, 0.49387352369362353, 0.4419602385761725, 0.4260075180010743, 0.42947973283338914, 0.6207287358260278, 0.5029119087448987, 0.4390512404678434, 0.46022621489232307, 0.5516022949552334, 0.3852286789678383, 0.4752516221405437, 0.5767807758558201, 0.48412053195199817, 0.5326650653013213, 0.39306332169495206, 0.4178976187751248, 0.3770613215722915, 0.40137931584408865, 0.5508260990959737, 0.47802450903842314, 0.4879878251552582, 0.4829853900400118, 0.47687041305265754, 0.4242220306511583, 0.5146497065866594, 0.7840544434788724, 0.8097971252035995, 0.7122773318839698, 0.8396111793009753], ["tcp_download", null, null, null, null, null, null, 1387.29, 1480.2993918657303, 1461.6701971817017, 1492.284932100773, 1464.9765162515641, 1447.6762092804909, 1429.5676186466217, 1374.9907824468612, 1424.3914604401589, 1427.8750513100624, 1442.1271781277655, 1452.0712224936485, 1461.1807102823257, 1468.452928521633, 1379.097790481789, 1457.9747568702696, 1414.3292240333558, 1395.3128971672058, 1395.1983086967468, 1381.5499286460874, 1446.9096886981963, 1409.7709242677688, 1439.2435370445253, 1454.3908314085006, 1430.8967992591856, 1414.1136860084534, 1363.3282902669905, 1404.149760699272, 1461.9865821552276, 1451.8456505727768, 1455.2297042703628, 1361.9757618093493, 1462.009776878357, 1445.995709384642, 1461.0071967601775, 1438.0730323791504, 1380.846670475006, 1457.3411240196228, 1386.704370355606, 1460.4692491149901, 1357.132097978592, 1431.403939037323, 1427.472689234891, 1357.6644718599318, 1443.662310426235, 1410.4533935189247, 1504.5399936747551, 1512.3712449166344, 1473.4356361484527, 1455.5773343372346, 1320.1778507614135, 1407.0856645035744, 1409.5540106248854, 1418.6626577448844, 1354.660240972042, 1419.1350945663453, 1342.0043340921402, 1437.8972033190726, 1446.539569387436, 1803.0655504905912, 1807.42, null, null, null]], "agent": "shaker_trimaz_master_0", "start": 1458720502.234232, "meta": [["time", "s"], ["ping_icmp", "ms"], ["tcp_download", "Mbits/s"]], "command": {"data": "zcat `flent -H 172.16.45.188 -l 60 -s 1 tcp_download 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "samples": [[0.0, 1.74, null], [1.0, 0.5564791303721972, null], [2.0, 0.6380103909170879, null], [3.0, 0.6582203186745399, null], [4.0, 0.8046504348730222, null], [5.0, 0.6315549223141063, null], [6.0, 0.43499285703205265, 1387.29], [7.0, 0.42991767332665376, 1480.2993918657303], [8.0, 0.3964076916842276, 1461.6701971817017], [9.0, 0.5578933399616607, 1492.284932100773], [10.0, 0.5127899656076507, 1464.9765162515641], [11.0, 0.42575277889977076, 1447.6762092804909], [12.0, 0.32733369290447345, 1429.5676186466217], [13.0, 0.4558717634845571, 1374.9907824468612], [14.0, 0.40435973672178527, 1424.3914604401589], [15.0, 0.5466930178057733, 1427.8750513100624], [16.0, 0.4170350822150759, 1442.1271781277655], [17.0, 0.43125458267991357, 1452.0712224936485], [18.0, 0.5346622748094152, 1461.1807102823257], [19.0, 0.3932731079285792, 1468.452928521633], [20.0, 0.500737725644079, 1379.097790481789], [21.0, 0.3909238888748486, 1457.9747568702696], [22.0, 0.36100509407686604, 1414.3292240333558], [23.0, 0.3635281635601068, 1395.3128971672058], [24.0, 0.5695747243530999, 1395.1983086967468], [25.0, 0.38914991309016383, 1381.5499286460874], [26.0, 0.44802475986979434, 1446.9096886981963], [27.0, 0.4580867968926012, 1409.7709242677688], [28.0, 0.4927251454611958, 1439.2435370445253], [29.0, 0.3806318365031428, 1454.3908314085006], [30.0, 0.629565176541286, 1430.8967992591856], [31.0, 0.44012404200024463, 1414.1136860084534], [32.0, 0.48975525009263393, 1363.3282902669905], [33.0, 0.38894973439005087, 1404.149760699272], [34.0, 0.3693221421697414, 1461.9865821552276], [35.0, 0.49507495740162677, 1451.8456505727768], [36.0, 0.5258803418477356, 1455.2297042703628], [37.0, 0.47609094498194543, 1361.9757618093493], [38.0, 0.5126652409780905, 1462.009776878357], [39.0, 0.3741395307753029, 1445.995709384642], [40.0, 0.42916261633715946, 1461.0071967601775], [41.0, 0.49387352369362353, 1438.0730323791504], [42.0, 0.4419602385761725, 1380.846670475006], [43.0, 0.4260075180010743, 1457.3411240196228], [44.0, 0.42947973283338914, 1386.704370355606], [45.0, 0.6207287358260278, 1460.4692491149901], [46.0, 0.5029119087448987, 1357.132097978592], [47.0, 0.4390512404678434, 1431.403939037323], [48.0, 0.46022621489232307, 1427.472689234891], [49.0, 0.5516022949552334, 1357.6644718599318], [50.0, 0.3852286789678383, 1443.662310426235], [51.0, 0.4752516221405437, 1410.4533935189247], [52.0, 0.5767807758558201, 1504.5399936747551], [53.0, 0.48412053195199817, 1512.3712449166344], [54.0, 0.5326650653013213, 1473.4356361484527], [55.0, 0.39306332169495206, 1455.5773343372346], [56.0, 0.4178976187751248, 1320.1778507614135], [57.0, 0.3770613215722915, 1407.0856645035744], [58.0, 0.40137931584408865, 1409.5540106248854], [59.0, 0.5508260990959737, 1418.6626577448844], [60.0, 0.47802450903842314, 1354.660240972042], [61.0, 0.4879878251552582, 1419.1350945663453], [62.0, 0.4829853900400118, 1342.0043340921402], [63.0, 0.47687041305265754, 1437.8972033190726], [64.0, 0.4242220306511583, 1446.539569387436], [65.0, 0.5146497065866594, 1803.0655504905912], [66.0, 0.7840544434788724, 1807.42], [67.0, 0.8097971252035995, null], [68.0, 0.7122773318839698, null], [69.0, 0.8396111793009753, null]], "executor": "flent", "test": "Download", "type": "agent", "id": "74ad284e-6c60-4821-a541-e680b76a417c"}, "8b5db47e-3545-4262-8ebb-9506a9c0ecb4": {"stats": {}, "scenario": "OpenStack L3 North-South", "concurrency": 18, "test": "Upload", "type": "concurrency", "id": "8b5db47e-3545-4262-8ebb-9506a9c0ecb4", "node_chart": [["x", "node-56.domain.tld", "node-68.domain.tld", "node-57.domain.tld", "node-62.domain.tld", "node-95.domain.tld", "node-88.domain.tld", "node-61.domain.tld", "node-55.domain.tld", "node-87.domain.tld", "node-84.domain.tld", "node-60.domain.tld", "node-72.domain.tld", "node-85.domain.tld", "node-53.domain.tld", "node-79.domain.tld", "node-90.domain.tld", "node-51.domain.tld", "node-75.domain.tld"]]}, "53eebd3a-4bad-4227-84cf-d65183ae543f": {"stats": {}, "scenario": "OpenStack L3 North-South", "concurrency": 2, "test": "Upload", "type": "concurrency", "id": "53eebd3a-4bad-4227-84cf-d65183ae543f", "node_chart": [["x", "node-84.domain.tld", "node-51.domain.tld"]]}, "5cf5e3b0-7166-48d5-ab00-674e33bed1c9": {"status": "lost", "node": "node-57.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720861.311709, "chart": [], "agent": "shaker_trimaz_master_5", "command": {"data": "zcat `flent -H 172.16.45.183 -l 60 -s 1 tcp_upload 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Upload", "type": "agent", "id": "5cf5e3b0-7166-48d5-ab00-674e33bed1c9"}, "f6653d73-2190-44b8-b265-5275c90bcdea": {"status": "lost", "node": "node-61.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720921.36625, "chart": [], "agent": "shaker_trimaz_master_8", "command": {"data": "zcat `flent -H 172.16.45.184 -l 60 -s 1 tcp_bidirectional 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 4, "executor": "flent", "test": "Bi-directional", "type": "agent", "id": "f6653d73-2190-44b8-b265-5275c90bcdea"}, "a270c17c-f22b-4d9f-a3c9-c2d471ca6c58": {"status": "lost", "node": "node-51.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720592.999129, "chart": [], "agent": "shaker_trimaz_master_0", "command": {"data": "zcat `flent -H 172.16.45.188 -l 60 -s 1 tcp_download 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 9, "executor": "flent", "test": "Download", "type": "agent", "id": "a270c17c-f22b-4d9f-a3c9-c2d471ca6c58"}, "0cbf1769-41e1-4f0e-bd2d-fd566364e0da": {"status": "lost", "node": "node-62.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720861.311709, "chart": [], "agent": "shaker_trimaz_master_17", "command": {"data": "zcat `flent -H 172.16.45.197 -l 60 -s 1 tcp_upload 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Upload", "type": "agent", "id": "0cbf1769-41e1-4f0e-bd2d-fd566364e0da"}, "85c1f495-b380-4086-a80c-3650f361367e": {"status": "lost", "node": "node-84.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720592.999129, "chart": [], "agent": "shaker_trimaz_master_1", "command": {"data": "zcat `flent -H 172.16.45.190 -l 60 -s 1 tcp_download 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 9, "executor": "flent", "test": "Download", "type": "agent", "id": "85c1f495-b380-4086-a80c-3650f361367e"}, "27fcd859-86f2-4c42-a436-77559d2d6003": {"stats": {}, "scenario": "OpenStack L3 North-South", "concurrency": 18, "test": "Bi-directional", "type": "concurrency", "id": "27fcd859-86f2-4c42-a436-77559d2d6003", "node_chart": [["x", "node-61.domain.tld", "node-57.domain.tld", "node-84.domain.tld", "node-51.domain.tld", "node-90.domain.tld", "node-85.domain.tld", "node-56.domain.tld", "node-68.domain.tld", "node-53.domain.tld", "node-75.domain.tld", "node-55.domain.tld", "node-79.domain.tld", "node-87.domain.tld", "node-60.domain.tld", "node-72.domain.tld", "node-95.domain.tld", "node-62.domain.tld", "node-88.domain.tld"]]}, "f407918d-e163-4457-946d-92ff70b076bf": {"status": "ok", "node": "node-84.domain.tld", "finish": 1458720572.661689, "stats": {"ping_icmp": {"max": 2.45, "mean": 0.6799786769653097, "unit": "ms", "min": 0.4490069880568839}, "tcp_download": {"max": 1509.49, "mean": 851.4460596494038, "unit": "Mbits/s", "min": 741.9548534154892}}, "stderr": "", "scenario": "OpenStack L3 North-South", "concurrency": 4, "schedule": 1458720502.223637, "chart": [["time", 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0, 20.0, 21.0, 22.0, 23.0, 24.0, 25.0, 26.0, 27.0, 28.0, 29.0, 30.0, 31.0, 32.0, 33.0, 34.0, 35.0, 36.0, 37.0, 38.0, 39.0, 40.0, 41.0, 42.0, 43.0, 44.0, 45.0, 46.0, 47.0, 48.0, 49.0, 50.0, 51.0, 52.0, 53.0, 54.0, 55.0, 56.0, 57.0, 58.0, 59.0, 60.0, 61.0, 62.0, 63.0, 64.0, 65.0, 66.0, 67.0, 68.0, 69.0], ["ping_icmp", 2.45, 0.9640010469397037, 0.9999943533907784, 0.9630099847953812, 0.9440076953498688, 1.0497496878665205, 0.6050685254178817, 0.5760383713878554, 0.8178491244102191, 0.49405267828475935, 0.7459896685690095, 0.5621535074282322, 0.7119917323485642, 0.6460008690218391, 0.6609951738038652, 0.5460008356511428, 0.5510214345311599, 0.6849937166892127, 0.5149872536352532, 0.4490069880568839, 0.4790472843398692, 0.6809962672581193, 0.5800155676409146, 0.7129998845917875, 0.5920146315752335, 0.7149991496679724, 0.6011054690877596, 0.7429909189135531, 0.4990329109059867, 0.6549989175809412, 0.6349980415041839, 0.5980045652357382, 0.6370038478942196, 0.6969967153881703, 0.5030503992322841, 0.7429933067988908, 0.707999917022698, 0.6209849343470895, 0.45900725276386306, 0.48803767101980783, 0.6539952072346435, 0.5540001630758586, 0.5549902274235387, 0.48904882842807634, 0.7059993275746133, 0.6320294904575186, 0.9709115286274442, 0.617335681809897, 0.6420011253311323, 0.7009977165819405, 0.5489971932742536, 0.5309932320001031, 0.49301376266975955, 0.5570132769734042, 0.6399945480522491, 0.5549885295961313, 0.4820308643947149, 0.617997303420936, 0.589003980067714, 0.6230013150892907, 0.6369979592784591, 0.6090260425412318, 0.49101233160389524, 0.5580165801740216, 0.6649963389692464, 0.5820219227004343, 0.8739281770576246, 0.8969947356274045, 0.8850026865140002, 0.9579770106749349], ["tcp_download", null, null, null, null, null, null, 1509.49, 865.0440956020356, 863.5992018651963, 864.007323012352, 862.8778250408172, 858.1771595556315, 845.8176708602906, 833.6478547709204, 831.6389201331237, 853.610918519497, 850.2556093716622, 841.6553243947029, 859.1944191646576, 855.6965957808494, 848.2933888435364, 836.9720560836793, 835.751047782898, 835.3439456367493, 851.4433104410197, 811.5204273462296, 841.3673437261582, 846.3093736696244, 840.4054013967515, 851.9128909730911, 847.7570412039757, 854.6537345838547, 814.0084248628914, 835.9408070445061, 846.0617164492606, 854.3518851590158, 858.4479533514128, 819.8733634066582, 852.9385396042728, 855.1357379293441, 851.2647629594803, 859.8584123659134, 829.3802011728287, 855.7137299442292, 856.0801386404038, 834.2983140399257, 829.2807524871827, 835.7611546134949, 858.9186802232607, 823.6052248477936, 838.2349028158188, 843.9813208246231, 788.6595088316087, 741.9548534154892, 816.7338282442092, 850.0114120841026, 818.6203566037187, 825.1310220003128, 838.5286575102806, 841.7065866732597, 814.1226926469803, 849.1181852700656, 811.2805973577499, 840.7197459316253, 856.0072298932075, 844.59, null, null, null, null]], "agent": "shaker_trimaz_master_1", "start": 1458720502.240311, "meta": [["time", "s"], ["ping_icmp", "ms"], ["tcp_download", "Mbits/s"]], "command": {"data": "zcat `flent -H 172.16.45.190 -l 60 -s 1 tcp_download 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "samples": [[0.0, 2.45, null], [1.0, 0.9640010469397037, null], [2.0, 0.9999943533907784, null], [3.0, 0.9630099847953812, null], [4.0, 0.9440076953498688, null], [5.0, 1.0497496878665205, null], [6.0, 0.6050685254178817, 1509.49], [7.0, 0.5760383713878554, 865.0440956020356], [8.0, 0.8178491244102191, 863.5992018651963], [9.0, 0.49405267828475935, 864.007323012352], [10.0, 0.7459896685690095, 862.8778250408172], [11.0, 0.5621535074282322, 858.1771595556315], [12.0, 0.7119917323485642, 845.8176708602906], [13.0, 0.6460008690218391, 833.6478547709204], [14.0, 0.6609951738038652, 831.6389201331237], [15.0, 0.5460008356511428, 853.610918519497], [16.0, 0.5510214345311599, 850.2556093716622], [17.0, 0.6849937166892127, 841.6553243947029], [18.0, 0.5149872536352532, 859.1944191646576], [19.0, 0.4490069880568839, 855.6965957808494], [20.0, 0.4790472843398692, 848.2933888435364], [21.0, 0.6809962672581193, 836.9720560836793], [22.0, 0.5800155676409146, 835.751047782898], [23.0, 0.7129998845917875, 835.3439456367493], [24.0, 0.5920146315752335, 851.4433104410197], [25.0, 0.7149991496679724, 811.5204273462296], [26.0, 0.6011054690877596, 841.3673437261582], [27.0, 0.7429909189135531, 846.3093736696244], [28.0, 0.4990329109059867, 840.4054013967515], [29.0, 0.6549989175809412, 851.9128909730911], [30.0, 0.6349980415041839, 847.7570412039757], [31.0, 0.5980045652357382, 854.6537345838547], [32.0, 0.6370038478942196, 814.0084248628914], [33.0, 0.6969967153881703, 835.9408070445061], [34.0, 0.5030503992322841, 846.0617164492606], [35.0, 0.7429933067988908, 854.3518851590158], [36.0, 0.707999917022698, 858.4479533514128], [37.0, 0.6209849343470895, 819.8733634066582], [38.0, 0.45900725276386306, 852.9385396042728], [39.0, 0.48803767101980783, 855.1357379293441], [40.0, 0.6539952072346435, 851.2647629594803], [41.0, 0.5540001630758586, 859.8584123659134], [42.0, 0.5549902274235387, 829.3802011728287], [43.0, 0.48904882842807634, 855.7137299442292], [44.0, 0.7059993275746133, 856.0801386404038], [45.0, 0.6320294904575186, 834.2983140399257], [46.0, 0.9709115286274442, 829.2807524871827], [47.0, 0.617335681809897, 835.7611546134949], [48.0, 0.6420011253311323, 858.9186802232607], [49.0, 0.7009977165819405, 823.6052248477936], [50.0, 0.5489971932742536, 838.2349028158188], [51.0, 0.5309932320001031, 843.9813208246231], [52.0, 0.49301376266975955, 788.6595088316087], [53.0, 0.5570132769734042, 741.9548534154892], [54.0, 0.6399945480522491, 816.7338282442092], [55.0, 0.5549885295961313, 850.0114120841026], [56.0, 0.4820308643947149, 818.6203566037187], [57.0, 0.617997303420936, 825.1310220003128], [58.0, 0.589003980067714, 838.5286575102806], [59.0, 0.6230013150892907, 841.7065866732597], [60.0, 0.6369979592784591, 814.1226926469803], [61.0, 0.6090260425412318, 849.1181852700656], [62.0, 0.49101233160389524, 811.2805973577499], [63.0, 0.5580165801740216, 840.7197459316253], [64.0, 0.6649963389692464, 856.0072298932075], [65.0, 0.5820219227004343, 844.59], [66.0, 0.8739281770576246, null], [67.0, 0.8969947356274045, null], [68.0, 0.8850026865140002, null], [69.0, 0.9579770106749349, null]], "executor": "flent", "test": "Download", "type": "agent", "id": "f407918d-e163-4457-946d-92ff70b076bf"}, "4b0f50ac-ed29-4203-b975-5ddefd0f44ce": {"status": "lost", "node": "node-87.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720761.215506, "chart": [], "agent": "shaker_trimaz_master_10", "command": {"data": "zcat `flent -H 172.16.45.195 -l 60 -s 1 tcp_download 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Download", "type": "agent", "id": "4b0f50ac-ed29-4203-b975-5ddefd0f44ce"}, "993943b0-9fdd-4439-bda2-c8c01b4f67ae": {"stats": {}, "scenario": "OpenStack L3 North-South", "concurrency": 4, "test": "Bi-directional", "type": "concurrency", "id": "993943b0-9fdd-4439-bda2-c8c01b4f67ae", "node_chart": [["x", "node-51.domain.tld", "node-53.domain.tld", "node-61.domain.tld", "node-84.domain.tld"]]}, "875de5f2-cc0f-4881-a18a-7a38ed3edfaa": {"status": "lost", "node": "node-51.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720821.270846, "chart": [], "agent": "shaker_trimaz_master_0", "command": {"data": "zcat `flent -H 172.16.45.188 -l 60 -s 1 tcp_upload 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 4, "executor": "flent", "test": "Upload", "type": "agent", "id": "875de5f2-cc0f-4881-a18a-7a38ed3edfaa"}, "d2ffe4a6-915d-4f78-84be-30ba9a5b3772": {"status": "lost", "node": "node-88.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720592.999129, "chart": [], "agent": "shaker_trimaz_master_9", "command": {"data": "zcat `flent -H 172.16.45.189 -l 60 -s 1 tcp_download 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 9, "executor": "flent", "test": "Download", "type": "agent", "id": "d2ffe4a6-915d-4f78-84be-30ba9a5b3772"}, "1c112ef5-c9ff-4409-a38f-953a2b6285a7": {"status": "lost", "node": "node-90.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720961.411295, "chart": [], "agent": "shaker_trimaz_master_6", "command": {"data": "zcat `flent -H 172.16.45.194 -l 60 -s 1 tcp_bidirectional 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Bi-directional", "type": "agent", "id": "1c112ef5-c9ff-4409-a38f-953a2b6285a7"}, "09c2028a-6b7d-447e-a7ea-d2c04d3de211": {"status": "lost", "node": "node-51.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720881.341517, "chart": [], "agent": "shaker_trimaz_master_0", "command": {"data": "zcat `flent -H 172.16.45.188 -l 60 -s 1 tcp_bidirectional 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 1, "executor": "flent", "test": "Bi-directional", "type": "agent", "id": "09c2028a-6b7d-447e-a7ea-d2c04d3de211"}, "63173e7a-ec46-4bb9-bf75-3f751ccaad3b": {"status": "lost", "node": "node-51.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720781.228216, "chart": [], "agent": "shaker_trimaz_master_0", "command": {"data": "zcat `flent -H 172.16.45.188 -l 60 -s 1 tcp_upload 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 1, "executor": "flent", "test": "Upload", "type": "agent", "id": "63173e7a-ec46-4bb9-bf75-3f751ccaad3b"}, "1d9bf413-5d95-4aa4-b553-0a45c5918dba": {"status": "error", "info": "Flent returned no data, stderr: \ngzip: stdin: unexpected end of file\n", "finish": 1458720419.682936, "node": "node-84.domain.tld", "concurrency": 2, "scenario": "OpenStack L3 North-South", "traceback": "Traceback (most recent call last):\n  File \"/opt/stack/.venv/lib/python2.7/site-packages/shaker/engine/quorum.py\", line 97, in process_reply\n    reply = self.executors[agent_id].process_reply(message)\n  File \"/opt/stack/.venv/lib/python2.7/site-packages/shaker/engine/executors/flent.py\", line 48, in process_reply\n    'Flent returned no data, stderr: %s' % result['stderr'])\nExecutorException: Flent returned no data, stderr: \ngzip: stdin: unexpected end of file\n\n", "chart": [], "schedule": 1458720348.092505, "start": 1458720348.105514, "command": {"data": "zcat `flent -H 172.16.45.190 -l 60 -s 1 tcp_download 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "agent": "shaker_trimaz_master_1", "stderr": "\ngzip: stdin: unexpected end of file\n", "executor": "flent", "test": "Download", "stats": {}, "type": "agent", "id": "1d9bf413-5d95-4aa4-b553-0a45c5918dba"}, "b5eb7487-b483-4763-8893-629809481ea1": {"status": "lost", "node": "node-95.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720761.215506, "chart": [], "agent": "shaker_trimaz_master_16", "command": {"data": "zcat `flent -H 172.16.45.187 -l 60 -s 1 tcp_download 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Download", "type": "agent", "id": "b5eb7487-b483-4763-8893-629809481ea1"}, "a4d27502-943c-4482-9ad5-00bc250d617c": {"stats": {}, "scenario": "OpenStack L3 North-South", "concurrency": 2, "test": "Download", "type": "concurrency", "id": "a4d27502-943c-4482-9ad5-00bc250d617c", "node_chart": [["x", "node-51.domain.tld", "node-84.domain.tld"]]}, "ff3d71e9-338d-4c8a-a44c-171c54fad749": {"status": "lost", "node": "node-90.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720941.391526, "chart": [], "agent": "shaker_trimaz_master_6", "command": {"data": "zcat `flent -H 172.16.45.194 -l 60 -s 1 tcp_bidirectional 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 9, "executor": "flent", "test": "Bi-directional", "type": "agent", "id": "ff3d71e9-338d-4c8a-a44c-171c54fad749"}, "d87b8ee7-be95-4ff2-8e86-b350a13be5cc": {"meta": [["concurrency", ""]], "scenario": "OpenStack L3 North-South", "test": "Bi-directional", "type": "test", "chart": [["concurrency", 1, 2, 4, 9, 18]], "id": "d87b8ee7-be95-4ff2-8e86-b350a13be5cc"}, "88beb9cc-9c2d-400e-8a08-8c02f7298895": {"status": "lost", "node": "node-95.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720861.311709, "chart": [], "agent": "shaker_trimaz_master_16", "command": {"data": "zcat `flent -H 172.16.45.187 -l 60 -s 1 tcp_upload 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Upload", "type": "agent", "id": "88beb9cc-9c2d-400e-8a08-8c02f7298895"}, "df502efd-c50c-4251-a0be-6dad9004bcdd": {"status": "lost", "node": "node-88.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720861.311709, "chart": [], "agent": "shaker_trimaz_master_9", "command": {"data": "zcat `flent -H 172.16.45.189 -l 60 -s 1 tcp_upload 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Upload", "type": "agent", "id": "df502efd-c50c-4251-a0be-6dad9004bcdd"}, "1e8b42e2-0213-4ed4-8620-836427d41d58": {"status": "lost", "node": "node-61.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720861.311709, "chart": [], "agent": "shaker_trimaz_master_8", "command": {"data": "zcat `flent -H 172.16.45.184 -l 60 -s 1 tcp_upload 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Upload", "type": "agent", "id": "1e8b42e2-0213-4ed4-8620-836427d41d58"}, "24e6db5b-15e6-4bf6-8db0-2b9fb6054dd4": {"stats": {}, "scenario": "OpenStack L3 North-South", "concurrency": 9, "test": "Download", "type": "concurrency", "id": "24e6db5b-15e6-4bf6-8db0-2b9fb6054dd4", "node_chart": [["x", "node-90.domain.tld", "node-56.domain.tld", "node-55.domain.tld", "node-51.domain.tld", "node-84.domain.tld", "node-88.domain.tld", "node-53.domain.tld", "node-57.domain.tld", "node-61.domain.tld"]]}, "54d4e749-0430-4b36-8a01-5fa7a7fdf073": {"status": "lost", "node": "node-85.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720961.411295, "chart": [], "agent": "shaker_trimaz_master_13", "command": {"data": "zcat `flent -H 172.16.45.185 -l 60 -s 1 tcp_bidirectional 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Bi-directional", "type": "agent", "id": "54d4e749-0430-4b36-8a01-5fa7a7fdf073"}, "2f346df9-da19-4114-a95d-61f7403f36f8": {"status": "lost", "node": "node-53.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720592.999129, "chart": [], "agent": "shaker_trimaz_master_2", "command": {"data": "zcat `flent -H 172.16.45.192 -l 60 -s 1 tcp_download 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 9, "executor": "flent", "test": "Download", "type": "agent", "id": "2f346df9-da19-4114-a95d-61f7403f36f8"}, "4d8c8c82-9bc3-417d-9872-039c90ea8d69": {"status": "lost", "node": "node-84.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720801.245021, "chart": [], "agent": "shaker_trimaz_master_1", "command": {"data": "zcat `flent -H 172.16.45.190 -l 60 -s 1 tcp_upload 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 2, "executor": "flent", "test": "Upload", "type": "agent", "id": "4d8c8c82-9bc3-417d-9872-039c90ea8d69"}, "2477e725-d007-478a-a504-ea9f5fc2b7cd": {"status": "lost", "node": "node-56.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720961.411295, "chart": [], "agent": "shaker_trimaz_master_4", "command": {"data": "zcat `flent -H 172.16.45.186 -l 60 -s 1 tcp_bidirectional 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Bi-directional", "type": "agent", "id": "2477e725-d007-478a-a504-ea9f5fc2b7cd"}, "daa005c5-80e6-4708-8d70-2fe0e06d468c": {"stats": {}, "scenario": "OpenStack L3 North-South", "concurrency": 2, "test": "Bi-directional", "type": "concurrency", "id": "daa005c5-80e6-4708-8d70-2fe0e06d468c", "node_chart": [["x", "node-51.domain.tld", "node-84.domain.tld"]]}, "d9e47fe7-f047-4ca0-b23e-60208a4d5689": {"stats": {}, "scenario": "OpenStack L3 North-South", "concurrency": 1, "test": "Upload", "type": "concurrency", "id": "d9e47fe7-f047-4ca0-b23e-60208a4d5689", "node_chart": [["x", "node-51.domain.tld"]]}, "b1f01cc2-1363-4d25-8511-b560bb7c3166": {"status": "lost", "node": "node-68.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720961.411295, "chart": [], "agent": "shaker_trimaz_master_11", "command": {"data": "zcat `flent -H 172.16.45.181 -l 60 -s 1 tcp_bidirectional 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Bi-directional", "type": "agent", "id": "b1f01cc2-1363-4d25-8511-b560bb7c3166"}, "47bf6150-b35a-4541-9516-03e4576a352d": {"status": "lost", "node": "node-53.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720841.2943, "chart": [], "agent": "shaker_trimaz_master_2", "command": {"data": "zcat `flent -H 172.16.45.192 -l 60 -s 1 tcp_upload 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 9, "executor": "flent", "test": "Upload", "type": "agent", "id": "47bf6150-b35a-4541-9516-03e4576a352d"}, "40b9bbfb-8097-4d14-8ffd-e9817cfa9b93": {"status": "lost", "node": "node-62.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720761.215506, "chart": [], "agent": "shaker_trimaz_master_17", "command": {"data": "zcat `flent -H 172.16.45.197 -l 60 -s 1 tcp_download 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Download", "type": "agent", "id": "40b9bbfb-8097-4d14-8ffd-e9817cfa9b93"}, "4382946b-4761-469f-8c3a-e0c4d996d572": {"status": "ok", "node": "node-61.domain.tld", "finish": 1458720572.709595, "stats": {"ping_icmp": {"max": 2.3693734601902854, "mean": 0.6576877528626819, "unit": "ms", "min": 0.3945140442126441}, "tcp_download": {"max": 2120.13, "mean": 1948.617881960227, "unit": "Mbits/s", "min": 1927.2354388308527}}, "stderr": "", "scenario": "OpenStack L3 North-South", "concurrency": 4, "schedule": 1458720502.223637, "chart": [["time", 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0, 20.0, 21.0, 22.0, 23.0, 24.0, 25.0, 26.0, 27.0, 28.0, 29.0, 30.0, 31.0, 32.0, 33.0, 34.0, 35.0, 36.0, 37.0, 38.0, 39.0, 40.0, 41.0, 42.0, 43.0, 44.0, 45.0, 46.0, 47.0, 48.0, 49.0, 50.0, 51.0, 52.0, 53.0, 54.0, 55.0, 56.0, 57.0, 58.0, 59.0, 60.0, 61.0, 62.0, 63.0, 64.0, 65.0, 66.0, 67.0, 68.0, 69.0], ["ping_icmp", 1.73, 0.9048565603580954, 0.8220034878684651, 0.9378070894366529, 0.7311466750798675, 0.8079668180462095, 0.6649221584772171, 0.5068792581270288, 0.4348010896727764, 0.784705518020032, 0.6328027959065402, 0.5370957209491459, 0.6218958944683587, 0.5709318066344617, 0.5392653963663203, 0.6618300086529895, 0.5790301334222385, 0.6075699092085722, 0.3945140442126441, 0.6156649226569608, 0.4575732685426287, 0.7138455984826176, 0.6365957445489314, 0.4415944244795087, 0.7017824454947734, 0.5939595292744352, 0.5753732329702214, 0.7494297595693626, 0.45948967209386704, 0.6798286166356227, 0.5962987357101395, 0.7376839421011994, 0.5778616623927191, 0.5131164359182261, 0.5660278326265903, 0.578776521273435, 0.47432743338782735, 0.6199060342326177, 0.5748941937083704, 0.5290367571781659, 2.3693734601902854, 0.46604166381298634, 0.5539046196533381, 0.4850155674083851, 0.49245533784746937, 0.6985009242646141, 0.4501713037265898, 0.6, 0.5998714547517235, 0.5391330330782786, 0.5997860658270733, 0.4983111719987156, 0.6377545834780902, 0.519204817585381, 0.6129668598759678, 0.5968957774921975, 0.548495338259264, 0.7774594074139434, 0.49958654268319713, 0.7686041031486647, 0.5620170877652917, 0.5701339300976586, 0.6327174796180928, 0.49703958054832553, 0.5151074034180773, 0.5646118424204318, 0.8503232205634584, 1.0296336829859318, 0.802024760395586, 0.8379105518928466], ["tcp_download", null, null, null, null, null, null, 2120.13, 1940.5914634609223, 1950.0222183036803, 1933.5019262123108, 1941.161123456955, 1944.5142311512354, 1945.5551322889328, 1947.55054813385, 1948.3960302162172, 1938.934943623543, 1937.8847731924059, 1935.8396881628037, 1936.6859356975556, 1943.1791869163515, 1948.5645744800568, 1945.13639898777, 1933.9828831911088, 1930.834697651863, 1930.7205720140869, 1943.4367662429809, 1934.3527351760863, 1939.9773053359986, 1946.5622665786743, 1948.8768877792359, 1949.585991897583, 1944.9566825103761, 1945.3575378799437, 1937.3362076950073, 1934.724772720337, 1941.9880867004395, 1941.8510306549072, 1953.7912324142455, 1943.9669723129273, 1943.7210879135132, 1947.87606590271, 1946.5577299118042, 1956.78108089447, 1955.3004149244766, 1957.8228486323355, 1954.7310524630548, 1951.9288328742982, 1946.4171949267388, 1950.4226250720023, 1953.56888027668, 1956.629418358803, 1951.286320543289, 1973.2410857725145, 1992.1926763176918, 1951.6950944852829, 1931.1576063868556, 1947.432058200836, 1935.7320933723452, 1927.2354388308527, 1930.8414139699935, 1944.7419911623, 1935.2150190138818, 1948.1189445209504, 1937.1759898686407, 1936.1870306181909, 1970.8000013189621, 1970.93, null, null, null]], "agent": "shaker_trimaz_master_8", "start": 1458720502.239842, "meta": [["time", "s"], ["ping_icmp", "ms"], ["tcp_download", "Mbits/s"]], "command": {"data": "zcat `flent -H 172.16.45.184 -l 60 -s 1 tcp_download 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "samples": [[0.0, 1.73, null], [1.0, 0.9048565603580954, null], [2.0, 0.8220034878684651, null], [3.0, 0.9378070894366529, null], [4.0, 0.7311466750798675, null], [5.0, 0.8079668180462095, null], [6.0, 0.6649221584772171, 2120.13], [7.0, 0.5068792581270288, 1940.5914634609223], [8.0, 0.4348010896727764, 1950.0222183036803], [9.0, 0.784705518020032, 1933.5019262123108], [10.0, 0.6328027959065402, 1941.161123456955], [11.0, 0.5370957209491459, 1944.5142311512354], [12.0, 0.6218958944683587, 1945.5551322889328], [13.0, 0.5709318066344617, 1947.55054813385], [14.0, 0.5392653963663203, 1948.3960302162172], [15.0, 0.6618300086529895, 1938.934943623543], [16.0, 0.5790301334222385, 1937.8847731924059], [17.0, 0.6075699092085722, 1935.8396881628037], [18.0, 0.3945140442126441, 1936.6859356975556], [19.0, 0.6156649226569608, 1943.1791869163515], [20.0, 0.4575732685426287, 1948.5645744800568], [21.0, 0.7138455984826176, 1945.13639898777], [22.0, 0.6365957445489314, 1933.9828831911088], [23.0, 0.4415944244795087, 1930.834697651863], [24.0, 0.7017824454947734, 1930.7205720140869], [25.0, 0.5939595292744352, 1943.4367662429809], [26.0, 0.5753732329702214, 1934.3527351760863], [27.0, 0.7494297595693626, 1939.9773053359986], [28.0, 0.45948967209386704, 1946.5622665786743], [29.0, 0.6798286166356227, 1948.8768877792359], [30.0, 0.5962987357101395, 1949.585991897583], [31.0, 0.7376839421011994, 1944.9566825103761], [32.0, 0.5778616623927191, 1945.3575378799437], [33.0, 0.5131164359182261, 1937.3362076950073], [34.0, 0.5660278326265903, 1934.724772720337], [35.0, 0.578776521273435, 1941.9880867004395], [36.0, 0.47432743338782735, 1941.8510306549072], [37.0, 0.6199060342326177, 1953.7912324142455], [38.0, 0.5748941937083704, 1943.9669723129273], [39.0, 0.5290367571781659, 1943.7210879135132], [40.0, 2.3693734601902854, 1947.87606590271], [41.0, 0.46604166381298634, 1946.5577299118042], [42.0, 0.5539046196533381, 1956.78108089447], [43.0, 0.4850155674083851, 1955.3004149244766], [44.0, 0.49245533784746937, 1957.8228486323355], [45.0, 0.6985009242646141, 1954.7310524630548], [46.0, 0.4501713037265898, 1951.9288328742982], [47.0, 0.6, 1946.4171949267388], [48.0, 0.5998714547517235, 1950.4226250720023], [49.0, 0.5391330330782786, 1953.56888027668], [50.0, 0.5997860658270733, 1956.629418358803], [51.0, 0.4983111719987156, 1951.286320543289], [52.0, 0.6377545834780902, 1973.2410857725145], [53.0, 0.519204817585381, 1992.1926763176918], [54.0, 0.6129668598759678, 1951.6950944852829], [55.0, 0.5968957774921975, 1931.1576063868556], [56.0, 0.548495338259264, 1947.432058200836], [57.0, 0.7774594074139434, 1935.7320933723452], [58.0, 0.49958654268319713, 1927.2354388308527], [59.0, 0.7686041031486647, 1930.8414139699935], [60.0, 0.5620170877652917, 1944.7419911623], [61.0, 0.5701339300976586, 1935.2150190138818], [62.0, 0.6327174796180928, 1948.1189445209504], [63.0, 0.49703958054832553, 1937.1759898686407], [64.0, 0.5151074034180773, 1936.1870306181909], [65.0, 0.5646118424204318, 1970.8000013189621], [66.0, 0.8503232205634584, 1970.93], [67.0, 1.0296336829859318, null], [68.0, 0.802024760395586, null], [69.0, 0.8379105518928466, null]], "executor": "flent", "test": "Download", "type": "agent", "id": "4382946b-4761-469f-8c3a-e0c4d996d572"}, "ef8bda6b-3d37-4966-af50-e9176049d8a9": {"status": "lost", "node": "node-53.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720761.215506, "chart": [], "agent": "shaker_trimaz_master_2", "command": {"data": "zcat `flent -H 172.16.45.192 -l 60 -s 1 tcp_download 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Download", "type": "agent", "id": "ef8bda6b-3d37-4966-af50-e9176049d8a9"}, "b58a4b77-e994-4b57-82f0-f9b0bf87cc21": {"meta": [["concurrency", ""]], "scenario": "OpenStack L3 North-South", "test": "Upload", "type": "test", "chart": [["concurrency", 1, 2, 4, 9, 18]], "id": "b58a4b77-e994-4b57-82f0-f9b0bf87cc21"}, "000247e8-4798-48ee-aa87-7ce7e523b7d0": {"status": "lost", "node": "node-68.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720761.215506, "chart": [], "agent": "shaker_trimaz_master_11", "command": {"data": "zcat `flent -H 172.16.45.181 -l 60 -s 1 tcp_download 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Download", "type": "agent", "id": "000247e8-4798-48ee-aa87-7ce7e523b7d0"}, "6bd9d431-08da-4603-9fcc-f41aa7ded691": {"status": "lost", "node": "node-53.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720941.391526, "chart": [], "agent": "shaker_trimaz_master_2", "command": {"data": "zcat `flent -H 172.16.45.192 -l 60 -s 1 tcp_bidirectional 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 9, "executor": "flent", "test": "Bi-directional", "type": "agent", "id": "6bd9d431-08da-4603-9fcc-f41aa7ded691"}, "3a3af509-8e7d-4147-afd8-0f4ab9222249": {"status": "lost", "node": "node-61.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720821.270846, "chart": [], "agent": "shaker_trimaz_master_8", "command": {"data": "zcat `flent -H 172.16.45.184 -l 60 -s 1 tcp_upload 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 4, "executor": "flent", "test": "Upload", "type": "agent", "id": "3a3af509-8e7d-4147-afd8-0f4ab9222249"}, "35941e9e-7ffd-4dac-90c6-98b583218cfa": {"stats": {}, "scenario": "OpenStack L3 North-South", "concurrency": 9, "test": "Upload", "type": "concurrency", "id": "35941e9e-7ffd-4dac-90c6-98b583218cfa", "node_chart": [["x", "node-56.domain.tld", "node-55.domain.tld", "node-57.domain.tld", "node-84.domain.tld", "node-61.domain.tld", "node-53.domain.tld", "node-51.domain.tld", "node-88.domain.tld", "node-90.domain.tld"]]}, "4a1eb556-4932-447b-b6dd-5a65df6827af": {"status": "lost", "node": "node-55.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720861.311709, "chart": [], "agent": "shaker_trimaz_master_3", "command": {"data": "zcat `flent -H 172.16.45.182 -l 60 -s 1 tcp_upload 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Upload", "type": "agent", "id": "4a1eb556-4932-447b-b6dd-5a65df6827af"}, "b780cc79-346c-425f-ab62-990e6f771cce": {"status": "lost", "node": "node-87.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720861.311709, "chart": [], "agent": "shaker_trimaz_master_10", "command": {"data": "zcat `flent -H 172.16.45.195 -l 60 -s 1 tcp_upload 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Upload", "type": "agent", "id": "b780cc79-346c-425f-ab62-990e6f771cce"}, "4f80853d-23b9-4727-9e63-004703ebf443": {"status": "lost", "node": "node-53.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720961.411295, "chart": [], "agent": "shaker_trimaz_master_2", "command": {"data": "zcat `flent -H 172.16.45.192 -l 60 -s 1 tcp_bidirectional 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Bi-directional", "type": "agent", "id": "4f80853d-23b9-4727-9e63-004703ebf443"}, "c592ca65-dc02-4720-ae11-a98d28f9cbf6": {"status": "lost", "node": "node-75.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720961.411295, "chart": [], "agent": "shaker_trimaz_master_14", "command": {"data": "zcat `flent -H 172.16.45.193 -l 60 -s 1 tcp_bidirectional 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Bi-directional", "type": "agent", "id": "c592ca65-dc02-4720-ae11-a98d28f9cbf6"}, "fed9a706-8811-4135-9732-06efc078e04f": {"status": "lost", "node": "node-84.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720861.311709, "chart": [], "agent": "shaker_trimaz_master_1", "command": {"data": "zcat `flent -H 172.16.45.190 -l 60 -s 1 tcp_upload 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Upload", "type": "agent", "id": "fed9a706-8811-4135-9732-06efc078e04f"}, "49fc3cab-2f88-4ae4-a5c5-d5665526cebe": {"status": "lost", "node": "node-51.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720841.2943, "chart": [], "agent": "shaker_trimaz_master_0", "command": {"data": "zcat `flent -H 172.16.45.188 -l 60 -s 1 tcp_upload 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 9, "executor": "flent", "test": "Upload", "type": "agent", "id": "49fc3cab-2f88-4ae4-a5c5-d5665526cebe"}, "be7c3631-e4eb-4748-acf4-ede78aa900e7": {"status": "lost", "node": "node-55.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720961.411295, "chart": [], "agent": "shaker_trimaz_master_3", "command": {"data": "zcat `flent -H 172.16.45.182 -l 60 -s 1 tcp_bidirectional 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Bi-directional", "type": "agent", "id": "be7c3631-e4eb-4748-acf4-ede78aa900e7"}, "45ca08b8-fa0a-4a82-8b56-b8f79258837c": {"status": "lost", "node": "node-61.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720761.215506, "chart": [], "agent": "shaker_trimaz_master_8", "command": {"data": "zcat `flent -H 172.16.45.184 -l 60 -s 1 tcp_download 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Download", "type": "agent", "id": "45ca08b8-fa0a-4a82-8b56-b8f79258837c"}, "fbbbc159-37ca-4007-8fd5-dff048d2f48a": {"status": "lost", "node": "node-79.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720961.411295, "chart": [], "agent": "shaker_trimaz_master_15", "command": {"data": "zcat `flent -H 172.16.45.196 -l 60 -s 1 tcp_bidirectional 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Bi-directional", "type": "agent", "id": "fbbbc159-37ca-4007-8fd5-dff048d2f48a"}, "78d90384-1484-4638-b33e-28df9b86bc95": {"status": "lost", "node": "node-57.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720592.999129, "chart": [], "agent": "shaker_trimaz_master_5", "command": {"data": "zcat `flent -H 172.16.45.183 -l 60 -s 1 tcp_download 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 9, "executor": "flent", "test": "Download", "type": "agent", "id": "78d90384-1484-4638-b33e-28df9b86bc95"}, "3e2081cb-612e-4fd9-8133-e5084c5aeeb2": {"status": "lost", "node": "node-88.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720761.215506, "chart": [], "agent": "shaker_trimaz_master_9", "command": {"data": "zcat `flent -H 172.16.45.189 -l 60 -s 1 tcp_download 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Download", "type": "agent", "id": "3e2081cb-612e-4fd9-8133-e5084c5aeeb2"}, "1c8f629e-6613-45b8-9f9e-e80dc1a081d4": {"status": "lost", "node": "node-51.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720941.391526, "chart": [], "agent": "shaker_trimaz_master_0", "command": {"data": "zcat `flent -H 172.16.45.188 -l 60 -s 1 tcp_bidirectional 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 9, "executor": "flent", "test": "Bi-directional", "type": "agent", "id": "1c8f629e-6613-45b8-9f9e-e80dc1a081d4"}, "7c7892db-29e7-4fc4-9729-402684dc551e": {"status": "lost", "node": "node-60.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720861.311709, "chart": [], "agent": "shaker_trimaz_master_7", "command": {"data": "zcat `flent -H 172.16.45.191 -l 60 -s 1 tcp_upload 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Upload", "type": "agent", "id": "7c7892db-29e7-4fc4-9729-402684dc551e"}, "26881fec-2c70-4a30-8673-8e33d2122d60": {"status": "lost", "node": "node-61.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720941.391526, "chart": [], "agent": "shaker_trimaz_master_8", "command": {"data": "zcat `flent -H 172.16.45.184 -l 60 -s 1 tcp_bidirectional 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 9, "executor": "flent", "test": "Bi-directional", "type": "agent", "id": "26881fec-2c70-4a30-8673-8e33d2122d60"}, "fe89b4af-90b6-4f9e-a5ea-b9f1f7a43ae8": {"status": "lost", "node": "node-87.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720961.411295, "chart": [], "agent": "shaker_trimaz_master_10", "command": {"data": "zcat `flent -H 172.16.45.195 -l 60 -s 1 tcp_bidirectional 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Bi-directional", "type": "agent", "id": "fe89b4af-90b6-4f9e-a5ea-b9f1f7a43ae8"}, "ef61bff2-b2b4-457d-9da4-80c3f91c19de": {"status": "lost", "node": "node-72.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720861.311709, "chart": [], "agent": "shaker_trimaz_master_12", "command": {"data": "zcat `flent -H 172.16.45.180 -l 60 -s 1 tcp_upload 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Upload", "type": "agent", "id": "ef61bff2-b2b4-457d-9da4-80c3f91c19de"}, "0053f7d1-e9a6-4d9c-b91d-bdb111021d84": {"status": "lost", "node": "node-75.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720761.215506, "chart": [], "agent": "shaker_trimaz_master_14", "command": {"data": "zcat `flent -H 172.16.45.193 -l 60 -s 1 tcp_download 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Download", "type": "agent", "id": "0053f7d1-e9a6-4d9c-b91d-bdb111021d84"}, "21d264a1-98c5-4f40-8165-c081119214df": {"status": "lost", "node": "node-51.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720801.245021, "chart": [], "agent": "shaker_trimaz_master_0", "command": {"data": "zcat `flent -H 172.16.45.188 -l 60 -s 1 tcp_upload 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 2, "executor": "flent", "test": "Upload", "type": "agent", "id": "21d264a1-98c5-4f40-8165-c081119214df"}, "51a10342-50c3-4c23-9297-c1bd1f081978": {"stats": {}, "scenario": "OpenStack L3 North-South", "concurrency": 18, "test": "Download", "type": "concurrency", "id": "51a10342-50c3-4c23-9297-c1bd1f081978", "node_chart": [["x", "node-57.domain.tld", "node-72.domain.tld", "node-55.domain.tld", "node-87.domain.tld", "node-95.domain.tld", "node-62.domain.tld", "node-53.domain.tld", "node-68.domain.tld", "node-61.domain.tld", "node-88.domain.tld", "node-75.domain.tld", "node-60.domain.tld", "node-90.domain.tld", "node-85.domain.tld", "node-79.domain.tld", "node-56.domain.tld", "node-51.domain.tld", "node-84.domain.tld"]]}, "527b7d0c-eada-4ff5-988a-5d6d68150d55": {"status": "lost", "node": "node-60.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720761.215506, "chart": [], "agent": "shaker_trimaz_master_7", "command": {"data": "zcat `flent -H 172.16.45.191 -l 60 -s 1 tcp_download 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Download", "type": "agent", "id": "527b7d0c-eada-4ff5-988a-5d6d68150d55"}, "748258be-5831-47b6-8ca9-92d9453575d4": {"status": "lost", "node": "node-90.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720761.215506, "chart": [], "agent": "shaker_trimaz_master_6", "command": {"data": "zcat `flent -H 172.16.45.194 -l 60 -s 1 tcp_download 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Download", "type": "agent", "id": "748258be-5831-47b6-8ca9-92d9453575d4"}, "59c9bdb0-0f57-4e68-9fcb-92356c32b8b3": {"status": "lost", "node": "node-55.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720941.391526, "chart": [], "agent": "shaker_trimaz_master_3", "command": {"data": "zcat `flent -H 172.16.45.182 -l 60 -s 1 tcp_bidirectional 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 9, "executor": "flent", "test": "Bi-directional", "type": "agent", "id": "59c9bdb0-0f57-4e68-9fcb-92356c32b8b3"}, "577221c4-c81c-4cd0-9df7-fb5020193ad9": {"stats": {}, "scenario": "OpenStack L3 North-South", "concurrency": 1, "test": "Bi-directional", "type": "concurrency", "id": "577221c4-c81c-4cd0-9df7-fb5020193ad9", "node_chart": [["x", "node-51.domain.tld"]]}, "4b26f8fe-610e-4bbd-9c4b-dc41ec23c6a8": {"status": "lost", "node": "node-85.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720861.311709, "chart": [], "agent": "shaker_trimaz_master_13", "command": {"data": "zcat `flent -H 172.16.45.185 -l 60 -s 1 tcp_upload 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Upload", "type": "agent", "id": "4b26f8fe-610e-4bbd-9c4b-dc41ec23c6a8"}, "f795ab58-4c9d-4a51-9ce1-70bbcb9408be": {"status": "lost", "node": "node-51.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720901.350794, "chart": [], "agent": "shaker_trimaz_master_0", "command": {"data": "zcat `flent -H 172.16.45.188 -l 60 -s 1 tcp_bidirectional 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 2, "executor": "flent", "test": "Bi-directional", "type": "agent", "id": "f795ab58-4c9d-4a51-9ce1-70bbcb9408be"}, "36da3b7a-3728-45e6-a43e-4300730ed136": {"status": "lost", "node": "node-85.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720761.215506, "chart": [], "agent": "shaker_trimaz_master_13", "command": {"data": "zcat `flent -H 172.16.45.185 -l 60 -s 1 tcp_download 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Download", "type": "agent", "id": "36da3b7a-3728-45e6-a43e-4300730ed136"}, "67e89f4e-6379-4f5a-8175-5858ec87d4c1": {"status": "error", "info": "Flent returned no data, stderr: \ngzip: stdin: unexpected end of file\n", "finish": 1458720327.68877, "node": "node-51.domain.tld", "concurrency": 1, "scenario": "OpenStack L3 North-South", "traceback": "Traceback (most recent call last):\n  File \"/opt/stack/.venv/lib/python2.7/site-packages/shaker/engine/quorum.py\", line 97, in process_reply\n    reply = self.executors[agent_id].process_reply(message)\n  File \"/opt/stack/.venv/lib/python2.7/site-packages/shaker/engine/executors/flent.py\", line 48, in process_reply\n    'Flent returned no data, stderr: %s' % result['stderr'])\nExecutorException: Flent returned no data, stderr: \ngzip: stdin: unexpected end of file\n\n", "chart": [], "schedule": 1458720319.21709, "start": 1458720319.23185, "command": {"data": "zcat `flent -H 172.16.45.188 -l 60 -s 1 tcp_download 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "agent": "shaker_trimaz_master_0", "stderr": "\ngzip: stdin: unexpected end of file\n", "executor": "flent", "test": "Download", "stats": {}, "type": "agent", "id": "67e89f4e-6379-4f5a-8175-5858ec87d4c1"}, "394633c9-7093-4604-974e-3e79f434f8cb": {"status": "lost", "node": "node-60.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720961.411295, "chart": [], "agent": "shaker_trimaz_master_7", "command": {"data": "zcat `flent -H 172.16.45.191 -l 60 -s 1 tcp_bidirectional 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Bi-directional", "type": "agent", "id": "394633c9-7093-4604-974e-3e79f434f8cb"}, "25448057-980e-42c9-ae3a-34f76d4e5973": {"status": "ok", "node": "node-53.domain.tld", "finish": 1458720572.708774, "stats": {"ping_icmp": {"max": 1.59, "mean": 0.6136799984731133, "unit": "ms", "min": 0.38100531326243897}, "tcp_download": {"max": 2776.53, "mean": 2349.4537231001914, "unit": "Mbits/s", "min": 2306.260376610756}}, "stderr": "", "scenario": "OpenStack L3 North-South", "concurrency": 4, "schedule": 1458720502.223637, "chart": [["time", 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0, 20.0, 21.0, 22.0, 23.0, 24.0, 25.0, 26.0, 27.0, 28.0, 29.0, 30.0, 31.0, 32.0, 33.0, 34.0, 35.0, 36.0, 37.0, 38.0, 39.0, 40.0, 41.0, 42.0, 43.0, 44.0, 45.0, 46.0, 47.0, 48.0, 49.0, 50.0, 51.0, 52.0, 53.0, 54.0, 55.0, 56.0, 57.0, 58.0, 59.0, 60.0, 61.0, 62.0, 63.0, 64.0, 65.0, 66.0, 67.0, 68.0, 69.0], ["ping_icmp", 1.59, 0.8875240552976069, 0.7930339438484467, 0.9029487334748596, 0.9059986345618224, 0.9658745067459586, 0.5135708442640281, 0.54099105948151, 0.4740010066708339, 0.4909992501953783, 0.5249977870451784, 0.49200125888401364, 0.48300032401154425, 0.5609924316257248, 0.7888851309017064, 0.6000272267132609, 0.5740030933200833, 0.528003268398511, 0.538999097833991, 0.6529782314177137, 0.6510003881442438, 0.5920680315582549, 0.6609842419136984, 0.6180066232823946, 0.6150004620552063, 0.6399955476402494, 0.5700812636911264, 0.4140009309086743, 0.5629806061039495, 0.5659996788427466, 0.41700284343310695, 0.5849778132120949, 0.5750013518291536, 0.39900723579962705, 0.5259910990581994, 0.6149865480836991, 0.4480020140864477, 0.5669835752668563, 0.6009947634579773, 0.5120054326340502, 0.7009499022683282, 0.5431940025443347, 0.5649942929228806, 0.5320033050070858, 0.7089454888185859, 0.6350133927198218, 0.5860069163215221, 0.38100531326243897, 0.45000082268797503, 0.5689871490464591, 0.5829982076050189, 0.5740010450010895, 0.4860042384166595, 0.49699948334632316, 0.47200095368272926, 0.6649594679411923, 0.6070709776516288, 0.5140123860187449, 0.4950008381158393, 0.549994335508139, 0.5490001051423679, 0.6339855515789915, 0.47400225102237903, 0.5669902226292981, 0.5240040495839788, 0.6339781035505385, 0.8137258341099454, 0.9359214829174983, 0.7920583444184612, 0.975891093583734], ["tcp_download", null, null, null, null, null, null, 2334.46, 2347.2874269270897, 2343.9023222327232, 2339.5975669980053, 2342.5508118343355, 2322.3004795265197, 2320.838570713997, 2314.7690159368517, 2323.076273136139, 2320.8745190453533, 2333.4191538619993, 2332.347419424057, 2339.318058179377, 2339.4990385222436, 2337.9713898134232, 2342.5557565999034, 2336.6740800571442, 2341.1066441178323, 2338.936419081688, 2345.4910385942458, 2329.0826253938676, 2334.151319010258, 2334.7160801291466, 2333.3005762553216, 2329.250101649761, 2340.1386441898344, 2322.5593859972337, 2329.4999675369263, 2330.055801925659, 2344.2201029968264, 2339.629881706238, 2341.3451388168337, 2342.520176506043, 2344.096734085083, 2351.0512269592286, 2343.772131500244, 2350.671059036255, 2357.423325996399, 2351.8476901245117, 2345.473567428589, 2343.1019648550505, 2340.544053955078, 2341.7483488655093, 2337.530121245384, 2342.7402007961273, 2342.354134273529, 2340.220201563835, 2341.487785100937, 2340.697610821724, 2336.2025642251965, 2323.4505516576764, 2325.9650064373013, 2318.728873238563, 2313.7267924594876, 2306.260376610756, 2306.5069932556153, 2311.146026363373, 2326.529022907716, 2335.7250844860077, 2773.6998741456373, 2776.53, null, null, null]], "agent": "shaker_trimaz_master_2", "start": 1458720502.240829, "meta": [["time", "s"], ["ping_icmp", "ms"], ["tcp_download", "Mbits/s"]], "command": {"data": "zcat `flent -H 172.16.45.192 -l 60 -s 1 tcp_download 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "samples": [[0.0, 1.59, null], [1.0, 0.8875240552976069, null], [2.0, 0.7930339438484467, null], [3.0, 0.9029487334748596, null], [4.0, 0.9059986345618224, null], [5.0, 0.9658745067459586, null], [6.0, 0.5135708442640281, 2334.46], [7.0, 0.54099105948151, 2347.2874269270897], [8.0, 0.4740010066708339, 2343.9023222327232], [9.0, 0.4909992501953783, 2339.5975669980053], [10.0, 0.5249977870451784, 2342.5508118343355], [11.0, 0.49200125888401364, 2322.3004795265197], [12.0, 0.48300032401154425, 2320.838570713997], [13.0, 0.5609924316257248, 2314.7690159368517], [14.0, 0.7888851309017064, 2323.076273136139], [15.0, 0.6000272267132609, 2320.8745190453533], [16.0, 0.5740030933200833, 2333.4191538619993], [17.0, 0.528003268398511, 2332.347419424057], [18.0, 0.538999097833991, 2339.318058179377], [19.0, 0.6529782314177137, 2339.4990385222436], [20.0, 0.6510003881442438, 2337.9713898134232], [21.0, 0.5920680315582549, 2342.5557565999034], [22.0, 0.6609842419136984, 2336.6740800571442], [23.0, 0.6180066232823946, 2341.1066441178323], [24.0, 0.6150004620552063, 2338.936419081688], [25.0, 0.6399955476402494, 2345.4910385942458], [26.0, 0.5700812636911264, 2329.0826253938676], [27.0, 0.4140009309086743, 2334.151319010258], [28.0, 0.5629806061039495, 2334.7160801291466], [29.0, 0.5659996788427466, 2333.3005762553216], [30.0, 0.41700284343310695, 2329.250101649761], [31.0, 0.5849778132120949, 2340.1386441898344], [32.0, 0.5750013518291536, 2322.5593859972337], [33.0, 0.39900723579962705, 2329.4999675369263], [34.0, 0.5259910990581994, 2330.055801925659], [35.0, 0.6149865480836991, 2344.2201029968264], [36.0, 0.4480020140864477, 2339.629881706238], [37.0, 0.5669835752668563, 2341.3451388168337], [38.0, 0.6009947634579773, 2342.520176506043], [39.0, 0.5120054326340502, 2344.096734085083], [40.0, 0.7009499022683282, 2351.0512269592286], [41.0, 0.5431940025443347, 2343.772131500244], [42.0, 0.5649942929228806, 2350.671059036255], [43.0, 0.5320033050070858, 2357.423325996399], [44.0, 0.7089454888185859, 2351.8476901245117], [45.0, 0.6350133927198218, 2345.473567428589], [46.0, 0.5860069163215221, 2343.1019648550505], [47.0, 0.38100531326243897, 2340.544053955078], [48.0, 0.45000082268797503, 2341.7483488655093], [49.0, 0.5689871490464591, 2337.530121245384], [50.0, 0.5829982076050189, 2342.7402007961273], [51.0, 0.5740010450010895, 2342.354134273529], [52.0, 0.4860042384166595, 2340.220201563835], [53.0, 0.49699948334632316, 2341.487785100937], [54.0, 0.47200095368272926, 2340.697610821724], [55.0, 0.6649594679411923, 2336.2025642251965], [56.0, 0.6070709776516288, 2323.4505516576764], [57.0, 0.5140123860187449, 2325.9650064373013], [58.0, 0.4950008381158393, 2318.728873238563], [59.0, 0.549994335508139, 2313.7267924594876], [60.0, 0.5490001051423679, 2306.260376610756], [61.0, 0.6339855515789915, 2306.5069932556153], [62.0, 0.47400225102237903, 2311.146026363373], [63.0, 0.5669902226292981, 2326.529022907716], [64.0, 0.5240040495839788, 2335.7250844860077], [65.0, 0.6339781035505385, 2773.6998741456373], [66.0, 0.8137258341099454, 2776.53], [67.0, 0.9359214829174983, null], [68.0, 0.7920583444184612, null], [69.0, 0.975891093583734, null]], "executor": "flent", "test": "Download", "type": "agent", "id": "25448057-980e-42c9-ae3a-34f76d4e5973"}, "553e4193-fcfc-4015-a452-cc9a55ad6f87": {"status": "lost", "node": "node-72.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720961.411295, "chart": [], "agent": "shaker_trimaz_master_12", "command": {"data": "zcat `flent -H 172.16.45.180 -l 60 -s 1 tcp_bidirectional 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Bi-directional", "type": "agent", "id": "553e4193-fcfc-4015-a452-cc9a55ad6f87"}, "b6a91835-db5f-42b8-8f22-76b04780f1b1": {"status": "lost", "node": "node-53.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720861.311709, "chart": [], "agent": "shaker_trimaz_master_2", "command": {"data": "zcat `flent -H 172.16.45.192 -l 60 -s 1 tcp_upload 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Upload", "type": "agent", "id": "b6a91835-db5f-42b8-8f22-76b04780f1b1"}, "ed2179bc-965d-4386-925d-988381a47d6e": {"stats": {}, "scenario": "OpenStack L3 North-South", "concurrency": 1, "test": "Download", "type": "concurrency", "id": "ed2179bc-965d-4386-925d-988381a47d6e", "node_chart": [["x", "node-51.domain.tld"]]}, "c910fce3-c632-4adf-a6c8-40a6055e6c81": {"status": "lost", "node": "node-88.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720841.2943, "chart": [], "agent": "shaker_trimaz_master_9", "command": {"data": "zcat `flent -H 172.16.45.189 -l 60 -s 1 tcp_upload 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 9, "executor": "flent", "test": "Upload", "type": "agent", "id": "c910fce3-c632-4adf-a6c8-40a6055e6c81"}, "9e28fc5e-6893-4342-b7db-980af98f2211": {"status": "lost", "node": "node-79.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720761.215506, "chart": [], "agent": "shaker_trimaz_master_15", "command": {"data": "zcat `flent -H 172.16.45.196 -l 60 -s 1 tcp_download 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Download", "type": "agent", "id": "9e28fc5e-6893-4342-b7db-980af98f2211"}, "a5689fc3-dc6d-40bc-b0d9-68bb59e45791": {"status": "lost", "node": "node-79.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720861.311709, "chart": [], "agent": "shaker_trimaz_master_15", "command": {"data": "zcat `flent -H 172.16.45.196 -l 60 -s 1 tcp_upload 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Upload", "type": "agent", "id": "a5689fc3-dc6d-40bc-b0d9-68bb59e45791"}, "45c1e064-f608-434c-86f2-7b566c014b6f": {"status": "lost", "node": "node-56.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720761.215506, "chart": [], "agent": "shaker_trimaz_master_4", "command": {"data": "zcat `flent -H 172.16.45.186 -l 60 -s 1 tcp_download 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Download", "type": "agent", "id": "45c1e064-f608-434c-86f2-7b566c014b6f"}, "76f36c4c-38ea-48ce-92fa-9893136da07a": {"status": "lost", "node": "node-84.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720901.350794, "chart": [], "agent": "shaker_trimaz_master_1", "command": {"data": "zcat `flent -H 172.16.45.190 -l 60 -s 1 tcp_bidirectional 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 2, "executor": "flent", "test": "Bi-directional", "type": "agent", "id": "76f36c4c-38ea-48ce-92fa-9893136da07a"}, "3724f59b-b85b-4bf5-b9c3-0c9a56a9e0b7": {"status": "lost", "node": "node-57.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720941.391526, "chart": [], "agent": "shaker_trimaz_master_5", "command": {"data": "zcat `flent -H 172.16.45.183 -l 60 -s 1 tcp_bidirectional 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 9, "executor": "flent", "test": "Bi-directional", "type": "agent", "id": "3724f59b-b85b-4bf5-b9c3-0c9a56a9e0b7"}, "90e50b45-66bb-43f7-a4e3-3bd79a1edcb6": {"status": "lost", "node": "node-90.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720861.311709, "chart": [], "agent": "shaker_trimaz_master_6", "command": {"data": "zcat `flent -H 172.16.45.194 -l 60 -s 1 tcp_upload 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Upload", "type": "agent", "id": "90e50b45-66bb-43f7-a4e3-3bd79a1edcb6"}, "a15126d7-3ba8-4a3d-ba7a-8e195665c298": {"status": "lost", "node": "node-84.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720941.391526, "chart": [], "agent": "shaker_trimaz_master_1", "command": {"data": "zcat `flent -H 172.16.45.190 -l 60 -s 1 tcp_bidirectional 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 9, "executor": "flent", "test": "Bi-directional", "type": "agent", "id": "a15126d7-3ba8-4a3d-ba7a-8e195665c298"}, "fbcdf5aa-93db-4ebd-9c9d-bb4254dd4f14": {"status": "lost", "node": "node-61.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720592.999129, "chart": [], "agent": "shaker_trimaz_master_8", "command": {"data": "zcat `flent -H 172.16.45.184 -l 60 -s 1 tcp_download 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 9, "executor": "flent", "test": "Download", "type": "agent", "id": "fbcdf5aa-93db-4ebd-9c9d-bb4254dd4f14"}, "913590b6-610b-47bb-9c65-ce5e47e39663": {"status": "lost", "node": "node-95.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720961.411295, "chart": [], "agent": "shaker_trimaz_master_16", "command": {"data": "zcat `flent -H 172.16.45.187 -l 60 -s 1 tcp_bidirectional 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Bi-directional", "type": "agent", "id": "913590b6-610b-47bb-9c65-ce5e47e39663"}, "b4f485e4-b38f-40bb-91d7-566c19ac289b": {"status": "lost", "node": "node-90.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720841.2943, "chart": [], "agent": "shaker_trimaz_master_6", "command": {"data": "zcat `flent -H 172.16.45.194 -l 60 -s 1 tcp_upload 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 9, "executor": "flent", "test": "Upload", "type": "agent", "id": "b4f485e4-b38f-40bb-91d7-566c19ac289b"}, "26698aba-4271-43b4-9f99-eabedf8daca7": {"status": "lost", "node": "node-84.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720821.270846, "chart": [], "agent": "shaker_trimaz_master_1", "command": {"data": "zcat `flent -H 172.16.45.190 -l 60 -s 1 tcp_upload 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 4, "executor": "flent", "test": "Upload", "type": "agent", "id": "26698aba-4271-43b4-9f99-eabedf8daca7"}, "2d12f500-c883-4c56-8772-2806dfe0b48e": {"status": "lost", "node": "node-62.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720961.411295, "chart": [], "agent": "shaker_trimaz_master_17", "command": {"data": "zcat `flent -H 172.16.45.197 -l 60 -s 1 tcp_bidirectional 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Bi-directional", "type": "agent", "id": "2d12f500-c883-4c56-8772-2806dfe0b48e"}, "b21910fb-b218-4cd0-b707-02f62e228b9e": {"status": "lost", "node": "node-51.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720861.311709, "chart": [], "agent": "shaker_trimaz_master_0", "command": {"data": "zcat `flent -H 172.16.45.188 -l 60 -s 1 tcp_upload 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Upload", "type": "agent", "id": "b21910fb-b218-4cd0-b707-02f62e228b9e"}, "bc608cd1-1034-41f7-bf84-3727c091fa82": {"status": "lost", "node": "node-88.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720941.391526, "chart": [], "agent": "shaker_trimaz_master_9", "command": {"data": "zcat `flent -H 172.16.45.189 -l 60 -s 1 tcp_bidirectional 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 9, "executor": "flent", "test": "Bi-directional", "type": "agent", "id": "bc608cd1-1034-41f7-bf84-3727c091fa82"}, "17b487e7-526e-4b38-8b2a-476daeffef55": {"status": "lost", "node": "node-88.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720961.411295, "chart": [], "agent": "shaker_trimaz_master_9", "command": {"data": "zcat `flent -H 172.16.45.189 -l 60 -s 1 tcp_bidirectional 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Bi-directional", "type": "agent", "id": "17b487e7-526e-4b38-8b2a-476daeffef55"}, "5e3ef872-9225-4010-b58e-fe690a7c86d1": {"status": "lost", "node": "node-84.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720921.36625, "chart": [], "agent": "shaker_trimaz_master_1", "command": {"data": "zcat `flent -H 172.16.45.190 -l 60 -s 1 tcp_bidirectional 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 4, "executor": "flent", "test": "Bi-directional", "type": "agent", "id": "5e3ef872-9225-4010-b58e-fe690a7c86d1"}, "7ff47860-008a-4ece-8fe3-a44d3293a581": {"status": "lost", "node": "node-51.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720761.215506, "chart": [], "agent": "shaker_trimaz_master_0", "command": {"data": "zcat `flent -H 172.16.45.188 -l 60 -s 1 tcp_download 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Download", "type": "agent", "id": "7ff47860-008a-4ece-8fe3-a44d3293a581"}, "ef98aad0-208a-4c1e-841f-012da44c6cad": {"status": "lost", "node": "node-75.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720861.311709, "chart": [], "agent": "shaker_trimaz_master_14", "command": {"data": "zcat `flent -H 172.16.45.193 -l 60 -s 1 tcp_upload 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Upload", "type": "agent", "id": "ef98aad0-208a-4c1e-841f-012da44c6cad"}, "1bca52ba-9346-4cb6-8ff5-0bc0b0253f98": {"status": "lost", "node": "node-84.domain.tld", "stats": {}, "scenario": "OpenStack L3 North-South", "schedule": 1458720761.215506, "chart": [], "agent": "shaker_trimaz_master_1", "command": {"data": "zcat `flent -H 172.16.45.190 -l 60 -s 1 tcp_download 2>&1 | grep \"se with\" | grep -Po '\\./\\S+'`", "type": "script"}, "concurrency": 18, "executor": "flent", "test": "Download", "type": "agent", "id": "1bca52ba-9346-4cb6-8ff5-0bc0b0253f98"}}, "tests": {"Download": {"class": "flent", "method": "tcp_download", "title": "Download"}, "Bi-directional": {"class": "flent", "method": "tcp_bidirectional", "title": "Bi-directional"}, "Upload": {"class": "flent", "method": "tcp_upload", "title": "Upload"}}, "agents": {"shaker_trimaz_slave_10": {"node": "node-67.domain.tld", "zone": "nova", "availability_zone": "nova:node-67.domain.tld", "ip": "172.16.45.195", "master": {"node": "node-87.domain.tld", "zone": "nova", "availability_zone": "nova:node-87.domain.tld", "ip": "10.1.0.15", "mode": "master", "slave_id": "shaker_trimaz_slave_10", "id": "shaker_trimaz_master_10"}, "mode": "slave", "master_id": "shaker_trimaz_master_10", "id": "shaker_trimaz_slave_10"}, "shaker_trimaz_slave_11": {"node": "node-83.domain.tld", "zone": "nova", "availability_zone": "nova:node-83.domain.tld", "ip": "172.16.45.181", "master": {"node": "node-68.domain.tld", "zone": "nova", "availability_zone": "nova:node-68.domain.tld", "ip": "10.1.0.13", "mode": "master", "slave_id": "shaker_trimaz_slave_11", "id": "shaker_trimaz_master_11"}, "mode": "slave", "master_id": "shaker_trimaz_master_11", "id": "shaker_trimaz_slave_11"}, "shaker_trimaz_slave_12": {"node": "node-71.domain.tld", "zone": "nova", "availability_zone": "nova:node-71.domain.tld", "ip": "172.16.45.180", "master": {"node": "node-72.domain.tld", "zone": "nova", "availability_zone": "nova:node-72.domain.tld", "ip": "10.1.0.16", "mode": "master", "slave_id": "shaker_trimaz_slave_12", "id": "shaker_trimaz_master_12"}, "mode": "slave", "master_id": "shaker_trimaz_master_12", "id": "shaker_trimaz_slave_12"}, "shaker_trimaz_slave_13": {"node": "node-74.domain.tld", "zone": "nova", "availability_zone": "nova:node-74.domain.tld", "ip": "172.16.45.185", "master": {"node": "node-85.domain.tld", "zone": "nova", "availability_zone": "nova:node-85.domain.tld", "ip": "10.1.0.4", "mode": "master", "slave_id": "shaker_trimaz_slave_13", "id": "shaker_trimaz_master_13"}, "mode": "slave", "master_id": "shaker_trimaz_master_13", "id": "shaker_trimaz_slave_13"}, "shaker_trimaz_slave_14": {"node": "node-77.domain.tld", "zone": "nova", "availability_zone": "nova:node-77.domain.tld", "ip": "172.16.45.193", "master": {"node": "node-75.domain.tld", "zone": "nova", "availability_zone": "nova:node-75.domain.tld", "ip": "10.1.0.12", "mode": "master", "slave_id": "shaker_trimaz_slave_14", "id": "shaker_trimaz_master_14"}, "mode": "slave", "master_id": "shaker_trimaz_master_14", "id": "shaker_trimaz_slave_14"}, "shaker_trimaz_slave_15": {"node": "node-50.domain.tld", "zone": "nova", "availability_zone": "nova:node-50.domain.tld", "ip": "172.16.45.196", "master": {"node": "node-79.domain.tld", "zone": "nova", "availability_zone": "nova:node-79.domain.tld", "ip": "10.1.0.10", "mode": "master", "slave_id": "shaker_trimaz_slave_15", "id": "shaker_trimaz_master_15"}, "mode": "slave", "master_id": "shaker_trimaz_master_15", "id": "shaker_trimaz_slave_15"}, "shaker_trimaz_slave_16": {"node": "node-94.domain.tld", "zone": "nova", "availability_zone": "nova:node-94.domain.tld", "ip": "172.16.45.187", "master": {"node": "node-95.domain.tld", "zone": "nova", "availability_zone": "nova:node-95.domain.tld", "ip": "10.1.0.18", "mode": "master", "slave_id": "shaker_trimaz_slave_16", "id": "shaker_trimaz_master_16"}, "mode": "slave", "master_id": "shaker_trimaz_master_16", "id": "shaker_trimaz_slave_16"}, "shaker_trimaz_slave_17": {"node": "node-70.domain.tld", "zone": "nova", "availability_zone": "nova:node-70.domain.tld", "ip": "172.16.45.197", "master": {"node": "node-62.domain.tld", "zone": "nova", "availability_zone": "nova:node-62.domain.tld", "ip": "10.1.0.14", "mode": "master", "slave_id": "shaker_trimaz_slave_17", "id": "shaker_trimaz_master_17"}, "mode": "slave", "master_id": "shaker_trimaz_master_17", "id": "shaker_trimaz_slave_17"}, "shaker_trimaz_slave_6": {"node": "node-59.domain.tld", "zone": "nova", "availability_zone": "nova:node-59.domain.tld", "ip": "172.16.45.194", "master": {"node": "node-90.domain.tld", "zone": "nova", "availability_zone": "nova:node-90.domain.tld", "ip": "10.1.0.6", "mode": "master", "slave_id": "shaker_trimaz_slave_6", "id": "shaker_trimaz_master_6"}, "mode": "slave", "master_id": "shaker_trimaz_master_6", "id": "shaker_trimaz_slave_6"}, "shaker_trimaz_master_1": {"node": "node-84.domain.tld", "slave": {"node": "node-96.domain.tld", "zone": "nova", "availability_zone": "nova:node-96.domain.tld", "ip": "172.16.45.190", "mode": "slave", "master_id": "shaker_trimaz_master_1", "id": "shaker_trimaz_slave_1"}, "zone": "nova", "availability_zone": "nova:node-84.domain.tld", "ip": "10.1.0.17", "mode": "master", "slave_id": "shaker_trimaz_slave_1", "id": "shaker_trimaz_master_1"}, "shaker_trimaz_slave_4": {"node": "node-92.domain.tld", "zone": "nova", "availability_zone": "nova:node-92.domain.tld", "ip": "172.16.45.186", "master": {"node": "node-56.domain.tld", "zone": "nova", "availability_zone": "nova:node-56.domain.tld", "ip": "10.1.0.20", "mode": "master", "slave_id": "shaker_trimaz_slave_4", "id": "shaker_trimaz_master_4"}, "mode": "slave", "master_id": "shaker_trimaz_master_4", "id": "shaker_trimaz_slave_4"}, "shaker_trimaz_master_8": {"node": "node-61.domain.tld", "slave": {"node": "node-65.domain.tld", "zone": "nova", "availability_zone": "nova:node-65.domain.tld", "ip": "172.16.45.184", "mode": "slave", "master_id": "shaker_trimaz_master_8", "id": "shaker_trimaz_slave_8"}, "zone": "nova", "availability_zone": "nova:node-61.domain.tld", "ip": "10.1.0.21", "mode": "master", "slave_id": "shaker_trimaz_slave_8", "id": "shaker_trimaz_master_8"}, "shaker_trimaz_master_9": {"node": "node-88.domain.tld", "slave": {"node": "node-66.domain.tld", "zone": "nova", "availability_zone": "nova:node-66.domain.tld", "ip": "172.16.45.189", "mode": "slave", "master_id": "shaker_trimaz_master_9", "id": "shaker_trimaz_slave_9"}, "zone": "nova", "availability_zone": "nova:node-88.domain.tld", "ip": "10.1.0.9", "mode": "master", "slave_id": "shaker_trimaz_slave_9", "id": "shaker_trimaz_master_9"}, "shaker_trimaz_slave_5": {"node": "node-91.domain.tld", "zone": "nova", "availability_zone": "nova:node-91.domain.tld", "ip": "172.16.45.183", "master": {"node": "node-57.domain.tld", "zone": "nova", "availability_zone": "nova:node-57.domain.tld", "ip": "10.1.0.11", "mode": "master", "slave_id": "shaker_trimaz_slave_5", "id": "shaker_trimaz_master_5"}, "mode": "slave", "master_id": "shaker_trimaz_master_5", "id": "shaker_trimaz_slave_5"}, "shaker_trimaz_slave_8": {"node": "node-65.domain.tld", "zone": "nova", "availability_zone": "nova:node-65.domain.tld", "ip": "172.16.45.184", "master": {"node": "node-61.domain.tld", "zone": "nova", "availability_zone": "nova:node-61.domain.tld", "ip": "10.1.0.21", "mode": "master", "slave_id": "shaker_trimaz_slave_8", "id": "shaker_trimaz_master_8"}, "mode": "slave", "master_id": "shaker_trimaz_master_8", "id": "shaker_trimaz_slave_8"}, "shaker_trimaz_slave_9": {"node": "node-66.domain.tld", "zone": "nova", "availability_zone": "nova:node-66.domain.tld", "ip": "172.16.45.189", "master": {"node": "node-88.domain.tld", "zone": "nova", "availability_zone": "nova:node-88.domain.tld", "ip": "10.1.0.9", "mode": "master", "slave_id": "shaker_trimaz_slave_9", "id": "shaker_trimaz_master_9"}, "mode": "slave", "master_id": "shaker_trimaz_master_9", "id": "shaker_trimaz_slave_9"}, "shaker_trimaz_master_0": {"node": "node-51.domain.tld", "slave": {"node": "node-97.domain.tld", "zone": "nova", "availability_zone": "nova:node-97.domain.tld", "ip": "172.16.45.188", "mode": "slave", "master_id": "shaker_trimaz_master_0", "id": "shaker_trimaz_slave_0"}, "zone": "nova", "availability_zone": "nova:node-51.domain.tld", "ip": "10.1.0.7", "mode": "master", "slave_id": "shaker_trimaz_slave_0", "id": "shaker_trimaz_master_0"}, "shaker_trimaz_slave_7": {"node": "node-89.domain.tld", "zone": "nova", "availability_zone": "nova:node-89.domain.tld", "ip": "172.16.45.191", "master": {"node": "node-60.domain.tld", "zone": "nova", "availability_zone": "nova:node-60.domain.tld", "ip": "10.1.0.8", "mode": "master", "slave_id": "shaker_trimaz_slave_7", "id": "shaker_trimaz_master_7"}, "mode": "slave", "master_id": "shaker_trimaz_master_7", "id": "shaker_trimaz_slave_7"}, "shaker_trimaz_master_2": {"node": "node-53.domain.tld", "slave": {"node": "node-54.domain.tld", "zone": "nova", "availability_zone": "nova:node-54.domain.tld", "ip": "172.16.45.192", "mode": "slave", "master_id": "shaker_trimaz_master_2", "id": "shaker_trimaz_slave_2"}, "zone": "nova", "availability_zone": "nova:node-53.domain.tld", "ip": "10.1.0.5", "mode": "master", "slave_id": "shaker_trimaz_slave_2", "id": "shaker_trimaz_master_2"}, "shaker_trimaz_master_3": {"node": "node-55.domain.tld", "slave": {"node": "node-93.domain.tld", "zone": "nova", "availability_zone": "nova:node-93.domain.tld", "ip": "172.16.45.182", "mode": "slave", "master_id": "shaker_trimaz_master_3", "id": "shaker_trimaz_slave_3"}, "zone": "nova", "availability_zone": "nova:node-55.domain.tld", "ip": "10.1.0.19", "mode": "master", "slave_id": "shaker_trimaz_slave_3", "id": "shaker_trimaz_master_3"}, "shaker_trimaz_slave_2": {"node": "node-54.domain.tld", "zone": "nova", "availability_zone": "nova:node-54.domain.tld", "ip": "172.16.45.192", "master": {"node": "node-53.domain.tld", "zone": "nova", "availability_zone": "nova:node-53.domain.tld", "ip": "10.1.0.5", "mode": "master", "slave_id": "shaker_trimaz_slave_2", "id": "shaker_trimaz_master_2"}, "mode": "slave", "master_id": "shaker_trimaz_master_2", "id": "shaker_trimaz_slave_2"}, "shaker_trimaz_master_5": {"node": "node-57.domain.tld", "slave": {"node": "node-91.domain.tld", "zone": "nova", "availability_zone": "nova:node-91.domain.tld", "ip": "172.16.45.183", "mode": "slave", "master_id": "shaker_trimaz_master_5", "id": "shaker_trimaz_slave_5"}, "zone": "nova", "availability_zone": "nova:node-57.domain.tld", "ip": "10.1.0.11", "mode": "master", "slave_id": "shaker_trimaz_slave_5", "id": "shaker_trimaz_master_5"}, "shaker_trimaz_slave_0": {"node": "node-97.domain.tld", "zone": "nova", "availability_zone": "nova:node-97.domain.tld", "ip": "172.16.45.188", "master": {"node": "node-51.domain.tld", "zone": "nova", "availability_zone": "nova:node-51.domain.tld", "ip": "10.1.0.7", "mode": "master", "slave_id": "shaker_trimaz_slave_0", "id": "shaker_trimaz_master_0"}, "mode": "slave", "master_id": "shaker_trimaz_master_0", "id": "shaker_trimaz_slave_0"}, "shaker_trimaz_slave_3": {"node": "node-93.domain.tld", "zone": "nova", "availability_zone": "nova:node-93.domain.tld", "ip": "172.16.45.182", "master": {"node": "node-55.domain.tld", "zone": "nova", "availability_zone": "nova:node-55.domain.tld", "ip": "10.1.0.19", "mode": "master", "slave_id": "shaker_trimaz_slave_3", "id": "shaker_trimaz_master_3"}, "mode": "slave", "master_id": "shaker_trimaz_master_3", "id": "shaker_trimaz_slave_3"}, "shaker_trimaz_master_6": {"node": "node-90.domain.tld", "slave": {"node": "node-59.domain.tld", "zone": "nova", "availability_zone": "nova:node-59.domain.tld", "ip": "172.16.45.194", "mode": "slave", "master_id": "shaker_trimaz_master_6", "id": "shaker_trimaz_slave_6"}, "zone": "nova", "availability_zone": "nova:node-90.domain.tld", "ip": "10.1.0.6", "mode": "master", "slave_id": "shaker_trimaz_slave_6", "id": "shaker_trimaz_master_6"}, "shaker_trimaz_master_7": {"node": "node-60.domain.tld", "slave": {"node": "node-89.domain.tld", "zone": "nova", "availability_zone": "nova:node-89.domain.tld", "ip": "172.16.45.191", "mode": "slave", "master_id": "shaker_trimaz_master_7", "id": "shaker_trimaz_slave_7"}, "zone": "nova", "availability_zone": "nova:node-60.domain.tld", "ip": "10.1.0.8", "mode": "master", "slave_id": "shaker_trimaz_slave_7", "id": "shaker_trimaz_master_7"}, "shaker_trimaz_slave_1": {"node": "node-96.domain.tld", "zone": "nova", "availability_zone": "nova:node-96.domain.tld", "ip": "172.16.45.190", "master": {"node": "node-84.domain.tld", "zone": "nova", "availability_zone": "nova:node-84.domain.tld", "ip": "10.1.0.17", "mode": "master", "slave_id": "shaker_trimaz_slave_1", "id": "shaker_trimaz_master_1"}, "mode": "slave", "master_id": "shaker_trimaz_master_1", "id": "shaker_trimaz_slave_1"}, "shaker_trimaz_master_16": {"node": "node-95.domain.tld", "slave": {"node": "node-94.domain.tld", "zone": "nova", "availability_zone": "nova:node-94.domain.tld", "ip": "172.16.45.187", "mode": "slave", "master_id": "shaker_trimaz_master_16", "id": "shaker_trimaz_slave_16"}, "zone": "nova", "availability_zone": "nova:node-95.domain.tld", "ip": "10.1.0.18", "mode": "master", "slave_id": "shaker_trimaz_slave_16", "id": "shaker_trimaz_master_16"}, "shaker_trimaz_master_12": {"node": "node-72.domain.tld", "slave": {"node": "node-71.domain.tld", "zone": "nova", "availability_zone": "nova:node-71.domain.tld", "ip": "172.16.45.180", "mode": "slave", "master_id": "shaker_trimaz_master_12", "id": "shaker_trimaz_slave_12"}, "zone": "nova", "availability_zone": "nova:node-72.domain.tld", "ip": "10.1.0.16", "mode": "master", "slave_id": "shaker_trimaz_slave_12", "id": "shaker_trimaz_master_12"}, "shaker_trimaz_master_13": {"node": "node-85.domain.tld", "slave": {"node": "node-74.domain.tld", "zone": "nova", "availability_zone": "nova:node-74.domain.tld", "ip": "172.16.45.185", "mode": "slave", "master_id": "shaker_trimaz_master_13", "id": "shaker_trimaz_slave_13"}, "zone": "nova", "availability_zone": "nova:node-85.domain.tld", "ip": "10.1.0.4", "mode": "master", "slave_id": "shaker_trimaz_slave_13", "id": "shaker_trimaz_master_13"}, "shaker_trimaz_master_10": {"node": "node-87.domain.tld", "slave": {"node": "node-67.domain.tld", "zone": "nova", "availability_zone": "nova:node-67.domain.tld", "ip": "172.16.45.195", "mode": "slave", "master_id": "shaker_trimaz_master_10", "id": "shaker_trimaz_slave_10"}, "zone": "nova", "availability_zone": "nova:node-87.domain.tld", "ip": "10.1.0.15", "mode": "master", "slave_id": "shaker_trimaz_slave_10", "id": "shaker_trimaz_master_10"}, "shaker_trimaz_master_11": {"node": "node-68.domain.tld", "slave": {"node": "node-83.domain.tld", "zone": "nova", "availability_zone": "nova:node-83.domain.tld", "ip": "172.16.45.181", "mode": "slave", "master_id": "shaker_trimaz_master_11", "id": "shaker_trimaz_slave_11"}, "zone": "nova", "availability_zone": "nova:node-68.domain.tld", "ip": "10.1.0.13", "mode": "master", "slave_id": "shaker_trimaz_slave_11", "id": "shaker_trimaz_master_11"}, "shaker_trimaz_master_4": {"node": "node-56.domain.tld", "slave": {"node": "node-92.domain.tld", "zone": "nova", "availability_zone": "nova:node-92.domain.tld", "ip": "172.16.45.186", "mode": "slave", "master_id": "shaker_trimaz_master_4", "id": "shaker_trimaz_slave_4"}, "zone": "nova", "availability_zone": "nova:node-56.domain.tld", "ip": "10.1.0.20", "mode": "master", "slave_id": "shaker_trimaz_slave_4", "id": "shaker_trimaz_master_4"}, "shaker_trimaz_master_17": {"node": "node-62.domain.tld", "slave": {"node": "node-70.domain.tld", "zone": "nova", "availability_zone": "nova:node-70.domain.tld", "ip": "172.16.45.197", "mode": "slave", "master_id": "shaker_trimaz_master_17", "id": "shaker_trimaz_slave_17"}, "zone": "nova", "availability_zone": "nova:node-62.domain.tld", "ip": "10.1.0.14", "mode": "master", "slave_id": "shaker_trimaz_slave_17", "id": "shaker_trimaz_master_17"}, "shaker_trimaz_master_14": {"node": "node-75.domain.tld", "slave": {"node": "node-77.domain.tld", "zone": "nova", "availability_zone": "nova:node-77.domain.tld", "ip": "172.16.45.193", "mode": "slave", "master_id": "shaker_trimaz_master_14", "id": "shaker_trimaz_slave_14"}, "zone": "nova", "availability_zone": "nova:node-75.domain.tld", "ip": "10.1.0.12", "mode": "master", "slave_id": "shaker_trimaz_slave_14", "id": "shaker_trimaz_master_14"}, "shaker_trimaz_master_15": {"node": "node-79.domain.tld", "slave": {"node": "node-50.domain.tld", "zone": "nova", "availability_zone": "nova:node-50.domain.tld", "ip": "172.16.45.196", "mode": "slave", "master_id": "shaker_trimaz_master_15", "id": "shaker_trimaz_slave_15"}, "zone": "nova", "availability_zone": "nova:node-79.domain.tld", "ip": "10.1.0.10", "mode": "master", "slave_id": "shaker_trimaz_slave_15", "id": "shaker_trimaz_master_15"}}, "sla": []};
+  </script>
+
+  <script type="text/javascript">
+    "use strict";
+
+    $(function () {
+
+      var fields = ["scenario", "test", "concurrency", "node", "agent"];
+      var state = {
+        scenario: "",
+        test: "",
+        concurrency: "",
+        node: "",
+        agent: ""
+      };
+      var tablePageSize = 10;
+
+      // compiled templates
+      var scenario_source_template = Handlebars.compile($("#scenario_source_template").html());
+      var test_specification_template = Handlebars.compile($("#test_specification_template").html());
+      var agents_table_template = Handlebars.compile($("#agents_table_template").html());
+      var records_table_template = Handlebars.compile($("#records_table_template").html());
+      var executor_template = Handlebars.compile($("#executor_template").html());
+      var concurrency_summary_template = Handlebars.compile($("#concurrency_summary_template").html());
+      var test_summary_template = Handlebars.compile($("#test_summary_template").html());
+      var sla_table_template = Handlebars.compile($("#sla_table_template").html());
+      var errors_template = Handlebars.compile($("#errors_template").html());
+
+      function concatenate(strings) {
+        // returns strings concatenated via comma (like join() but omits empty strings)
+        var f = false;
+        var result = "";
+        $.each(strings, function (_i, string) {
+          if (string.length > 0) {
+            if (f) result += ", ";
+            result += string;
+            f = true;
+          }
+        });
+        return result;
+      }
+
+      function initSingleSelector(name, values) {
+        var selectorId = "#" + name + "_selector";
+
+        var selector_inst = $(selectorId);
+        selector_inst.empty();
+        selector_inst.append($("<option>", {
+          style: "font-style: italic; text-decoration: underline;",
+          value: "",
+          text: selector_inst.data('placeholder')
+        }));
+
+        $.each(values, function (key, item) {
+          selector_inst.append($('<option>', {
+            value: item, //(key + 1),
+            text: item
+          }));
+        });
+
+        selector_inst.val(state[name]);
+
+        selector_inst.
+            on("change", function (e) {
+              state[name] = this.value;
+
+              // convert state -> url
+              var tokens = [];
+              $.each(fields.sort(), function (i, field) {
+                if (state[field] != "") {
+                  tokens.push(field + "=" + state[field]);
+                }
+              });
+              window.location.href = "#" + tokens.join(":");
+            });
+      }
+
+      function getFieldValues(field, records) {
+        var values_set = {};
+
+        $.each(records, function (j, record) {
+          if (record[field]) {
+            values_set["" + record[field]] = true;
+          }
+        });
+
+        return $.map(values_set, function (_i, value) {
+          return value;
+        }).sort();
+      }
+
+      function updateSelectors() {
+        $.each(fields, function (i, field) {
+          var values = getFieldValues(field, filterRecords(report.records, null, field));
+          console.log(values);
+          initSingleSelector(field, values);
+        });
+      }
+
+      function filterRecords(records, type, except_field) {
+        var res = [];
+        $.each(records, function(_i, record){
+          if (!type || typeof type === 'undefined' || record.type == type) {
+            var flag = true;
+            $.each(state, function (key, value) {
+              if (key != except_field && value) {
+                flag &= record[key] == value;
+              }
+            });
+            if (flag) {
+              res.push(record);
+            }
+          }
+        });
+        return res;
+      }
+
+      function getAgentsByIds(agent_ids) {
+        var agents = [];
+        $.each(agent_ids, function(agent_id){
+          agents.push(report.agents[agent_id]);
+        });
+        return agents;
+      }
+
+      /* Template Rendering Funcs */
+
+      function showScenarioSource(contentArea, scenario) {
+        contentArea.append(scenario_source_template(
+            {data: jsyaml.safeDump(scenario)}));
+      }
+
+      function showTestSpecification(contentArea, test) {
+        contentArea.append(test_specification_template(
+            {data: jsyaml.safeDump(test)}
+        ))
+      }
+
+      function showAgentRecord(contentArea, record) {
+        var chart_id = "chart_" + Math.round(Math.random() * 10000);
+        var ext_options = {
+          command_yaml: jsyaml.safeDump(record["command"]),
+          chart_id: chart_id};
+        if (record["stats"]) {
+          ext_options["stats_yaml"] = jsyaml.safeDump(record["stats"]);
+        }
+        contentArea.append(executor_template(
+            {record: $.extend({}, record, ext_options)}
+        ));
+        if (record["chart"]) {
+          var meta = record["meta"];
+          var axes = [];
+          axes[meta[1][0]] = 'y';
+          var axis = {
+            x: {label: concatenate(meta[0])},
+            y: {label: concatenate(meta[1]), min: 0}
+          };
+          if (meta.length > 2) {
+            axes[meta[2][0]] = 'y2';
+            axis['y2'] = {label: concatenate(meta[2]), min: 0, show: true}
+          }
+
+          c3.generate({
+            bindto: "#" + chart_id,
+            data: {
+              x: 'time',
+              columns: record["chart"],
+              axes: axes
+            },
+            axis: axis
+          });
+        }
+      }
+
+      function showConcurrencySummary(contentArea, record) {
+        var chart_id = "chart_" + Math.round(Math.random() * 10000);
+        var node_chart_id = "node_chart_" + Math.round(Math.random() * 10000);
+        var ext_options = { chart_id: chart_id, node_chart_id: node_chart_id };
+        if (record["stats"]) {
+          ext_options["stats_yaml"] = jsyaml.safeDump(record["stats"]);
+        }
+        console.log(record);
+        contentArea.append(concurrency_summary_template(
+            {record: $.extend({}, record, ext_options)}
+        ));
+        if (record["node_chart"]) {
+          c3.generate({
+            bindto: "#" + node_chart_id,
+            data: {
+              x: 'x',
+              columns: record["node_chart"],
+              type: 'step',
+              order: null
+            },
+            axis: {
+              x: { type: 'category' }
+            }
+          });
+        }
+      }
+
+      function showTestSummary(contentArea, record) {
+        console.log(record);
+        var chart_id = "chart_" + Math.round(Math.random() * 10000);
+        var ext_options = { chart_id: chart_id };
+        if (record["stats"]) {
+          ext_options["stats_yaml"] = jsyaml.safeDump(record["stats"]);
+        }
+        contentArea.append(test_summary_template(
+            {record: $.extend({}, record, ext_options)}
+        ));
+        if (record["chart"]) {
+          var meta = record["meta"];
+          var axes = [];
+          axes[meta[1][0]] = 'y';
+          var axis = {
+            x: {label: concatenate(meta[0])},
+            y: {label: concatenate(meta[1]), min: 0}
+          };
+          if (meta.length > 2) {
+            axes[meta[2][0]] = 'y2';
+            axis['y2'] = {label: concatenate(meta[2]), min: 0, show: true}
+          }
+
+          c3.generate({
+            bindto: "#" + chart_id,
+            data: {
+              x: 'concurrency',
+              columns: record["chart"],
+              axes: axes
+            },
+            axis: axis
+          });
+        }
+      }
+
+      function showAgentsTable(contentArea, filteredRecords) {
+        var agent_ids = {};
+        $.each(filteredRecords, function(_i, record){
+          if (record.agent) {
+            agent_ids[record.agent] = true;
+          }
+        });
+
+        var agents = getAgentsByIds(agent_ids);
+        if (agents.length == 0) return;
+
+        // add slave agents
+        var slave_agent_ids = {};
+        $.each(agents, function(_i, agent){
+          if (agent.slave_id) {
+            slave_agent_ids[agent.slave_id] = true;
+          }
+        });
+        agents = $.merge(agents, getAgentsByIds(slave_agent_ids));
+
+        contentArea.append(agents_table_template({
+          agents: agents,
+          table_id: "agents_table"
+        }));
+        $("#agents_table").dataTable({
+          "autoWidth": true,
+          "paging": false,
+          "ordering": true,
+          "info": false
+        });
+      }
+
+      function makeURL(record, s) {
+        var extra = {};
+        extra[s] = record[s];
+        return "#" + $.map($.extend({}, state, extra), function (val, index) {
+          return val? (index + "=" + val) : null;
+        }).join(":")
+      }
+
+      function showRecordsTable(contentArea, filteredRecords) {
+        $.each(filteredRecords, function(_i, record) {
+          $.each(fields, function(_j, field){
+            if (record[field]) {
+              record[field + "_url"] = makeURL(record, field);
+            }
+          });
+        });
+
+        contentArea.append(records_table_template({
+          records: filteredRecords,
+          table_id: "records_table"
+        }));
+        $("#records_table").dataTable({
+          autoWidth: true,
+          paging: filteredRecords.length > tablePageSize,
+          ordering: true,
+          info: false,
+          searching: filteredRecords.length > tablePageSize
+        });
+      }
+
+      function showSlaTable(contentArea, records) {
+        if (records.length == 0) return;
+
+        contentArea.append(sla_table_template({
+          records: records,
+          table_id: "sla_table"
+        }));
+        $("#records_table").dataTable({
+          autoWidth: true,
+          paging: records.length > tablePageSize,
+          ordering: true,
+          info: false,
+          searching: records.length > tablePageSize
+        });
+      }
+
+      function showErrors(contentArea, records) {
+        if (records.length == 0) return;
+
+        contentArea.append(errors_template({
+          records: records,
+          table_id: "errors_list"
+        }));
+      }
+
+      /* Update cycle */
+
+      function update() {
+        var filteredRecords = filterRecords(report.records);
+        console.log(filteredRecords);
+        var slaRecords = [];
+        var errorRecords = [];
+        $.each(filterRecords(report.records), function(_i, record) {
+          if (record["sla_info"]) {
+            slaRecords.push(record);
+          }
+          if (record["is_status_error"]) {
+            errorRecords.push(record);
+          }
+        });
+
+        var contentArea = $("#content_area");
+        contentArea.empty();
+
+        updateSelectors();
+
+        showRecordsTable(contentArea, filteredRecords);
+        showSlaTable(contentArea, slaRecords);
+        showErrors(contentArea, errorRecords);
+
+        if (state["scenario"] != "" && state["test"] != "" &&
+                state["concurrency"] != "" &&
+                state["agent"] != "") {
+          showAgentRecord(contentArea, filteredRecords[0]);
+        }
+        if (state["scenario"] != "" && state["test"] != "" &&
+                state["concurrency"] != "" && state["node"] == "" &&
+                state["agent"] == "") {
+          var agg_recs = filterRecords(report.records, "concurrency");
+          if (agg_recs.length > 0) {
+            showConcurrencySummary(contentArea, agg_recs[0]);
+          }
+        }
+        if (state["scenario"] != "" && state["test"] != "" &&
+                state["concurrency"] == "" && state["node"] == "" &&
+                state["agent"] == "") {
+          var test_recs = filterRecords(report.records, "test");
+          if (test_recs.length > 0) {
+            showTestSummary(contentArea, test_recs[0]);
+          }
+        }
+        if (state["test"] != "") {
+          showTestSpecification(contentArea, report.tests[state["test"]]);
+        }
+        if (state["agent"] == "") {
+          showAgentsTable(contentArea, filteredRecords);
+        }
+        if (state["scenario"] != "") {
+          showScenarioSource(contentArea, report.scenarios[state["scenario"]]);
+        }
+      }
+
+      function parseUrlToState() {
+        var hashUrl = window.location.hash.substr(1);
+
+        $.each(hashUrl.split(":"), function (_i, pair) {
+          var kv = pair.split("=");
+          if (kv.length == 2) {
+            state[kv[0]] = decodeURIComponent(kv[1]);
+          }
+        });
+      }
+
+      // entry-point
+      parseUrlToState();
+      console.log(state);
+
+      // pre-process records
+      $.each(report.records, function(_i, record) {
+        if (record.status) {
+          record["is_status_ok"] = record.status == "ok";
+          record["is_status_lost"] = record.status == "lost";
+          record["is_status_interrupted"] = record.status == "interrupted";
+          record["is_status_error"] = record.status == "error";
+        }
+      });
+
+      // auto-select filters with 1 option
+      $.each(fields, function(_i, field) {
+        var values = getFieldValues(field, report.records);
+        if (values.length == 1) {
+          state[field] = values[0];
+        }
+      });
+
+      update();
+
+      $(window).on('hashchange', function() {
+        parseUrlToState();
+        update()
+      });
+
+      $('[data-toggle="tooltip"]').tooltip();
+    });
+  </script>
+
+  <style type="text/css">
+  </style>
+
+</head>
+
+<body>
+
+<div class="container" id="container">
+  <div class="row text-center">
+    <h1>Shaker | The Report</h1>
+  </div>
+  <hr>
+  <div class="row">
+    <div class="col-md-2">
+      <label for="scenario_selector" title="Scenario name">Scenario</label>
+      <select id="scenario_selector" class="form-control" data-placeholder="- Any scenario -"></select>
+    </div>
+    <div class="col-md-2">
+      <label for="test_selector" title="Test name">Test Case</label>
+      <select id="test_selector" class="form-control" data-placeholder="- Any test case -"></select>
+    </div>
+    <div class="col-md-2">
+      <label for="concurrency_selector" title="Concurrency">Concurrency</label>
+      <select id="concurrency_selector" class="form-control" data-placeholder="- Any concurrency -"></select>
+    </div>
+    <div class="col-md-2">
+      <label for="node_selector" title="Host / Compute node">Host</label>
+      <select id="node_selector" class="form-control" data-placeholder="- Any node -"></select>
+    </div>
+    <div class="col-md-2">
+      <label for="agent_selector" title="Agent">Agent</label>
+      <select id="agent_selector" class="form-control" data-placeholder="- Any agent -"></select>
+    </div>
+  </div>
+
+  <div id="content_area" class="row">
+    <!-- Container for the screen content -->
+  </div>
+
+  <div id="footer" class="row">&nbsp;</div>
+</div>
+
+<!-- TEMPLATES --------------------------------------------------------------->
+
+<!-- Scenario File -->
+<script id="scenario_source_template" type="text/x-handlebars-template">
+  <h3>Scenario</h3>
+  <pre>{{ data }}</pre>
+</script>
+
+<!-- Test Specification -->
+<script id="test_specification_template" type="text/x-handlebars-template">
+  <h3>Test Specification</h3>
+  <pre>{{ data }}</pre>
+</script>
+
+<!-- Executor Result -->
+<script id="executor_template" type="text/x-handlebars-template">
+  <h3>Execution Summary</h3>
+  {{#with record}}
+  <div id="{{ chart_id }}"></div>
+  {{#if is_status_ok}}<span class="label label-success"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span>success</span>{{/if}}
+  {{#if is_status_lost}}<span class="label label-danger"><span class="glyphicon glyphicon-alert" aria-hidden="true"></span>lost</span>{{/if}}
+  {{#if is_status_interrupted}}<span class="label label-warning"><span class="glyphicon glyphicon-stop" aria-hidden="true"></span>interrupted</span>{{/if}}
+  {{#if is_status_error}}<span class="label label-danger"><span class="glyphicon glyphicon-alert" aria-hidden="true"></span>error</span>{{/if}}
+  {{#if stats_yaml}}
+    <h4>Stats</h4>
+    <pre>{{ stats_yaml }}</pre>
+  {{/if}}
+  <h4>Command</h4>
+  <pre>{{ command_yaml }}</pre>
+  {{#if stdout}}
+    <h4>Stdout</h4>
+    <pre>{{ stdout }}</pre>
+  {{/if}}
+  {{#if verbose}}
+    <h4>Verbose Info</h4>
+    <pre>{{ verbose }}</pre>
+  {{/if}}
+  {{#if stderr}}
+    <h4>Stderr</h4>
+    <pre>{{ stderr }}</pre>
+  {{/if}}
+  {{/with}}
+</script>
+
+<!-- Concurrency summary -->
+<script id="concurrency_summary_template" type="text/x-handlebars-template">
+  {{#with record}}
+  <div id="{{ chart_id  }}"></div>
+  <h3>Per-node chart</h3>
+  <div id="{{ node_chart_id  }}"></div>
+  <h3>Stats</h3>
+  <pre>{{ stats_yaml }}</pre>
+  {{/with}}
+</script>
+
+<!-- Test summary -->
+<script id="test_summary_template" type="text/x-handlebars-template">
+  {{#with record}}
+  <div id="{{ chart_id   }}"></div>
+  {{#if stats_yaml}}
+    <h3>Stats</h3>
+    <pre>{{ stats_yaml }}</pre>
+  {{/if}}
+  {{/with}}
+</script>
+
+<!-- Records Table -->
+<script id="records_table_template" type="text/x-handlebars-template">
+  <h3>Records</h3>
+  <table class="table table-striped" id="{{ table_id  }}">
+    <thead>
+    <tr>
+      <th>Scenario</th>
+      <th>Test Case</th>
+      <th>Concurrency</th>
+      <th>Host / Compute Node</th>
+      <th>Agent</th>
+      <th>Status</th>
+    </tr>
+    </thead>
+    <tbody>
+    {{#records}}
+    <tr>
+      <td><a href="{{ scenario_url }}">{{ scenario }}</a></td>
+      <td><a href="{{ test_url }}">{{ test }}</a></td>
+      <td><a href="{{ concurrency_url }}">{{ concurrency }}</a></td>
+      <td><a href="{{ node_url }}">{{ node }}</a></td>
+      <td><a href="{{ agent_url }}">{{ agent }}</a></td>
+      <td>
+        {{#if is_status_ok }}
+          <span class="label label-success">
+            <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+            success
+          </span>
+        {{/if}}
+        {{#if is_status_lost }}
+          <span class="label label-danger">
+            <span class="glyphicon glyphicon-alert" aria-hidden="true"></span>
+            lost
+          </span>
+        {{/if}}
+        {{#if is_status_interrupted }}
+          <span class="label label-warning">
+            <span class="glyphicon glyphicon-stop" aria-hidden="true"></span>
+            interrupted
+          </span>
+        {{/if}}
+        {{#if is_status_error }}
+          <span class="label label-danger">
+            <span class="glyphicon glyphicon-stop" aria-hidden="true"></span>
+            error
+          </span>
+        {{/if}}
+      </td>
+    </tr>
+    {{/records}}
+    </tbody>
+  </table>
+</script>
+
+<!-- Agents List -->
+<script id="agents_table_template" type="text/x-handlebars-template">
+  <h3>Agents</h3>
+  <table class="table table-striped" id="{{ table_id }}">
+    <thead>
+    <tr>
+      <th>Agent</th>
+      <th>Mode</th>
+      <th>IP</th>
+      <th>Node</th>
+      <th>AZ</th>
+    </tr>
+    </thead>
+    <tbody>
+    {{#agents}}
+    <tr>
+      <td>{{ id }}</td>
+      <td>{{ mode }}</td>
+      <td>{{ ip }}</td>
+      <td>{{ node }}</td>
+      <td>{{ zone }}</td>
+    </tr>
+    {{/agents}}
+    </tbody>
+  </table>
+</script>
+
+<!-- SLA List -->
+<script id="sla_table_template" type="text/x-handlebars-template">
+  <h3>Agents</h3>
+  <table class="table table-striped" id="{{  table_id }}">
+    <thead>
+    <tr>
+      <th>Condition</th>
+      <th>Location</th>
+      <th>Status</th>
+    </tr>
+    </thead>
+    <tbody>
+    {{#records}}
+    <tr>
+      <td>{{ sla }}</td>
+      <td>{{ location }}</td>
+      <td>
+        {{#if is_status_ok }}
+          <span class="text-success">
+            <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+            {{ status }}
+          </span>
+        {{else}}
+          <span class="text-danger">
+            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+            {{ status }}
+          </span>
+        {{/if}}
+      </td>
+    </tr>
+    {{/records}}
+    </tbody>
+  </table>
+</script>
+
+<!-- Errors -->
+<script id="errors_template" type="text/x-handlebars-template">
+  <h3>Errors</h3>
+  <div class="text-danger">
+    <ul>
+    {{#records}}
+      <li>{{ info }}{{ stderr }}{{ traceback }}</li>
+    {{/records}}
+    </ul>
+  </div>
+</script>
+
+</body>
+</html>
