@@ -21,6 +21,7 @@ def main():
             'scenario': res['scenarios'].keys()[0],
             'statuses': collections.Counter(
                 r.get('status') for r in res['records'].itervalues()),
+            'stats': parsing.shaker_get_max_min_stats(res['records']),
         } for fname, res in parsing.all_shaker_results()],
         'rally': [{
             'filename': fname,
@@ -33,6 +34,8 @@ def main():
             'errors': [len(s['errors']) for s in res['scenarios']],
         } for fname, res in parsing.all_rally_results()],
     }
+    for res in context['shaker']:
+        res['num_stats'] = max(1, len(res['stats']))
     rendered = tmpl.render(context)
     with open('.index.new.html', 'w') as f:
         f.write(rendered)

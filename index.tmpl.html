@@ -4,33 +4,69 @@
     <h1>Shaker</h1>
     <table border="1">
     <thead style="text-align: center; font-weight: bold">
-        <td>Scenario</td><td>restart</td><td>ha</td><td>lost</td><td>errors</td><td>link</td>
+        <tr>
+            <td rowspan="2">Scenario</td>
+            <td rowspan="2">restart</td>
+            <td rowspan="2">ha</td>
+            <td rowspan="2">lost</td>
+            <td rowspan="2">errors</td>
+            <td colspan="5">stats</td>
+            <td rowspan="2">link</td>
+        </tr>
+        <tr>
+            <td>name</td>
+            <td>units</td>
+            <td>min</td>
+            <td>mean</td>
+            <td>max</td>
+        </tr>
     </thead>
     <tbody>
     {% for scenario, results in shaker|groupby('scenario') %}
         {% for result in results %}
+        {% set res_loop = loop %}
+        {% set stats = result.stats %}
+        {% set stats_count = result.stats|count %}
+        {% if stats_count == 0 %}
+            {% set stats = {'':{}} %}
+        {% endif %}
+        {% for type, t_stat in stats.iteritems() %}
         <tr>
             {% if loop.first %}
-            <td rowspan="{{ results|count }}">{{ scenario }}</td>
+            {% if res_loop.first %}
+            <td rowspan="{{ results|sum('num_stats') }}">{{ scenario }}</td>
             {% endif %}
-            <td style="text-align: center">
+            <td rowspan="{{ stats_count }}" style="text-align: center">
                 {% if 'restart' in result.filename %}
                 &#128504;
                 {% else %}
                 &#65794;
                 {% endif %}
             </td>
-            <td style="text-align: center">
+            <td rowspan="{{ stats_count }}" style="text-align: center">
                 {% if 'ha' not in result.filename %}
                 &#128504;
                 {% else %}
                 &#65794;
                 {% endif %}
             </td>
-            <td style="text-align: center">{{ result.statuses.lost }}</td>
-            <td style="text-align: center">{{ result.statuses.error }}</td>
-            <td><a href="{{ result.filepath }}">{{ result.filename }}</a></td>
+            <td rowspan="{{ stats_count }}" style="text-align: center">{{ result.statuses.lost }}</td>
+            <td rowspan="{{ stats_count }}" style="text-align: center">{{ result.statuses.error }}</td>
+            {% endif %}
+            {% if t_stat %}
+            <td>{{ type }}</td>
+            <td>{{ t_stat.unit}}</td>
+            <td>{{ t_stat.min|round(2) }}</td>
+            <td>{{ t_stat.mean|round(2) }}</td>
+            <td>{{ t_stat.max|round(2) }}</td>
+            {% else %}
+            <td colspan="5"></td>
+            {% endif %}
+            {% if loop.first %}
+            <td rowspan="{{ stats_count }}"><a href="{{ result.filepath }}">{{ result.filename }}</a></td>
+            {% endif %}
         </tr>
+        {% endfor %}
         {% endfor %}
     {% endfor %}
     </tbody>
