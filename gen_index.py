@@ -25,7 +25,7 @@ def main():
         } for fname, res in parsing.all_shaker_results()],
         'rally': [{
             'filename': fname,
-            'filepath': 'shaker/' + fname,
+            'filepath': 'rally/' + fname,
             'sources': [{
                 'name': name,
                 'concurrency': task[0]['runner']['concurrency'],
