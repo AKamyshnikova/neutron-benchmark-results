@@ -1,4 +1,5 @@
 import collections
+import operator
 import os
 
 import jinja2
@@ -36,6 +37,8 @@ def main():
     }
     for res in context['shaker']:
         res['num_stats'] = max(1, len(res['stats']))
+    for k, v in context.iteritems():
+        context[k] = sorted(v, key=operator.itemgetter('filename'))
     rendered = tmpl.render(context)
     with open('.index.new.html', 'w') as f:
         f.write(rendered)
