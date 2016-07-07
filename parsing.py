@@ -13,18 +13,9 @@ def all_results(dirname, f):
             yield fname, f(os.path.join(dirname, fname))
 
 
-def find_first_line_match(fname, regexp, num_lines):
-    with open(fname) as f:
-        for line in itertools.islice(f, num_lines):
-            match = re.search(regexp, line)
-            if match:
-                return match
-        else:
-            return None
-
-
 def shaker_load(fname):
-    match = find_first_line_match(fname, r'var report = (.*);', 100)
+    with open(fname) as f:
+        match = re.search(r'var report = (.*);', f.read())
     if match:
         return json.loads(match.group(1))
 
@@ -34,12 +25,14 @@ def all_shaker_results():
 
 
 def rally_load(fname):
-    match = find_first_line_match(fname, r'\$scope\.source = (.*);', 30)
+    with open(fname) as f:
+        content = f.read()
+    match = re.search(r'\$scope\.source = (.*);', content)
     if not match:
         return None
     source_str = json.loads(match.group(1))
     source = json.loads(source_str)
-    match = find_first_line_match(fname, r'\$scope\.scenarios = (.*);', 30)
+    match = re.search(r'\$scope\.scenarios = (.*);', content)
     if not match:
         return None
     scenarios = json.loads(match.group(1))
