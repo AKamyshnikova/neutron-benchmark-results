@@ -1,0 +1,856 @@
+<!doctype html>
+<html ng-app="App">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rally | Rally Task Report</title>
+  
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.1.15-beta/nv.d3.min.css">
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.3/angular.min.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.4.13/d3.min.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.1.15-beta/nv.d3.min.js"></script>
+  
+
+  <script type="text/javascript">
+    "use strict";
+    var widgetDirective = function($compile) {
+  var Chart = {
+    _render: function(node, data, chart, do_after){
+      nv.addGraph(function() {
+        d3.select(node)
+          .datum(data).transition().duration(0)
+          .call(chart);
+        if (typeof do_after === "function") {
+          do_after(node, chart)
+        }
+        nv.utils.windowResize(chart.update);
+      })
+    },
+    /* NOTE(amaretskiy): this is actually a result of
+       d3.scale.category20().range(), excluding red color (#d62728)
+       which is reserved for errors */
+    _colors: ["#1f77b4", "#aec7e8", "#ff7f0e", "#ffbb78", "#2ca02c",
+              "#98df8a", "#ff9896", "#9467bd", "#c5b0d5", "#8c564b",
+              "#c49c94", "#e377c2", "#f7b6d2", "#7f7f7f", "#c7c7c7",
+              "#bcbd22", "#dbdb8d", "#17becf", "#9edae5"],
+    _widgets: {
+      Pie: "pie",
+      StackedArea: "stack",
+      Lines: "lines",
+      Histogram: "histogram"
+    },
+    get_chart: function(widget) {
+      if (widget in this._widgets) {
+        var name = this._widgets[widget];
+        return Chart[name]
+      }
+      return function() { console.log("Error: unexpected widget:", widget) }
+    },
+    pie: function(node, data, opts, do_after) {
+      var chart = nv.models.pieChart()
+        .x(function(d) { return d.key })
+        .y(function(d) { return d.values })
+        .showLabels(true)
+        .labelType("percent")
+        .donut(true)
+        .donutRatio(0.25)
+        .donutLabelsOutside(true)
+        .color(function(d){
+          if (d.data && d.data.color) { return d.data.color }
+        });
+
+      var data_ = [], colors = [], colors_map = {errors: "#d62728"};
+      for (var i in data) {
+        var key = data[i][0];
+        if (! (key in colors_map)) {
+          if (! colors.length) { colors = Chart._colors.slice() }
+          colors_map[key] = colors.shift()
+        }
+        data_.push({key:key, values:data[i][1], color:colors_map[key]})
+      }
+      Chart._render(node, data_, chart)
+    },
+    stack: function(node, data, opts, do_after) {
+      var chart = nv.models.stackedAreaChart()
+        .x(function(d) { return d[0] })
+        .y(function(d) { return d[1] })
+        .useInteractiveGuideline(opts.guide)
+        .showControls(opts.controls)
+        .clipEdge(true);
+      chart.xAxis
+        .tickFormat(d3.format(opts.xformat || "d"))
+        .axisLabel(opts.xname || "")
+        .showMaxMin(false);
+      chart.yAxis
+        .orient("left")
+        .tickFormat(d3.format(opts.yformat || ",.3f"));
+      var data_ = [];
+      for (var i in data) {
+        var d = {key:data[i][0], values:data[i][1]};
+        if (d.key === "failed_duration") {
+          d.color = "#d62728"
+        }
+        data_.push(d);
+      }
+      Chart._render(node, data_, chart, do_after);
+    },
+    lines: function(node, data, opts, do_after) {
+      var chart = nv.models.lineChart()
+        .x(function(d) { return d[0] })
+        .y(function(d) { return d[1] })
+        .useInteractiveGuideline(opts.guide)
+        .clipEdge(true);
+      chart.xAxis
+        .tickFormat(d3.format(opts.xformat || "d"))
+        .axisLabel(opts.xname || "")
+        .showMaxMin(false);
+      chart.yAxis
+        .orient("left")
+        .tickFormat(d3.format(opts.yformat || ",.3f"));
+      var data_ = [];
+      for (var i in data) {
+        var d = {key:data[i][0], values:data[i][1]};
+        if (d.key === "failed_duration") {
+          d.color = "#d62728"
+        }
+        data_.push(d)
+      }
+      Chart._render(node, data_, chart, do_after)
+    },
+    histogram: function(node, data, opts) {
+      var chart = nv.models.multiBarChart()
+        .reduceXTicks(true)
+        .showControls(false)
+        .transitionDuration(0)
+        .groupSpacing(0.05);
+      chart
+        .legend.radioButtonMode(true);
+      chart.xAxis
+        .axisLabel("Duration (seconds)")
+        .tickFormat(d3.format(",.2f"));
+      chart.yAxis
+        .axisLabel("Iterations (frequency)")
+        .tickFormat(d3.format("d"));
+      Chart._render(node, data, chart)
+    }
+  };
+
+  return {
+    restrict: "A",
+    scope: { data: "=" },
+    link: function(scope, element, attrs) {
+      scope.$watch("data", function(data) {
+        if (! data) { return console.log("Chart has no data to render!") }
+        if (attrs.widget === "Table") {
+          var ng_class = attrs.lastrowClass ? " ng-class='{"+attrs.lastrowClass+":$last}'" : "";
+          var template = "<table class='striped'><thead>" +
+            "<tr><th ng-repeat='i in data.cols track by $index'>{{i}}<tr>" +
+            "</thead><tbody>" +
+            "<tr" + ng_class + " ng-repeat='row in data.rows track by $index'>" +
+            "<td ng-repeat='i in row track by $index'>{{i}}" +
+            "<tr>" +
+            "</tbody></table>";
+          var el = element.empty().append($compile(template)(scope)).children()[0]
+        } else {
+
+          var el_chart = element.addClass("chart").css({display:"block"});
+          var el = el_chart.html("<svg></svg>").children()[0];
+
+          var do_after = null;
+
+          if (attrs.widget in {StackedArea:0, Lines:0}) {
+
+            /* Hide widget if not enough data */
+            if ((! data.length) || (data[0].length < 1) || (data[0][1].length < 2)) {
+              return element.empty().css({display:"none"})
+            }
+
+            /* NOTE(amaretskiy): Dirty fix for changing chart width in case
+               if there are too long Y values that overlaps chart box. */
+            var do_after = function(node, chart){
+              var g_box = angular.element(el_chart[0].querySelector(".nv-y.nv-axis"));
+
+              if (g_box && g_box[0] && g_box[0].getBBox) {
+
+                try {
+                  // 30 is padding aroung graphs
+                  var width = g_box[0].getBBox().width + 30;
+                } catch (err) {
+                  // This happens sometimes, just skip silently
+                  return
+                }
+
+                // 890 is chart width (set by CSS)
+                if (typeof width === "number" && width > 890) {
+                  width = (890 * 2) - width;
+                  if (width > 0) {
+                    angular.element(node).css({width:width+"px"});
+                    chart.update()
+                  }
+                }
+              }
+            }
+          }
+          else if (attrs.widget === "Pie") {
+            if (! data.length) {
+              return element.empty().css({display:"none"})
+            }
+          }
+
+          var options = {
+            xname: attrs.nameX || "",
+            xformat: attrs.formatX || "d",
+            yformat: attrs.formatY || ",.3f",
+            controls: attrs.controls === "true",
+            guide: attrs.guide === "true"
+          };
+          Chart.get_chart(attrs.widget)(el, data, options, do_after);
+        }
+
+        if (attrs.nameY) {
+          /* NOTE(amaretskiy): Dirty fix for displaying Y-axis label correctly.
+             I believe sometimes NVD3 will allow doing this in normal way */
+          var label_y = angular.element("<div>").addClass("chart-label-y").text(attrs.nameY);
+          angular.element(el).parent().prepend(label_y)
+        }
+
+        if (attrs.description) {
+          var desc_el = angular.element("<div>").addClass(attrs.descriptionClass || "h3").text(attrs.description);
+          angular.element(el).parent().prepend(desc_el)
+        }
+
+        if (attrs.title) {
+          var title_el = angular.element("<div>").addClass(attrs.titleClass || "h2").text(attrs.title);
+          angular.element(el).parent().prepend(title_el)
+        }
+
+        angular.element(el).parent().append(angular.element("<div style='clear:both'>"))
+      });
+    }
+  }
+};
+
+    var controllerFunction = function($scope, $location) {
+        $scope.source = "{\n  \"NeutronNetworks.create_and_delete_routers\": [\n    {\n      \"args\": {\n        \"network_create_args\": {}, \n        \"router_create_args\": {}, \n        \"subnet_cidr_start\": \"1.1.0.0/30\", \n        \"subnet_create_args\": {}, \n        \"subnets_per_network\": 2\n      }, \n      \"context\": {\n        \"quotas\": {\n          \"neutron\": {\n            \"network\": -1, \n            \"port\": -1, \n            \"router\": -1, \n            \"subnet\": -1\n          }\n        }, \n        \"users\": {\n          \"project_domain\": \"default\", \n          \"resource_management_workers\": 20, \n          \"tenants\": 1, \n          \"user_choice_method\": \"random\", \n          \"user_domain\": \"default\", \n          \"users_per_tenant\": 3\n        }\n      }, \n      \"runner\": {\n        \"concurrency\": 30, \n        \"times\": 200, \n        \"type\": \"constant\"\n      }, \n      \"sla\": {\n        \"failure_rate\": {\n          \"max\": 0\n        }\n      }\n    }\n  ]\n}";
+        $scope.scenarios = [{"load_profile": [["parallel iterations", [[0.0, 0], [3.14137183713913, 29.432461699085223], [6.28274367427826, 30], [9.42411551141739, 30], [12.56548734855652, 30], [15.706859185695649, 30], [18.84823102283478, 30], [21.98960285997391, 30], [25.13097469711304, 29.997646530846186], [28.27234653425217, 29.997162084601268], [31.413718371391298, 29.993694836872454], [34.55509020853043, 30], [37.69646204566956, 29.98711234857196], [40.83783388280869, 29.993212136243013], [43.97920571994782, 29.989533896729643], [47.120577557086946, 29.991127719562684], [50.26194939422608, 29.992617564429967], [53.40332123136521, 29.994912669309556], [56.54469306850434, 29.997320328439688], [59.68606490564347, 29.971393915999773], [62.827436742782595, 29.996412987869732], [65.96880857992173, 30], [69.11018041706086, 29.994016940877383], [72.25155225419999, 29.99777995658621], [75.39292409133913, 29.98307132462325], [78.53429592847824, 29.992127350064305], [81.67566776561738, 29.99282825262923], [84.81703960275651, 29.99562131329966], [87.95841143989564, 29.997980171092575], [91.09978327703477, 29.989872591823087], [94.24115511417389, 29.997624323429587], [97.38252695131303, 29.986150893922], [100.52389878845216, 29.99452506677583], [103.66527062559129, 29.99525638509672], [106.80664246273042, 29.993386488772924], [109.94801429986954, 29.998893811057535], [113.08938613700867, 29.994638000507994], [116.2307579741478, 29.984162334300635], [119.37212981128694, 29.987444394995517], [122.51350164842607, 29.998071929749962], [125.65487348556519, 29.993433753513127], [128.79624532270432, 29.990764555645733], [131.93761715984346, 29.994823946505182], [135.0789889969826, 30], [138.22036083412172, 29.984827413799966], [141.36173267126085, 29.998568443510617], [144.50310450839999, 29.99310527421688], [147.64447634553912, 29.993284161855808], [150.78584818267825, 30], [153.92722001981736, 29.9824440414939], [157.0685918569565, 29.994254648168482], [160.20996369409562, 29.993137074777213], [163.35133553123475, 29.99608610239631], [166.49270736837389, 29.9905156915948], [169.63407920551302, 29.995768400378253], [172.77545104265215, 29.997434855994694], [175.91682287979128, 29.996912841068706], [179.05819471693042, 29.995165176384106], [182.19956655406955, 29.99135214499685], [185.34093839120865, 29.99252170737098], [188.48231022834779, 30], [191.62368206548692, 29.99521640640374], [194.76505390262605, 29.98732842541033], [197.90642573976518, 29.996021438727084], [201.04779757690432, 29.99833733919983], [204.18916941404345, 29.987601652181706], [207.33054125118258, 29.997832173258075], [210.4719130883217, 29.995535398659328], [213.61328492546085, 29.986138219235666], [216.75465676259998, 29.996980616487274], [219.89602859973908, 29.98995178189717], [223.03740043687822, 29.99730964208528], [226.17877227401735, 29.98062038956018], [229.32014411115648, 30], [232.4615159482956, 29.996960276272073], [235.60288778543475, 29.99425700095457], [238.74425962257388, 29.989901234944494], [241.885631459713, 29.99016254599279], [245.02700329685214, 29.994943255528685], [248.16837513399128, 29.995404249809066], [251.30974697113038, 29.99373392348], [254.4511188082695, 29.994434294770663], [257.59249064540865, 29.993210846005486], [260.7338624825478, 29.989241923565928], [263.8752343196869, 29.440100238001264], [267.0166061568261, 26.514262656275125], [270.1579779939652, 24.001361180103725], [273.2993498311043, 22.799964614582972], [276.44072166824344, 20.272235360450424], [279.58209350538255, 17.24421125281266], [282.7234653425217, 16.205208583388476], [285.8648371796608, 13.405312846845824], [289.00620901679997, 9.432147788088615], [292.1475808539391, 6.769162811182248], [295.28895269107824, 5], [298.43032452821734, 4.864273167635376], [301.5716963653565, 3.5394492310316368], [304.7130682024956, 2.9577203722390775], [307.8544400396347, 1.64391772052588], [310.99581187677387, 0.03921568627450806], [314.137183713913, 0]]]], "errors": [{"type": "NeutronClientException", "message": "<html><body><h1>504 Gateway Time-out</h1>\nThe server didn't respond in time.\n</body></html>\n", "traceback": "Traceback (most recent call last):\n  File \"/usr/local/lib/python2.7/dist-packages/rally/task/runner.py\", line 66, in _run_scenario_once\n    getattr(scenario_inst, method_name)(**scenario_kwargs)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/network.py\", line 234, in create_and_delete_routers\n    subnets_per_network, router_create_args)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/utils.py\", line 318, in _create_network_structure\n    router = self._create_router(router_create_args or {})\n  File \"/usr/local/lib/python2.7/dist-packages/rally/task/atomic.py\", line 84, in func_atomic_actions\n    f = func(self, *args, **kwargs)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/utils.py\", line 169, in _create_router\n    {\"router\": router_create_args})\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 712, in create_router\n    return self.post(self.routers_path, body=body)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 347, in post\n    headers=headers, params=params)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 282, in do_request\n    self._handle_fault_response(status_code, replybody, resp)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 257, in _handle_fault_response\n    exception_handler_v20(status_code, error_body)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 84, in exception_handler_v20\n    request_ids=request_ids)\nNeutronClientException: <html><body><h1>504 Gateway Time-out</h1>\nThe server didn't respond in time.\n</body></html>\n\n", "iteration": 13}, {"type": "NeutronClientException", "message": "<html><body><h1>504 Gateway Time-out</h1>\nThe server didn't respond in time.\n</body></html>\n", "traceback": "Traceback (most recent call last):\n  File \"/usr/local/lib/python2.7/dist-packages/rally/task/runner.py\", line 66, in _run_scenario_once\n    getattr(scenario_inst, method_name)(**scenario_kwargs)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/network.py\", line 234, in create_and_delete_routers\n    subnets_per_network, router_create_args)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/utils.py\", line 318, in _create_network_structure\n    router = self._create_router(router_create_args or {})\n  File \"/usr/local/lib/python2.7/dist-packages/rally/task/atomic.py\", line 84, in func_atomic_actions\n    f = func(self, *args, **kwargs)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/utils.py\", line 169, in _create_router\n    {\"router\": router_create_args})\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 712, in create_router\n    return self.post(self.routers_path, body=body)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 347, in post\n    headers=headers, params=params)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 282, in do_request\n    self._handle_fault_response(status_code, replybody, resp)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 257, in _handle_fault_response\n    exception_handler_v20(status_code, error_body)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 84, in exception_handler_v20\n    request_ids=request_ids)\nNeutronClientException: <html><body><h1>504 Gateway Time-out</h1>\nThe server didn't respond in time.\n</body></html>\n\n", "iteration": 26}, {"type": "NeutronClientException", "message": "<html><body><h1>504 Gateway Time-out</h1>\nThe server didn't respond in time.\n</body></html>\n", "traceback": "Traceback (most recent call last):\n  File \"/usr/local/lib/python2.7/dist-packages/rally/task/runner.py\", line 66, in _run_scenario_once\n    getattr(scenario_inst, method_name)(**scenario_kwargs)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/network.py\", line 234, in create_and_delete_routers\n    subnets_per_network, router_create_args)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/utils.py\", line 318, in _create_network_structure\n    router = self._create_router(router_create_args or {})\n  File \"/usr/local/lib/python2.7/dist-packages/rally/task/atomic.py\", line 84, in func_atomic_actions\n    f = func(self, *args, **kwargs)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/utils.py\", line 169, in _create_router\n    {\"router\": router_create_args})\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 712, in create_router\n    return self.post(self.routers_path, body=body)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 347, in post\n    headers=headers, params=params)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 282, in do_request\n    self._handle_fault_response(status_code, replybody, resp)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 257, in _handle_fault_response\n    exception_handler_v20(status_code, error_body)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 84, in exception_handler_v20\n    request_ids=request_ids)\nNeutronClientException: <html><body><h1>504 Gateway Time-out</h1>\nThe server didn't respond in time.\n</body></html>\n\n", "iteration": 47}, {"type": "NeutronClientException", "message": "<html><body><h1>504 Gateway Time-out</h1>\nThe server didn't respond in time.\n</body></html>\n", "traceback": "Traceback (most recent call last):\n  File \"/usr/local/lib/python2.7/dist-packages/rally/task/runner.py\", line 66, in _run_scenario_once\n    getattr(scenario_inst, method_name)(**scenario_kwargs)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/network.py\", line 234, in create_and_delete_routers\n    subnets_per_network, router_create_args)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/utils.py\", line 318, in _create_network_structure\n    router = self._create_router(router_create_args or {})\n  File \"/usr/local/lib/python2.7/dist-packages/rally/task/atomic.py\", line 84, in func_atomic_actions\n    f = func(self, *args, **kwargs)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/utils.py\", line 169, in _create_router\n    {\"router\": router_create_args})\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 712, in create_router\n    return self.post(self.routers_path, body=body)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 347, in post\n    headers=headers, params=params)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 282, in do_request\n    self._handle_fault_response(status_code, replybody, resp)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 257, in _handle_fault_response\n    exception_handler_v20(status_code, error_body)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 84, in exception_handler_v20\n    request_ids=request_ids)\nNeutronClientException: <html><body><h1>504 Gateway Time-out</h1>\nThe server didn't respond in time.\n</body></html>\n\n", "iteration": 49}, {"type": "NeutronClientException", "message": "<html><body><h1>504 Gateway Time-out</h1>\nThe server didn't respond in time.\n</body></html>\n", "traceback": "Traceback (most recent call last):\n  File \"/usr/local/lib/python2.7/dist-packages/rally/task/runner.py\", line 66, in _run_scenario_once\n    getattr(scenario_inst, method_name)(**scenario_kwargs)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/network.py\", line 234, in create_and_delete_routers\n    subnets_per_network, router_create_args)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/utils.py\", line 318, in _create_network_structure\n    router = self._create_router(router_create_args or {})\n  File \"/usr/local/lib/python2.7/dist-packages/rally/task/atomic.py\", line 84, in func_atomic_actions\n    f = func(self, *args, **kwargs)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/utils.py\", line 169, in _create_router\n    {\"router\": router_create_args})\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 712, in create_router\n    return self.post(self.routers_path, body=body)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 347, in post\n    headers=headers, params=params)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 282, in do_request\n    self._handle_fault_response(status_code, replybody, resp)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 257, in _handle_fault_response\n    exception_handler_v20(status_code, error_body)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 84, in exception_handler_v20\n    request_ids=request_ids)\nNeutronClientException: <html><body><h1>504 Gateway Time-out</h1>\nThe server didn't respond in time.\n</body></html>\n\n", "iteration": 59}, {"type": "NeutronClientException", "message": "<html><body><h1>504 Gateway Time-out</h1>\nThe server didn't respond in time.\n</body></html>\n", "traceback": "Traceback (most recent call last):\n  File \"/usr/local/lib/python2.7/dist-packages/rally/task/runner.py\", line 66, in _run_scenario_once\n    getattr(scenario_inst, method_name)(**scenario_kwargs)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/network.py\", line 234, in create_and_delete_routers\n    subnets_per_network, router_create_args)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/utils.py\", line 318, in _create_network_structure\n    router = self._create_router(router_create_args or {})\n  File \"/usr/local/lib/python2.7/dist-packages/rally/task/atomic.py\", line 84, in func_atomic_actions\n    f = func(self, *args, **kwargs)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/utils.py\", line 169, in _create_router\n    {\"router\": router_create_args})\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 712, in create_router\n    return self.post(self.routers_path, body=body)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 347, in post\n    headers=headers, params=params)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 282, in do_request\n    self._handle_fault_response(status_code, replybody, resp)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 257, in _handle_fault_response\n    exception_handler_v20(status_code, error_body)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 84, in exception_handler_v20\n    request_ids=request_ids)\nNeutronClientException: <html><body><h1>504 Gateway Time-out</h1>\nThe server didn't respond in time.\n</body></html>\n\n", "iteration": 67}, {"type": "NeutronClientException", "message": "<html><body><h1>504 Gateway Time-out</h1>\nThe server didn't respond in time.\n</body></html>\n", "traceback": "Traceback (most recent call last):\n  File \"/usr/local/lib/python2.7/dist-packages/rally/task/runner.py\", line 66, in _run_scenario_once\n    getattr(scenario_inst, method_name)(**scenario_kwargs)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/network.py\", line 234, in create_and_delete_routers\n    subnets_per_network, router_create_args)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/utils.py\", line 318, in _create_network_structure\n    router = self._create_router(router_create_args or {})\n  File \"/usr/local/lib/python2.7/dist-packages/rally/task/atomic.py\", line 84, in func_atomic_actions\n    f = func(self, *args, **kwargs)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/utils.py\", line 169, in _create_router\n    {\"router\": router_create_args})\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 712, in create_router\n    return self.post(self.routers_path, body=body)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 347, in post\n    headers=headers, params=params)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 282, in do_request\n    self._handle_fault_response(status_code, replybody, resp)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 257, in _handle_fault_response\n    exception_handler_v20(status_code, error_body)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 84, in exception_handler_v20\n    request_ids=request_ids)\nNeutronClientException: <html><body><h1>504 Gateway Time-out</h1>\nThe server didn't respond in time.\n</body></html>\n\n", "iteration": 69}, {"type": "NeutronClientException", "message": "<html><body><h1>504 Gateway Time-out</h1>\nThe server didn't respond in time.\n</body></html>\n", "traceback": "Traceback (most recent call last):\n  File \"/usr/local/lib/python2.7/dist-packages/rally/task/runner.py\", line 66, in _run_scenario_once\n    getattr(scenario_inst, method_name)(**scenario_kwargs)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/network.py\", line 234, in create_and_delete_routers\n    subnets_per_network, router_create_args)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/utils.py\", line 318, in _create_network_structure\n    router = self._create_router(router_create_args or {})\n  File \"/usr/local/lib/python2.7/dist-packages/rally/task/atomic.py\", line 84, in func_atomic_actions\n    f = func(self, *args, **kwargs)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/utils.py\", line 169, in _create_router\n    {\"router\": router_create_args})\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 712, in create_router\n    return self.post(self.routers_path, body=body)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 347, in post\n    headers=headers, params=params)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 282, in do_request\n    self._handle_fault_response(status_code, replybody, resp)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 257, in _handle_fault_response\n    exception_handler_v20(status_code, error_body)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 84, in exception_handler_v20\n    request_ids=request_ids)\nNeutronClientException: <html><body><h1>504 Gateway Time-out</h1>\nThe server didn't respond in time.\n</body></html>\n\n", "iteration": 76}, {"type": "NeutronClientException", "message": "<html><body><h1>504 Gateway Time-out</h1>\nThe server didn't respond in time.\n</body></html>\n", "traceback": "Traceback (most recent call last):\n  File \"/usr/local/lib/python2.7/dist-packages/rally/task/runner.py\", line 66, in _run_scenario_once\n    getattr(scenario_inst, method_name)(**scenario_kwargs)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/network.py\", line 234, in create_and_delete_routers\n    subnets_per_network, router_create_args)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/utils.py\", line 318, in _create_network_structure\n    router = self._create_router(router_create_args or {})\n  File \"/usr/local/lib/python2.7/dist-packages/rally/task/atomic.py\", line 84, in func_atomic_actions\n    f = func(self, *args, **kwargs)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/utils.py\", line 169, in _create_router\n    {\"router\": router_create_args})\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 712, in create_router\n    return self.post(self.routers_path, body=body)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 347, in post\n    headers=headers, params=params)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 282, in do_request\n    self._handle_fault_response(status_code, replybody, resp)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 257, in _handle_fault_response\n    exception_handler_v20(status_code, error_body)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 84, in exception_handler_v20\n    request_ids=request_ids)\nNeutronClientException: <html><body><h1>504 Gateway Time-out</h1>\nThe server didn't respond in time.\n</body></html>\n\n", "iteration": 126}, {"type": "NeutronClientException", "message": "<html><body><h1>504 Gateway Time-out</h1>\nThe server didn't respond in time.\n</body></html>\n", "traceback": "Traceback (most recent call last):\n  File \"/usr/local/lib/python2.7/dist-packages/rally/task/runner.py\", line 66, in _run_scenario_once\n    getattr(scenario_inst, method_name)(**scenario_kwargs)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/network.py\", line 234, in create_and_delete_routers\n    subnets_per_network, router_create_args)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/utils.py\", line 318, in _create_network_structure\n    router = self._create_router(router_create_args or {})\n  File \"/usr/local/lib/python2.7/dist-packages/rally/task/atomic.py\", line 84, in func_atomic_actions\n    f = func(self, *args, **kwargs)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/utils.py\", line 169, in _create_router\n    {\"router\": router_create_args})\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 712, in create_router\n    return self.post(self.routers_path, body=body)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 347, in post\n    headers=headers, params=params)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 282, in do_request\n    self._handle_fault_response(status_code, replybody, resp)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 257, in _handle_fault_response\n    exception_handler_v20(status_code, error_body)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 84, in exception_handler_v20\n    request_ids=request_ids)\nNeutronClientException: <html><body><h1>504 Gateway Time-out</h1>\nThe server didn't respond in time.\n</body></html>\n\n", "iteration": 137}, {"type": "NeutronClientException", "message": "<html><body><h1>504 Gateway Time-out</h1>\nThe server didn't respond in time.\n</body></html>\n", "traceback": "Traceback (most recent call last):\n  File \"/usr/local/lib/python2.7/dist-packages/rally/task/runner.py\", line 66, in _run_scenario_once\n    getattr(scenario_inst, method_name)(**scenario_kwargs)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/network.py\", line 234, in create_and_delete_routers\n    subnets_per_network, router_create_args)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/utils.py\", line 318, in _create_network_structure\n    router = self._create_router(router_create_args or {})\n  File \"/usr/local/lib/python2.7/dist-packages/rally/task/atomic.py\", line 84, in func_atomic_actions\n    f = func(self, *args, **kwargs)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/utils.py\", line 169, in _create_router\n    {\"router\": router_create_args})\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 712, in create_router\n    return self.post(self.routers_path, body=body)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 347, in post\n    headers=headers, params=params)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 282, in do_request\n    self._handle_fault_response(status_code, replybody, resp)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 257, in _handle_fault_response\n    exception_handler_v20(status_code, error_body)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 84, in exception_handler_v20\n    request_ids=request_ids)\nNeutronClientException: <html><body><h1>504 Gateway Time-out</h1>\nThe server didn't respond in time.\n</body></html>\n\n", "iteration": 139}, {"type": "NeutronClientException", "message": "<html><body><h1>504 Gateway Time-out</h1>\nThe server didn't respond in time.\n</body></html>\n", "traceback": "Traceback (most recent call last):\n  File \"/usr/local/lib/python2.7/dist-packages/rally/task/runner.py\", line 66, in _run_scenario_once\n    getattr(scenario_inst, method_name)(**scenario_kwargs)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/network.py\", line 234, in create_and_delete_routers\n    subnets_per_network, router_create_args)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/utils.py\", line 318, in _create_network_structure\n    router = self._create_router(router_create_args or {})\n  File \"/usr/local/lib/python2.7/dist-packages/rally/task/atomic.py\", line 84, in func_atomic_actions\n    f = func(self, *args, **kwargs)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/utils.py\", line 169, in _create_router\n    {\"router\": router_create_args})\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 712, in create_router\n    return self.post(self.routers_path, body=body)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 347, in post\n    headers=headers, params=params)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 282, in do_request\n    self._handle_fault_response(status_code, replybody, resp)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 257, in _handle_fault_response\n    exception_handler_v20(status_code, error_body)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 84, in exception_handler_v20\n    request_ids=request_ids)\nNeutronClientException: <html><body><h1>504 Gateway Time-out</h1>\nThe server didn't respond in time.\n</body></html>\n\n", "iteration": 148}, {"type": "NeutronClientException", "message": "<html><body><h1>504 Gateway Time-out</h1>\nThe server didn't respond in time.\n</body></html>\n", "traceback": "Traceback (most recent call last):\n  File \"/usr/local/lib/python2.7/dist-packages/rally/task/runner.py\", line 66, in _run_scenario_once\n    getattr(scenario_inst, method_name)(**scenario_kwargs)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/network.py\", line 234, in create_and_delete_routers\n    subnets_per_network, router_create_args)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/utils.py\", line 318, in _create_network_structure\n    router = self._create_router(router_create_args or {})\n  File \"/usr/local/lib/python2.7/dist-packages/rally/task/atomic.py\", line 84, in func_atomic_actions\n    f = func(self, *args, **kwargs)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/utils.py\", line 169, in _create_router\n    {\"router\": router_create_args})\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 712, in create_router\n    return self.post(self.routers_path, body=body)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 347, in post\n    headers=headers, params=params)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 282, in do_request\n    self._handle_fault_response(status_code, replybody, resp)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 257, in _handle_fault_response\n    exception_handler_v20(status_code, error_body)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 84, in exception_handler_v20\n    request_ids=request_ids)\nNeutronClientException: <html><body><h1>504 Gateway Time-out</h1>\nThe server didn't respond in time.\n</body></html>\n\n", "iteration": 150}, {"type": "NeutronClientException", "message": "<html><body><h1>504 Gateway Time-out</h1>\nThe server didn't respond in time.\n</body></html>\n", "traceback": "Traceback (most recent call last):\n  File \"/usr/local/lib/python2.7/dist-packages/rally/task/runner.py\", line 66, in _run_scenario_once\n    getattr(scenario_inst, method_name)(**scenario_kwargs)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/network.py\", line 234, in create_and_delete_routers\n    subnets_per_network, router_create_args)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/utils.py\", line 318, in _create_network_structure\n    router = self._create_router(router_create_args or {})\n  File \"/usr/local/lib/python2.7/dist-packages/rally/task/atomic.py\", line 84, in func_atomic_actions\n    f = func(self, *args, **kwargs)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/utils.py\", line 169, in _create_router\n    {\"router\": router_create_args})\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 712, in create_router\n    return self.post(self.routers_path, body=body)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 347, in post\n    headers=headers, params=params)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 282, in do_request\n    self._handle_fault_response(status_code, replybody, resp)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 257, in _handle_fault_response\n    exception_handler_v20(status_code, error_body)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 84, in exception_handler_v20\n    request_ids=request_ids)\nNeutronClientException: <html><body><h1>504 Gateway Time-out</h1>\nThe server didn't respond in time.\n</body></html>\n\n", "iteration": 156}, {"type": "NeutronClientException", "message": "<html><body><h1>504 Gateway Time-out</h1>\nThe server didn't respond in time.\n</body></html>\n", "traceback": "Traceback (most recent call last):\n  File \"/usr/local/lib/python2.7/dist-packages/rally/task/runner.py\", line 66, in _run_scenario_once\n    getattr(scenario_inst, method_name)(**scenario_kwargs)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/network.py\", line 234, in create_and_delete_routers\n    subnets_per_network, router_create_args)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/utils.py\", line 318, in _create_network_structure\n    router = self._create_router(router_create_args or {})\n  File \"/usr/local/lib/python2.7/dist-packages/rally/task/atomic.py\", line 84, in func_atomic_actions\n    f = func(self, *args, **kwargs)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/utils.py\", line 169, in _create_router\n    {\"router\": router_create_args})\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 712, in create_router\n    return self.post(self.routers_path, body=body)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 347, in post\n    headers=headers, params=params)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 282, in do_request\n    self._handle_fault_response(status_code, replybody, resp)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 257, in _handle_fault_response\n    exception_handler_v20(status_code, error_body)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 84, in exception_handler_v20\n    request_ids=request_ids)\nNeutronClientException: <html><body><h1>504 Gateway Time-out</h1>\nThe server didn't respond in time.\n</body></html>\n\n", "iteration": 162}, {"type": "NeutronClientException", "message": "<html><body><h1>504 Gateway Time-out</h1>\nThe server didn't respond in time.\n</body></html>\n", "traceback": "Traceback (most recent call last):\n  File \"/usr/local/lib/python2.7/dist-packages/rally/task/runner.py\", line 66, in _run_scenario_once\n    getattr(scenario_inst, method_name)(**scenario_kwargs)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/network.py\", line 234, in create_and_delete_routers\n    subnets_per_network, router_create_args)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/utils.py\", line 318, in _create_network_structure\n    router = self._create_router(router_create_args or {})\n  File \"/usr/local/lib/python2.7/dist-packages/rally/task/atomic.py\", line 84, in func_atomic_actions\n    f = func(self, *args, **kwargs)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/utils.py\", line 169, in _create_router\n    {\"router\": router_create_args})\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 712, in create_router\n    return self.post(self.routers_path, body=body)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 347, in post\n    headers=headers, params=params)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 282, in do_request\n    self._handle_fault_response(status_code, replybody, resp)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 257, in _handle_fault_response\n    exception_handler_v20(status_code, error_body)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 84, in exception_handler_v20\n    request_ids=request_ids)\nNeutronClientException: <html><body><h1>504 Gateway Time-out</h1>\nThe server didn't respond in time.\n</body></html>\n\n", "iteration": 167}, {"type": "NeutronClientException", "message": "<html><body><h1>504 Gateway Time-out</h1>\nThe server didn't respond in time.\n</body></html>\n", "traceback": "Traceback (most recent call last):\n  File \"/usr/local/lib/python2.7/dist-packages/rally/task/runner.py\", line 66, in _run_scenario_once\n    getattr(scenario_inst, method_name)(**scenario_kwargs)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/network.py\", line 234, in create_and_delete_routers\n    subnets_per_network, router_create_args)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/utils.py\", line 318, in _create_network_structure\n    router = self._create_router(router_create_args or {})\n  File \"/usr/local/lib/python2.7/dist-packages/rally/task/atomic.py\", line 84, in func_atomic_actions\n    f = func(self, *args, **kwargs)\n  File \"/usr/local/lib/python2.7/dist-packages/rally/plugins/openstack/scenarios/neutron/utils.py\", line 169, in _create_router\n    {\"router\": router_create_args})\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 712, in create_router\n    return self.post(self.routers_path, body=body)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 347, in post\n    headers=headers, params=params)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 282, in do_request\n    self._handle_fault_response(status_code, replybody, resp)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 257, in _handle_fault_response\n    exception_handler_v20(status_code, error_body)\n  File \"/usr/local/lib/python2.7/dist-packages/neutronclient/v2_0/client.py\", line 84, in exception_handler_v20\n    request_ids=request_ids)\nNeutronClientException: <html><body><h1>504 Gateway Time-out</h1>\nThe server didn't respond in time.\n</body></html>\n\n", "iteration": 171}], "name": "create_and_delete_routers", "runner": "constant", "iterations_count": 200, "output_errors": [], "pos": "0", "load_duration": 307.97763109207153, "sla_success": false, "met": "create_and_delete_routers", "atomic": {"pie": [["neutron.create_router", 13.835578655004502], ["neutron.create_router (2)", 12.64630338549614], ["neutron.remove_interface_router", 2.4954000306129456], ["neutron.create_subnet", 1.2506130588054658], ["neutron.add_interface_router (2)", 1.7635947597026824], ["neutron.add_interface_router", 1.8567383623123168], ["neutron.delete_router", 2.1030383920669555], ["neutron.delete_router (2)", 1.984548796415329], ["neutron.create_network", 0.81854043841362], ["neutron.create_subnet (2)", 1.131406545639038], ["neutron.remove_interface_router (2)", 2.410917421579361]], "iter": [["neutron.create_router", [[1, 9.070378065109253], [2, 6.733170032501221], [3, 7.35190486907959], [4, 26.430202960968018], [5, 16.043867111206055], [6, 6.532554864883423], [7, 13.038494110107422], [8, 10.096570014953613], [9, 4.199212074279785], [10, 5.088048219680786], [11, 12.687053918838501], [12, 12.89673399925232], [13, 28.857210874557495], [14, 13.467535018920898], [15, 8.255617141723633], [16, 25.89439296722412], [17, 24.64625310897827], [18, 28.08933401107788], [19, 9.070453882217407], [20, 9.64414095878601], [21, 17.770352125167847], [22, 3.644990921020508], [23, 12.48549485206604], [24, 14.322324991226196], [25, 10.99327802658081], [26, 6.324006080627441], [27, 24.357285022735596], [28, 12.57354211807251], [29, 10.752697944641113], [30, 6.9469709396362305], [31, 6.6398398876190186], [32, 6.827938079833984], [33, 7.22504997253418], [34, 34.37875819206238], [35, 9.504729986190796], [36, 27.879913091659546], [37, 2.5618460178375244], [38, 4.7647058963775635], [39, 7.1815080642700195], [40, 2.849936008453369], [41, 31.44484806060791], [42, 21.891587018966675], [43, 2.2439990043640137], [44, 16.85139799118042], [45, 2.543783187866211], [46, 6.05594801902771], [47, 2.6318628787994385], [48, 60.00617003440857], [49, 10.28849196434021], [50, 60.01001596450806], [51, 2.65375018119812], [52, 9.901201009750366], [53, 2.7233450412750244], [54, 2.7623910903930664], [55, 2.3513870239257812], [56, 2.246096134185791], [57, 9.377496004104614], [58, 2.3903920650482178], [59, 58.43433690071106], [60, 2.5786309242248535], [61, 4.986633062362671], [62, 2.504175901412964], [63, 2.5569040775299072], [64, 5.485935926437378], [65, 5.481683969497681], [66, 5.343996047973633], [67, 13.152553796768188], [68, 60.006957054138184], [69, 6.411746025085449], [70, 60.01618194580078], [71, 3.5803821086883545], [72, 6.3522279262542725], [73, 2.4371140003204346], [74, 13.653692960739136], [75, 5.202133893966675], [76, 6.215826034545898], [77, 60.007622957229614], [78, 2.462200880050659], [79, 5.229841947555542], [80, 2.6759378910064697], [81, 2.670545816421509], [82, 6.185100078582764], [83, 37.79515981674194], [84, 3.7511019706726074], [85, 2.0888490676879883], [86, 39.317928075790405], [87, 5.179419040679932], [88, 40.39570999145508], [89, 2.793236017227173], [90, 4.5015552043914795], [91, 6.75531005859375], [92, 24.687324047088623], [93, 3.244049072265625], [94, 3.461836099624634], [95, 4.771910190582275], [96, 21.70648694038391], [97, 11.480915784835815], [98, 10.684792041778564], [99, 14.918954849243164], [100, 47.39495611190796], [101, 4.1767261028289795], [102, 8.39453387260437], [103, 4.273629903793335], [104, 2.5729870796203613], [105, 2.8902151584625244], [106, 13.91001582145691], [107, 40.337260007858276], [108, 17.800145864486694], [109, 1.65749192237854], [110, 4.57330322265625], [111, 3.726550817489624], [112, 14.635534048080444], [113, 18.598480224609375], [114, 17.64510202407837], [115, 9.408315896987915], [116, 14.113058090209961], [117, 9.711755990982056], [118, 2.2539610862731934], [119, 6.455080032348633], [120, 28.822292804718018], [121, 2.0642731189727783], [122, 16.858394145965576], [123, 20.88508892059326], [124, 13.611987113952637], [125, 6.7414231300354], [126, 5.851669073104858], [127, 2.8700461387634277], [128, 48.45880889892578], [129, 8.378336906433105], [130, 5.505852937698364], [131, 2.597644090652466], [132, 3.055954933166504], [133, 8.007154941558838], [134, 10.20415711402893], [135, 6.827103853225708], [136, 5.415470123291016], [137, 9.021778106689453], [138, 60.00501108169556], [139, 3.2453079223632812], [140, 60.01109504699707], [141, 2.602843999862671], [142, 34.39628314971924], [143, 3.727865219116211], [144, 2.3303909301757812], [145, 3.0026919841766357], [146, 2.072371006011963], [147, 3.16621994972229], [148, 45.9419322013855], [149, 60.00915598869324], [150, 2.408405065536499], [151, 60.0086510181427], [152, 6.917258977890015], [153, 1.9963431358337402], [154, 58.45409893989563], [155, 2.8858041763305664], [156, 1.8823399543762207], [157, 60.01298904418945], [158, 8.167399883270264], [159, 2.516767978668213], [160, 4.742053031921387], [161, 14.48010802268982], [162, 4.467947006225586], [163, 60.00374507904053], [164, 53.108782052993774], [165, 14.001545190811157], [166, 3.598059892654419], [167, 1.9458250999450684], [168, 6.191287040710449], [169, 3.3591208457946777], [170, 3.4469869136810303], [171, 52.06910490989685], [172, 60.013458013534546], [173, 2.205157995223999], [174, 1.9876079559326172], [175, 28.680980920791626], [176, 2.835334062576294], [177, 3.591226816177368], [178, 2.254554033279419], [179, 2.0159201622009277], [180, 2.275237798690796], [181, 3.166015148162842], [182, 15.805541038513184], [183, 9.63495397567749], [184, 2.5883867740631104], [185, 2.312875986099243], [186, 3.5763678550720215], [187, 10.074869871139526], [188, 17.68203616142273], [189, 9.108565092086792], [190, 2.3608410358428955], [191, 10.787097215652466], [192, 7.12273097038269], [193, 11.96461009979248], [194, 12.262791156768799], [195, 14.729207992553711], [196, 2.361875057220459], [197, 5.486986875534058], [198, 13.675151109695435], [199, 3.467097043991089], [200, 8.586561918258667]]], ["neutron.create_router (2)", [[1, 5.475939035415649], [2, 18.55253291130066], [3, 20.583810091018677], [4, 2.5050048828125], [5, 9.858801126480103], [6, 5.08699107170105], [7, 4.755311012268066], [8, 22.69584894180298], [9, 34.30374097824097], [10, 25.159419059753418], [11, 15.0783109664917], [12, 7.507786989212036], [13, 5.12796688079834], [14, 60.00500416755676], [15, 22.830453872680664], [16, 5.449709892272949], [17, 10.131623029708862], [18, 15.870737075805664], [19, 41.723000049591064], [20, 19.659291982650757], [21, 2.620368003845215], [22, 21.143887996673584], [23, 6.8125832080841064], [24, 5.942818880081177], [25, 2.7060649394989014], [26, 13.078301906585693], [27, 60.00847506523132], [28, 7.966248035430908], [29, 2.9674129486083984], [30, 2.4095661640167236], [31, 3.2644050121307373], [32, 24.571940183639526], [33, 6.081820964813232], [34, 3.752748966217041], [35, 49.35457396507263], [36, 15.699692010879517], [37, 7.442006826400757], [38, 13.11185908317566], [39, 55.626837968826294], [40, 10.423667192459106], [41, 8.664615869522095], [42, 41.34448003768921], [43, 6.975318908691406], [44, 2.314344882965088], [45, 5.060563087463379], [46, 8.593181848526001], [47, 8.297132015228271], [48, 0], [49, 41.51017689704895], [50, 0], [51, 17.089202880859375], [52, 5.807064056396484], [53, 9.054697036743164], [54, 2.3016719818115234], [55, 5.217468023300171], [56, 3.0064728260040283], [57, 2.0978851318359375], [58, 45.92564415931702], [59, 14.826762914657593], [60, 60.007932901382446], [61, 10.880141019821167], [62, 3.3681020736694336], [63, 3.500655174255371], [64, 4.500746011734009], [65, 11.484440088272095], [66, 2.564894914627075], [67, 45.39370799064636], [68, 0], [69, 28.94466519355774], [70, 0], [71, 3.6300251483917236], [72, 2.2372169494628906], [73, 12.920264959335327], [74, 4.120151996612549], [75, 15.774435043334961], [76, 3.2862749099731445], [77, 0], [78, 3.1436898708343506], [79, 5.723384857177734], [80, 5.656774044036865], [81, 7.554012060165405], [82, 15.070255994796753], [83, 33.46609902381897], [84, 6.217550039291382], [85, 3.7964510917663574], [86, 2.210282802581787], [87, 3.814333915710449], [88, 2.156680107116699], [89, 2.9176669120788574], [90, 2.763486862182617], [91, 2.537222146987915], [92, 2.644789934158325], [93, 7.228071212768555], [94, 4.899847030639648], [95, 10.252537965774536], [96, 21.426639080047607], [97, 25.713836908340454], [98, 7.82141900062561], [99, 6.135380983352661], [100, 7.9971630573272705], [101, 23.97087597846985], [102, 2.187919855117798], [103, 15.839592933654785], [104, 19.80738401412964], [105, 3.767807960510254], [106, 2.7264561653137207], [107, 6.621031045913696], [108, 17.260581016540527], [109, 2.2092111110687256], [110, 20.867671966552734], [111, 22.828540086746216], [112, 2.296005964279175], [113, 4.405772924423218], [114, 47.42589998245239], [115, 4.483896970748901], [116, 26.089013814926147], [117, 49.161755084991455], [118, 22.689244031906128], [119, 23.786288022994995], [120, 6.468867063522339], [121, 3.2723381519317627], [122, 42.83872413635254], [123, 22.833842992782593], [124, 38.897599935531616], [125, 3.686516046524048], [126, 24.95954990386963], [127, 60.009690046310425], [128, 2.819180965423584], [129, 6.74874210357666], [130, 5.211292028427124], [131, 12.754120111465454], [132, 30.297852993011475], [133, 5.699425935745239], [134, 59.90715789794922], [135, 3.1716558933258057], [136, 49.17403197288513], [137, 2.6501190662384033], [138, 0], [139, 6.056139945983887], [140, 0], [141, 11.75609016418457], [142, 4.56203818321228], [143, 4.737126111984253], [144, 3.7285032272338867], [145, 2.319350004196167], [146, 2.624161958694458], [147, 1.8933830261230469], [148, 4.9223339557647705], [149, 0], [150, 2.4633541107177734], [151, 0], [152, 7.288086891174316], [153, 19.410969018936157], [154, 7.454128980636597], [155, 2.5002169609069824], [156, 4.528300046920776], [157, 0], [158, 18.958274126052856], [159, 4.32436203956604], [160, 2.7168819904327393], [161, 7.480511903762817], [162, 3.3981659412384033], [163, 0], [164, 2.413588047027588], [165, 7.0624401569366455], [166, 36.60832905769348], [167, 2.2641961574554443], [168, 60.010901927948], [169, 17.399075031280518], [170, 2.15487003326416], [171, 10.020769119262695], [172, 0], [173, 7.39643120765686], [174, 3.051682949066162], [175, 21.043832063674927], [176, 2.2854249477386475], [177, 10.743887901306152], [178, 14.847294807434082], [179, 19.379744052886963], [180, 2.903836965560913], [181, 4.051781892776489], [182, 35.811471939086914], [183, 20.208576917648315], [184, 2.006941080093384], [185, 4.954795837402344], [186, 6.2869789600372314], [187, 5.493656158447266], [188, 2.5262129306793213], [189, 3.78973388671875], [190, 2.166145086288452], [191, 2.4278600215911865], [192, 1.8268589973449707], [193, 11.962723970413208], [194, 17.470604181289673], [195, 1.6510009765625], [196, 7.548460006713867], [197, 28.30743408203125], [198, 1.9454610347747803], [199, 5.572595834732056], [200, 21.522568941116333]]], ["neutron.remove_interface_router", [[1, 3.8024680614471436], [2, 1.7229688167572021], [3, 5.8057990074157715], [4, 3.2978639602661133], [5, 2.0839908123016357], [6, 3.0783069133758545], [7, 2.414379119873047], [8, 5.061573028564453], [9, 7.032097101211548], [10, 2.2719480991363525], [11, 3.521678924560547], [12, 5.409168004989624], [13, 1.8294150829315186], [14, 0], [15, 2.6846108436584473], [16, 4.586632013320923], [17, 6.4311299324035645], [18, 4.767925024032593], [19, 5.751736879348755], [20, 1.4949750900268555], [21, 2.4761178493499756], [22, 2.6365270614624023], [23, 8.221482992172241], [24, 2.2230207920074463], [25, 2.1669859886169434], [26, 1.939404010772705], [27, 0], [28, 3.155205011367798], [29, 2.044853925704956], [30, 2.147458076477051], [31, 2.363924026489258], [32, 2.8045029640197754], [33, 2.4920051097869873], [34, 4.920244216918945], [35, 3.199315071105957], [36, 2.608081102371216], [37, 4.339823007583618], [38, 5.577813148498535], [39, 2.8057010173797607], [40, 4.080924987792969], [41, 2.676905870437622], [42, 4.111742973327637], [43, 2.259286880493164], [44, 1.3578200340270996], [45, 4.4874958992004395], [46, 1.9736430644989014], [47, 1.717987060546875], [48, 0], [49, 2.5614659786224365], [50, 0], [51, 2.050273895263672], [52, 3.01251220703125], [53, 2.5826048851013184], [54, 1.6207139492034912], [55, 3.257094144821167], [56, 1.3862791061401367], [57, 1.6525599956512451], [58, 3.083935022354126], [59, 4.663367986679077], [60, 0], [61, 2.1528007984161377], [62, 3.06858491897583], [63, 2.09405517578125], [64, 2.6670899391174316], [65, 1.975351095199585], [66, 2.8170008659362793], [67, 2.1807119846343994], [68, 0], [69, 2.7565500736236572], [70, 0], [71, 1.7417359352111816], [72, 2.875910997390747], [73, 2.059473991394043], [74, 1.782620906829834], [75, 3.712517023086548], [76, 2.7337160110473633], [77, 0], [78, 1.6424260139465332], [79, 1.769434928894043], [80, 1.7080519199371338], [81, 4.1569929122924805], [82, 2.499171018600464], [83, 1.841191053390503], [84, 2.1004388332366943], [85, 5.675806045532227], [86, 1.859123945236206], [87, 2.783830165863037], [88, 1.4130780696868896], [89, 2.6272809505462646], [90, 1.780229091644287], [91, 2.317366123199463], [92, 1.8693749904632568], [93, 3.7081449031829834], [94, 5.2130467891693115], [95, 3.852957010269165], [96, 1.8445169925689697], [97, 3.0647568702697754], [98, 4.128313064575195], [99, 3.5912649631500244], [100, 4.528783082962036], [101, 1.8366539478302002], [102, 1.9962379932403564], [103, 1.662703037261963], [104, 1.7598769664764404], [105, 6.377756118774414], [106, 1.7967638969421387], [107, 1.5521960258483887], [108, 1.5279529094696045], [109, 2.7674691677093506], [110, 3.389578104019165], [111, 1.5734272003173828], [112, 1.4788780212402344], [113, 2.859398126602173], [114, 2.897413969039917], [115, 1.3933279514312744], [116, 4.301358938217163], [117, 2.853724956512451], [118, 2.4317948818206787], [119, 3.1246068477630615], [120, 1.8602159023284912], [121, 2.4374539852142334], [122, 1.9278559684753418], [123, 1.262678861618042], [124, 4.3351521492004395], [125, 1.4072248935699463], [126, 2.4598920345306396], [127, 0], [128, 5.296157121658325], [129, 1.8689398765563965], [130, 2.1193699836730957], [131, 5.765523910522461], [132, 1.7568910121917725], [133, 2.1539430618286133], [134, 1.8457481861114502], [135, 1.506742000579834], [136, 3.135692834854126], [137, 1.9598519802093506], [138, 0], [139, 3.4479939937591553], [140, 0], [141, 3.923068046569824], [142, 1.8189680576324463], [143, 1.5755870342254639], [144, 3.828458070755005], [145, 2.856687068939209], [146, 1.8227601051330566], [147, 2.717660903930664], [148, 2.454176902770996], [149, 0], [150, 1.712141990661621], [151, 0], [152, 1.916003942489624], [153, 1.829604148864746], [154, 1.7844130992889404], [155, 1.8184218406677246], [156, 2.6853010654449463], [157, 0], [158, 3.847776174545288], [159, 2.3999860286712646], [160, 3.6302108764648438], [161, 1.9380438327789307], [162, 1.6450161933898926], [163, 0], [164, 1.345733880996704], [165, 1.7374110221862793], [166, 2.3159749507904053], [167, 1.4930779933929443], [168, 0], [169, 3.264178991317749], [170, 2.962027072906494], [171, 1.497157096862793], [172, 0], [173, 1.7006800174713135], [174, 2.8184518814086914], [175, 2.4390931129455566], [176, 2.83856201171875], [177, 1.790605068206787], [178, 2.2150747776031494], [179, 2.6851301193237305], [180, 2.595896005630493], [181, 2.686475992202759], [182, 2.0235331058502197], [183, 2.264918088912964], [184, 1.7690420150756836], [185, 1.898918867111206], [186, 1.4768099784851074], [187, 2.124530076980591], [188, 3.576993942260742], [189, 2.165224075317383], [190, 1.9736781120300293], [191, 2.55151104927063], [192, 1.9992849826812744], [193, 2.1679790019989014], [194, 3.4108099937438965], [195, 2.3554799556732178], [196, 1.6233861446380615], [197, 2.5406389236450195], [198, 1.5778281688690186], [199, 3.0301549434661865], [200, 1.5295770168304443]]], ["neutron.create_subnet", [[1, 1.250943899154663], [2, 0.9096319675445557], [3, 1.1302549839019775], [4, 2.5963521003723145], [5, 1.1064419746398926], [6, 1.6119709014892578], [7, 1.6082470417022705], [8, 1.6412239074707031], [9, 3.850942850112915], [10, 1.106924057006836], [11, 1.639220952987671], [12, 1.6071557998657227], [13, 1.1254339218139648], [14, 1.7328150272369385], [15, 1.7485527992248535], [16, 3.866863965988159], [17, 1.7017879486083984], [18, 1.2611238956451416], [19, 3.803239107131958], [20, 0.9429168701171875], [21, 1.5799531936645508], [22, 1.1950950622558594], [23, 1.7130858898162842], [24, 1.3971989154815674], [25, 1.0182218551635742], [26, 0.8379619121551514], [27, 1.3043968677520752], [28, 0.9132380485534668], [29, 1.2325081825256348], [30, 0.8256402015686035], [31, 1.3963758945465088], [32, 0.8340959548950195], [33, 0.8803877830505371], [34, 0.7921509742736816], [35, 0.7096600532531738], [36, 2.2565548419952393], [37, 0.8114559650421143], [38, 0.8326630592346191], [39, 0.8359050750732422], [40, 0.7929790019989014], [41, 0.5519330501556396], [42, 0.7564241886138916], [43, 2.252465009689331], [44, 1.3488481044769287], [45, 2.69999098777771], [46, 2.31027889251709], [47, 0.680131196975708], [48, 2.6627399921417236], [49, 1.0260610580444336], [50, 1.992250919342041], [51, 1.0100798606872559], [52, 2.0405149459838867], [53, 0.9081621170043945], [54, 1.060326099395752], [55, 1.0327839851379395], [56, 3.852046012878418], [57, 0.9359560012817383], [58, 1.4578030109405518], [59, 1.0438311100006104], [60, 0.6516578197479248], [61, 0.8488008975982666], [62, 0.8540420532226562], [63, 1.338352918624878], [64, 1.3175079822540283], [65, 0.9235010147094727], [66, 0.9023690223693848], [67, 1.0542171001434326], [68, 1.439100980758667], [69, 0.855571985244751], [70, 1.4389171600341797], [71, 1.6917471885681152], [72, 0.8452038764953613], [73, 0.9105629920959473], [74, 0.611828088760376], [75, 0.8219399452209473], [76, 0.8902630805969238], [77, 1.1091020107269287], [78, 0.5138800144195557], [79, 1.0271830558776855], [80, 0.7811689376831055], [81, 0.8924970626831055], [82, 0.8711130619049072], [83, 0.740347146987915], [84, 1.170609951019287], [85, 0.952409029006958], [86, 0.8601410388946533], [87, 0.7149431705474854], [88, 0.5920929908752441], [89, 0.8969449996948242], [90, 0.9891350269317627], [91, 1.746047019958496], [92, 1.1831960678100586], [93, 1.1598739624023438], [94, 1.6048319339752197], [95, 1.4735181331634521], [96, 1.9279282093048096], [97, 0.9494519233703613], [98, 1.4223449230194092], [99, 0.9219927787780762], [100, 1.151261806488037], [101, 0.9444758892059326], [102, 1.1603739261627197], [103, 1.1770179271697998], [104, 2.466506004333496], [105, 0.9241499900817871], [106, 1.1394140720367432], [107, 2.1193411350250244], [108, 0.7256288528442383], [109, 1.9348359107971191], [110, 0.9396440982818604], [111, 1.1006758213043213], [112, 0.9214699268341064], [113, 1.464461088180542], [114, 0.6184508800506592], [115, 0.8280658721923828], [116, 1.5235400199890137], [117, 1.459402084350586], [118, 0.9919040203094482], [119, 1.5872461795806885], [120, 0.7406480312347412], [121, 1.3631908893585205], [122, 0.8267619609832764], [123, 1.2229828834533691], [124, 1.1217410564422607], [125, 1.0742409229278564], [126, 1.3811421394348145], [127, 0.8906340599060059], [128, 0.7578139305114746], [129, 1.0388939380645752], [130, 1.3124449253082275], [131, 1.4796948432922363], [132, 1.2190709114074707], [133, 0.6049818992614746], [134, 1.2808358669281006], [135, 1.3438050746917725], [136, 1.638828992843628], [137, 1.359117031097412], [138, 0.9620919227600098], [139, 1.3097939491271973], [140, 1.8166420459747314], [141, 0.9720330238342285], [142, 0.9282450675964355], [143, 3.4852168560028076], [144, 0.4873499870300293], [145, 1.039628028869629], [146, 4.386292934417725], [147, 1.0025770664215088], [148, 0.8711400032043457], [149, 1.2586688995361328], [150, 0.81095290184021], [151, 0.8964178562164307], [152, 0.7591860294342041], [153, 1.7823190689086914], [154, 0.9537661075592041], [155, 0.6453821659088135], [156, 1.4635608196258545], [157, 1.021622896194458], [158, 1.3131060600280762], [159, 1.173539161682129], [160, 0.6052510738372803], [161, 0.8449339866638184], [162, 1.688511848449707], [163, 1.4621810913085938], [164, 1.5382659435272217], [165, 0.9589319229125977], [166, 1.2551701068878174], [167, 0.9775331020355225], [168, 0.9402899742126465], [169, 1.6389031410217285], [170, 1.0058350563049316], [171, 0.9542050361633301], [172, 0.882652997970581], [173, 0.9313178062438965], [174, 1.0118019580841064], [175, 0.7850019931793213], [176, 1.0708730220794678], [177, 1.1688940525054932], [178, 0.9689838886260986], [179, 0.7037642002105713], [180, 1.3524601459503174], [181, 0.704840898513794], [182, 1.7601690292358398], [183, 1.0401158332824707], [184, 2.4396791458129883], [185, 0.9321601390838623], [186, 1.6880359649658203], [187, 1.6487109661102295], [188, 0.9955058097839355], [189, 0.7063219547271729], [190, 1.163341999053955], [191, 0.740976095199585], [192, 0.7525849342346191], [193, 0.9487111568450928], [194, 0.7259430885314941], [195, 0.8181219100952148], [196, 0.8986599445343018], [197, 1.2649199962615967], [198, 0.9705460071563721], [199, 0.8146779537200928], [200, 1.2680630683898926]]], ["neutron.add_interface_router (2)", [[1, 1.3781890869140625], [2, 1.43192720413208], [3, 1.837946891784668], [4, 3.5835399627685547], [5, 1.1615431308746338], [6, 1.1906850337982178], [7, 2.308985948562622], [8, 1.8203179836273193], [9, 1.1924018859863281], [10, 1.090723991394043], [11, 5.157717943191528], [12, 2.780184030532837], [13, 5.043959856033325], [14, 0], [15, 1.349410057067871], [16, 1.2555348873138428], [17, 2.7043490409851074], [18, 4.93113899230957], [19, 1.9770429134368896], [20, 1.7096788883209229], [21, 1.4370689392089844], [22, 2.0222859382629395], [23, 1.3151209354400635], [24, 1.8266091346740723], [25, 1.4741058349609375], [26, 1.79892897605896], [27, 0], [28, 1.6789698600769043], [29, 2.921273946762085], [30, 2.6407101154327393], [31, 1.2278399467468262], [32, 3.172294855117798], [33, 1.756753921508789], [34, 2.59171199798584], [35, 1.3920061588287354], [36, 2.504193067550659], [37, 3.756140947341919], [38, 1.8187789916992188], [39, 1.1161789894104004], [40, 2.9006168842315674], [41, 1.235698938369751], [42, 1.6782259941101074], [43, 1.2085599899291992], [44, 2.6199769973754883], [45, 1.1626789569854736], [46, 1.2251920700073242], [47, 1.6452980041503906], [48, 0], [49, 2.391436815261841], [50, 0], [51, 1.613765001296997], [52, 2.0045909881591797], [53, 1.9725260734558105], [54, 1.3708679676055908], [55, 1.5126471519470215], [56, 0.987555980682373], [57, 1.437756061553955], [58, 3.0278937816619873], [59, 1.325348138809204], [60, 0], [61, 1.4798929691314697], [62, 1.4913301467895508], [63, 1.4368970394134521], [64, 1.1838130950927734], [65, 1.4661519527435303], [66, 1.5591800212860107], [67, 1.0907721519470215], [68, 0], [69, 1.664184808731079], [70, 0], [71, 0.993121862411499], [72, 1.5493521690368652], [73, 1.8871638774871826], [74, 1.1505401134490967], [75, 1.508270025253296], [76, 2.1757547855377197], [77, 0], [78, 4.207818984985352], [79, 2.062161922454834], [80, 1.3416922092437744], [81, 1.5047500133514404], [82, 2.4624600410461426], [83, 1.0024659633636475], [84, 2.0972390174865723], [85, 1.2507619857788086], [86, 3.227073907852173], [87, 1.6994531154632568], [88, 1.5528819561004639], [89, 2.948364019393921], [90, 1.863185167312622], [91, 1.1461079120635986], [92, 3.3067309856414795], [93, 3.0151140689849854], [94, 1.072737216949463], [95, 2.3760781288146973], [96, 2.9913501739501953], [97, 1.5674090385437012], [98, 1.4375309944152832], [99, 1.4205639362335205], [100, 2.316720962524414], [101, 2.3993749618530273], [102, 1.3266570568084717], [103, 1.0523929595947266], [104, 2.1627299785614014], [105, 2.4399800300598145], [106, 1.4870579242706299], [107, 4.880637884140015], [108, 2.2212400436401367], [109, 1.0949931144714355], [110, 2.8993349075317383], [111, 1.5707409381866455], [112, 2.4188849925994873], [113, 1.7226340770721436], [114, 1.795793056488037], [115, 2.3672778606414795], [116, 1.6730260848999023], [117, 1.2302699089050293], [118, 2.033327102661133], [119, 2.8612120151519775], [120, 1.8933470249176025], [121, 2.2712388038635254], [122, 1.2151250839233398], [123, 1.3615779876708984], [124, 2.1162350177764893], [125, 2.7735769748687744], [126, 2.499737024307251], [127, 0], [128, 1.366692066192627], [129, 2.7848970890045166], [130, 3.6627731323242188], [131, 1.7632830142974854], [132, 1.6940650939941406], [133, 2.088726043701172], [134, 1.6438372135162354], [135, 4.2196128368377686], [136, 1.670964002609253], [137, 1.5389409065246582], [138, 0], [139, 2.3888089656829834], [140, 0], [141, 1.1086640357971191], [142, 4.702970027923584], [143, 0.8936731815338135], [144, 1.228931188583374], [145, 1.59775710105896], [146, 1.8202378749847412], [147, 2.452913999557495], [148, 1.1995289325714111], [149, 0], [150, 1.9952239990234375], [151, 0], [152, 1.2916009426116943], [153, 1.0932629108428955], [154, 1.3769350051879883], [155, 1.7816109657287598], [156, 1.7476000785827637], [157, 0], [158, 3.2820029258728027], [159, 1.6955878734588623], [160, 1.1527669429779053], [161, 2.458258867263794], [162, 3.1210711002349854], [163, 0], [164, 1.4222640991210938], [165, 1.653489112854004], [166, 2.6498379707336426], [167, 1.4583930969238281], [168, 0], [169, 1.5422730445861816], [170, 2.323964834213257], [171, 1.0046658515930176], [172, 0], [173, 1.0826900005340576], [174, 1.234802007675171], [175, 1.2230160236358643], [176, 1.295846939086914], [177, 1.443230152130127], [178, 2.42496919631958], [179, 2.0659148693084717], [180, 1.3176469802856445], [181, 1.012742042541504], [182, 1.7902088165283203], [183, 1.1856598854064941], [184, 1.4451160430908203], [185, 2.294654130935669], [186, 1.4103741645812988], [187, 1.357882022857666], [188, 1.4528350830078125], [189, 1.5701861381530762], [190, 1.5746080875396729], [191, 1.292375087738037], [192, 1.7548730373382568], [193, 3.658339023590088], [194, 2.0054779052734375], [195, 1.0181810855865479], [196, 2.774923086166382], [197, 1.2406249046325684], [198, 0.9107019901275635], [199, 3.021550178527832], [200, 1.0290710926055908]]], ["neutron.add_interface_router", [[1, 2.476238965988159], [2, 1.682569980621338], [3, 1.3836288452148438], [4, 1.5973639488220215], [5, 2.0615339279174805], [6, 1.4607138633728027], [7, 1.226909875869751], [8, 1.9273028373718262], [9, 1.799867868423462], [10, 1.925508975982666], [11, 1.9464240074157715], [12, 2.2181570529937744], [13, 5.831987142562866], [14, 1.629302978515625], [15, 1.2015471458435059], [16, 4.203754901885986], [17, 1.5197489261627197], [18, 1.9720039367675781], [19, 2.0304789543151855], [20, 1.138871192932129], [21, 1.4266631603240967], [22, 1.2237648963928223], [23, 1.5859870910644531], [24, 0.9129669666290283], [25, 1.838028907775879], [26, 1.5351028442382812], [27, 1.4198651313781738], [28, 1.942669153213501], [29, 2.0374929904937744], [30, 1.1864409446716309], [31, 7.743546009063721], [32, 1.4277799129486084], [33, 2.3718957901000977], [34, 1.5205020904541016], [35, 3.9852190017700195], [36, 2.5799858570098877], [37, 2.595621109008789], [38, 1.328376054763794], [39, 1.2643630504608154], [40, 2.3942041397094727], [41, 1.8547930717468262], [42, 6.121287107467651], [43, 1.2901721000671387], [44, 2.407055139541626], [45, 1.6987910270690918], [46, 1.0841128826141357], [47, 1.4670121669769287], [48, 0], [49, 1.205806016921997], [50, 0], [51, 2.2574779987335205], [52, 1.5725998878479004], [53, 1.695340871810913], [54, 1.1484251022338867], [55, 1.5007960796356201], [56, 2.3017938137054443], [57, 1.383533000946045], [58, 1.1533739566802979], [59, 2.7833569049835205], [60, 2.587800979614258], [61, 1.3750741481781006], [62, 1.7541859149932861], [63, 2.405179023742676], [64, 2.879734992980957], [65, 1.4281299114227295], [66, 2.724601984024048], [67, 3.7512500286102295], [68, 0], [69, 2.425765037536621], [70, 0], [71, 2.5481488704681396], [72, 1.1842849254608154], [73, 2.4298179149627686], [74, 1.990144968032837], [75, 1.7588069438934326], [76, 1.554919958114624], [77, 0], [78, 1.4536540508270264], [79, 1.0368249416351318], [80, 1.3294811248779297], [81, 1.727043867111206], [82, 1.62782883644104], [83, 1.5813047885894775], [84, 1.7706420421600342], [85, 1.2160670757293701], [86, 2.314272880554199], [87, 2.2045958042144775], [88, 1.1048219203948975], [89, 1.1554839611053467], [90, 2.594416856765747], [91, 1.2110390663146973], [92, 3.3119490146636963], [93, 1.815429925918579], [94, 1.6645350456237793], [95, 1.343005895614624], [96, 3.0055289268493652], [97, 1.4296858310699463], [98, 1.4456710815429688], [99, 1.53141188621521], [100, 1.3864319324493408], [101, 3.480422019958496], [102, 1.0556621551513672], [103, 1.511620044708252], [104, 3.2403478622436523], [105, 1.1280429363250732], [106, 6.325655937194824], [107, 2.4191250801086426], [108, 1.5958061218261719], [109, 2.54715895652771], [110, 3.427638053894043], [111, 3.7187328338623047], [112, 1.5841500759124756], [113, 1.5917110443115234], [114, 2.253926992416382], [115, 1.4205222129821777], [116, 1.503744125366211], [117, 1.5564079284667969], [118, 4.2518470287323], [119, 2.261673927307129], [120, 1.239880084991455], [121, 1.291654109954834], [122, 2.4630608558654785], [123, 3.087263822555542], [124, 1.7306180000305176], [125, 2.0359771251678467], [126, 2.0727617740631104], [127, 1.1506731510162354], [128, 1.9158320426940918], [129, 2.32590389251709], [130, 1.834244966506958], [131, 1.2827157974243164], [132, 2.9319159984588623], [133, 1.3720459938049316], [134, 1.811445951461792], [135, 1.6323318481445312], [136, 1.2561678886413574], [137, 1.9094970226287842], [138, 0], [139, 0.993664026260376], [140, 0], [141, 2.7129361629486084], [142, 1.7653260231018066], [143, 1.8137848377227783], [144, 3.006821870803833], [145, 2.8964462280273438], [146, 1.634450912475586], [147, 1.2515230178833008], [148, 2.86838698387146], [149, 0], [150, 3.1016249656677246], [151, 0], [152, 2.545862913131714], [153, 1.1415059566497803], [154, 2.0480520725250244], [155, 1.129432201385498], [156, 1.5110878944396973], [157, 0], [158, 2.5151548385620117], [159, 1.5877370834350586], [160, 1.883450984954834], [161, 2.8829681873321533], [162, 2.0884978771209717], [163, 0], [164, 1.6667778491973877], [165, 1.9708330631256104], [166, 1.4124720096588135], [167, 1.4289898872375488], [168, 1.0911638736724854], [169, 2.8711090087890625], [170, 1.5093059539794922], [171, 1.5506999492645264], [172, 0], [173, 1.4402439594268799], [174, 1.205535888671875], [175, 1.7162489891052246], [176, 1.542086124420166], [177, 3.9875478744506836], [178, 1.245633840560913], [179, 1.449125051498413], [180, 1.488037109375], [181, 2.0171680450439453], [182, 0.8952760696411133], [183, 2.4685299396514893], [184, 1.3093390464782715], [185, 1.9794960021972656], [186, 1.3719568252563477], [187, 1.3837718963623047], [188, 1.6352651119232178], [189, 1.7495357990264893], [190, 1.5818841457366943], [191, 1.8095531463623047], [192, 1.0210070610046387], [193, 1.073740005493164], [194, 0.9990949630737305], [195, 1.4383859634399414], [196, 2.0837230682373047], [197, 1.8425052165985107], [198, 2.3670339584350586], [199, 1.335576057434082], [200, 3.273029088973999]]], ["neutron.delete_router", [[1, 3.039685010910034], [2, 2.065092086791992], [3, 3.8676071166992188], [4, 3.3043360710144043], [5, 1.3382301330566406], [6, 2.0925490856170654], [7, 3.618638038635254], [8, 4.479066848754883], [9, 1.7709989547729492], [10, 3.9283130168914795], [11, 1.5485668182373047], [12, 5.5131402015686035], [13, 2.0824358463287354], [14, 0], [15, 2.7867918014526367], [16, 1.4397928714752197], [17, 3.500638961791992], [18, 3.9169440269470215], [19, 1.5810198783874512], [20, 2.038645029067993], [21, 2.0999460220336914], [22, 1.721384048461914], [23, 1.8396148681640625], [24, 1.603485107421875], [25, 1.829360008239746], [26, 1.9220659732818604], [27, 0], [28, 1.6693379878997803], [29, 2.6912732124328613], [30, 1.810603141784668], [31, 1.8037738800048828], [32, 2.9429709911346436], [33, 1.5497019290924072], [34, 2.6793949604034424], [35, 1.722856044769287], [36, 2.2243709564208984], [37, 1.9048850536346436], [38, 2.2229411602020264], [39, 1.8202080726623535], [40, 1.9051458835601807], [41, 2.614393949508667], [42, 2.154524087905884], [43, 2.6017980575561523], [44, 1.8714430332183838], [45, 3.102689027786255], [46, 3.0015358924865723], [47, 1.940526008605957], [48, 0], [49, 2.0773980617523193], [50, 0], [51, 1.6801869869232178], [52, 1.7252299785614014], [53, 1.975287914276123], [54, 1.6513879299163818], [55, 1.763556957244873], [56, 2.3078198432922363], [57, 1.492244005203247], [58, 4.146486043930054], [59, 2.9729561805725098], [60, 0], [61, 1.47849702835083], [62, 1.0392541885375977], [63, 1.8659131526947021], [64, 3.1591880321502686], [65, 2.524104118347168], [66, 1.2714159488677979], [67, 2.9514222145080566], [68, 0], [69, 2.4073939323425293], [70, 0], [71, 1.6166021823883057], [72, 2.2237448692321777], [73, 2.1907360553741455], [74, 1.3631207942962646], [75, 2.2031610012054443], [76, 1.547961950302124], [77, 0], [78, 2.133427143096924], [79, 2.378419876098633], [80, 3.183501958847046], [81, 2.4474101066589355], [82, 3.3559131622314453], [83, 2.4045181274414062], [84, 1.7334630489349365], [85, 1.7164030075073242], [86, 1.5254569053649902], [87, 2.014709949493408], [88, 1.985733985900879], [89, 2.1437649726867676], [90, 2.9157769680023193], [91, 3.4332730770111084], [92, 1.5631921291351318], [93, 2.012683153152466], [94, 2.969592809677124], [95, 3.7290189266204834], [96, 3.447995901107788], [97, 1.6251280307769775], [98, 2.094547986984253], [99, 1.8438019752502441], [100, 2.015568971633911], [101, 2.39778995513916], [102, 1.0372729301452637], [103, 1.591299057006836], [104, 3.0800180435180664], [105, 2.8245768547058105], [106, 1.2599902153015137], [107, 2.6276869773864746], [108, 1.7941977977752686], [109, 3.1422739028930664], [110, 5.5202600955963135], [111, 3.4444501399993896], [112, 1.5502381324768066], [113, 2.006261110305786], [114, 1.9465839862823486], [115, 2.8469839096069336], [116, 2.6420230865478516], [117, 2.1695451736450195], [118, 4.6999351978302], [119, 2.7605559825897217], [120, 1.8205769062042236], [121, 1.5186588764190674], [122, 2.7145440578460693], [123, 2.2546260356903076], [124, 2.962491035461426], [125, 2.602790117263794], [126, 1.6367051601409912], [127, 0], [128, 1.9634969234466553], [129, 1.4165079593658447], [130, 4.440141916275024], [131, 1.2880640029907227], [132, 6.741544961929321], [133, 2.149477005004883], [134, 2.942483901977539], [135, 1.981307029724121], [136, 1.4679148197174072], [137, 2.351706027984619], [138, 0], [139, 3.6388449668884277], [140, 0], [141, 1.536041021347046], [142, 1.7257599830627441], [143, 1.863957166671753], [144, 3.14585018157959], [145, 3.071518898010254], [146, 1.776933193206787], [147, 1.583446979522705], [148, 1.6596190929412842], [149, 0], [150, 2.4477710723876953], [151, 0], [152, 1.5278477668762207], [153, 1.5360710620880127], [154, 3.096358060836792], [155, 1.2733938694000244], [156, 1.3597030639648438], [157, 0], [158, 2.54831600189209], [159, 1.9022259712219238], [160, 2.758164882659912], [161, 2.0512609481811523], [162, 1.25398588180542], [163, 0], [164, 1.7562999725341797], [165, 1.3199410438537598], [166, 2.0436618328094482], [167, 2.558316946029663], [168, 0], [169, 1.7819461822509766], [170, 1.1972057819366455], [171, 2.764662027359009], [172, 0], [173, 4.63278603553772], [174, 3.003941059112549], [175, 4.997474908828735], [176, 1.1853580474853516], [177, 1.770425796508789], [178, 2.4494218826293945], [179, 1.7466669082641602], [180, 1.9260320663452148], [181, 1.5323519706726074], [182, 2.171977996826172], [183, 1.4382951259613037], [184, 2.492527961730957], [185, 0.9926178455352783], [186, 0.9912638664245605], [187, 1.43218994140625], [188, 1.3680510520935059], [189, 2.336181163787842], [190, 1.2715651988983154], [191, 1.7484838962554932], [192, 2.525038957595825], [193, 1.3674519062042236], [194, 2.196138858795166], [195, 4.816554069519043], [196, 1.776757001876831], [197, 1.683901071548462], [198, 1.6271369457244873], [199, 2.026832103729248], [200, 2.855078935623169]]], ["neutron.delete_router (2)", [[1, 5.004947900772095], [2, 3.649045944213867], [3, 1.9384090900421143], [4, 1.4847049713134766], [5, 2.7929999828338623], [6, 1.4708878993988037], [7, 1.8823151588439941], [8, 3.4953880310058594], [9, 1.5079240798950195], [10, 1.6392369270324707], [11, 3.8857030868530273], [12, 4.31383204460144], [13, 1.3722960948944092], [14, 0], [15, 1.5606179237365723], [16, 3.2091619968414307], [17, 2.0010008811950684], [18, 2.3881499767303467], [19, 1.9923219680786133], [20, 1.1328988075256348], [21, 1.2656841278076172], [22, 4.014107942581177], [23, 3.704671859741211], [24, 1.72975492477417], [25, 1.7034940719604492], [26, 1.4125840663909912], [27, 0], [28, 2.249418020248413], [29, 4.314892053604126], [30, 2.0866169929504395], [31, 1.967716932296753], [32, 1.314378023147583], [33, 1.3601090908050537], [34, 2.641040086746216], [35, 1.5336158275604248], [36, 1.7876579761505127], [37, 2.42844295501709], [38, 1.735994815826416], [39, 2.3655900955200195], [40, 3.227786064147949], [41, 1.6788010597229004], [42, 2.459859848022461], [43, 2.4362850189208984], [44, 1.9201948642730713], [45, 1.5092599391937256], [46, 1.6546449661254883], [47, 2.979310989379883], [48, 0], [49, 2.0157439708709717], [50, 0], [51, 2.003648042678833], [52, 1.6366431713104248], [53, 1.2539210319519043], [54, 1.5988399982452393], [55, 2.1812798976898193], [56, 2.1511330604553223], [57, 1.5567820072174072], [58, 1.7337861061096191], [59, 1.7003180980682373], [60, 0], [61, 2.67863392829895], [62, 1.9076621532440186], [63, 2.558258056640625], [64, 1.99576997756958], [65, 1.819723129272461], [66, 2.045482873916626], [67, 3.3121659755706787], [68, 0], [69, 1.8986589908599854], [70, 0], [71, 1.7434799671173096], [72, 1.7178068161010742], [73, 1.6548919677734375], [74, 2.493664026260376], [75, 2.110889196395874], [76, 3.439769983291626], [77, 0], [78, 3.5452351570129395], [79, 2.6382501125335693], [80, 2.2995378971099854], [81, 2.081545829772949], [82, 2.0119240283966064], [83, 1.6749508380889893], [84, 1.8969249725341797], [85, 1.7378771305084229], [86, 1.7886419296264648], [87, 2.9928269386291504], [88, 2.057497024536133], [89, 1.571382999420166], [90, 2.8459460735321045], [91, 1.2875349521636963], [92, 1.5564868450164795], [93, 6.297946929931641], [94, 1.5463500022888184], [95, 1.7343199253082275], [96, 2.8330399990081787], [97, 1.9685261249542236], [98, 3.3441150188446045], [99, 2.2948169708251953], [100, 1.954516887664795], [101, 1.298792839050293], [102, 1.9640569686889648], [103, 1.7555909156799316], [104, 1.4130818843841553], [105, 1.5978350639343262], [106, 1.3214261531829834], [107, 4.387985944747925], [108, 2.175123929977417], [109, 3.392642021179199], [110, 1.9992930889129639], [111, 1.9679679870605469], [112, 1.8735020160675049], [113, 3.4037978649139404], [114, 1.141174077987671], [115, 2.354663133621216], [116, 1.370948076248169], [117, 1.3218810558319092], [118, 1.7592828273773193], [119, 1.59147310256958], [120, 2.954972982406616], [121, 3.419416904449463], [122, 2.0064709186553955], [123, 1.8575501441955566], [124, 2.217442035675049], [125, 2.529000997543335], [126, 2.5300991535186768], [127, 0], [128, 1.563966989517212], [129, 1.5588128566741943], [130, 2.5709898471832275], [131, 2.065329074859619], [132, 2.2876291275024414], [133, 1.603682041168213], [134, 1.9510290622711182], [135, 1.9649848937988281], [136, 1.488867998123169], [137, 1.2600250244140625], [138, 0], [139, 1.7755320072174072], [140, 0], [141, 1.342430830001831], [142, 2.1369519233703613], [143, 2.7283740043640137], [144, 2.8255648612976074], [145, 1.9742939472198486], [146, 1.4731488227844238], [147, 2.1536669731140137], [148, 1.6635971069335938], [149, 0], [150, 1.6596598625183105], [151, 0], [152, 1.3304660320281982], [153, 2.064544916152954], [154, 2.1408448219299316], [155, 2.665771007537842], [156, 3.2493369579315186], [157, 0], [158, 2.070870876312256], [159, 3.346668004989624], [160, 3.877573013305664], [161, 2.582242012023926], [162, 3.0027568340301514], [163, 0], [164, 1.0734961032867432], [165, 2.2515652179718018], [166, 1.7389731407165527], [167, 2.2319579124450684], [168, 0], [169, 2.783806085586548], [170, 2.1272361278533936], [171, 2.06707501411438], [172, 0], [173, 1.4629769325256348], [174, 1.9553720951080322], [175, 1.846642017364502], [176, 1.836380958557129], [177, 2.2360198497772217], [178, 1.8611199855804443], [179, 1.1679039001464844], [180, 2.040714979171753], [181, 2.2502520084381104], [182, 1.8474149703979492], [183, 4.0982489585876465], [184, 2.5519111156463623], [185, 1.1327590942382812], [186, 1.30531907081604], [187, 1.7239949703216553], [188, 3.485848903656006], [189, 3.3110110759735107], [190, 1.229835033416748], [191, 1.1949238777160645], [192, 1.3158400058746338], [193, 1.5874559879302979], [194, 1.875309944152832], [195, 2.4821839332580566], [196, 3.5667529106140137], [197, 1.7665719985961914], [198, 1.2233059406280518], [199, 1.6244471073150635], [200, 1.2971458435058594]]], ["neutron.create_network", [[1, 2.1026060581207275], [2, 1.968885898590088], [3, 1.4166679382324219], [4, 2.4750189781188965], [5, 1.4103269577026367], [6, 1.9281580448150635], [7, 1.4677410125732422], [8, 1.9452729225158691], [9, 1.8854219913482666], [10, 1.6020209789276123], [11, 1.8817660808563232], [12, 1.564410924911499], [13, 1.378736972808838], [14, 1.4901609420776367], [15, 1.4279859066009521], [16, 1.8442912101745605], [17, 2.4870400428771973], [18, 1.9190831184387207], [19, 1.8811237812042236], [20, 1.5307331085205078], [21, 1.9575579166412354], [22, 1.6067359447479248], [23, 1.0770959854125977], [24, 1.2137141227722168], [25, 1.2387661933898926], [26, 1.370628833770752], [27, 1.9132990837097168], [28, 2.597519874572754], [29, 1.9167730808258057], [30, 1.1007089614868164], [31, 0.6336750984191895], [32, 1.062263011932373], [33, 0.9378969669342041], [34, 4.505792140960693], [35, 0.5202469825744629], [36, 0.655383825302124], [37, 0.5972568988800049], [38, 1.485280990600586], [39, 0.5766398906707764], [40, 0.5838789939880371], [41, 0.7555818557739258], [42, 1.1647670269012451], [43, 0.6685259342193604], [44, 0.5397841930389404], [45, 0.5431489944458008], [46, 0.5006880760192871], [47, 0.6481609344482422], [48, 0.9775161743164062], [49, 0.5466799736022949], [50, 0.6057870388031006], [51, 1.1574981212615967], [52, 0.5713779926300049], [53, 0.9261119365692139], [54, 1.0293939113616943], [55, 0.8467330932617188], [56, 0.896920919418335], [57, 0.7008500099182129], [58, 1.4937598705291748], [59, 0.5735068321228027], [60, 0.6171400547027588], [61, 0.4757390022277832], [62, 0.5324239730834961], [63, 0.47579002380371094], [64, 0.8684239387512207], [65, 0.674767017364502], [66, 1.6703310012817383], [67, 0.5941321849822998], [68, 0.6228981018066406], [69, 0.49923086166381836], [70, 0.505094051361084], [71, 0.6864781379699707], [72, 0.6492960453033447], [73, 0.658167839050293], [74, 0.5335710048675537], [75, 0.4959077835083008], [76, 0.5411098003387451], [77, 0.570716142654419], [78, 0.46748995780944824], [79, 0.38661789894104004], [80, 0.4555790424346924], [81, 0.5879981517791748], [82, 1.305521011352539], [83, 0.6863760948181152], [84, 0.6554021835327148], [85, 0.6175971031188965], [86, 0.46645092964172363], [87, 0.688385009765625], [88, 0.4873521327972412], [89, 0.48562192916870117], [90, 0.9461879730224609], [91, 0.5903899669647217], [92, 0.5382509231567383], [93, 0.8377349376678467], [94, 0.5849251747131348], [95, 1.0532310009002686], [96, 0.6555929183959961], [97, 0.6028439998626709], [98, 0.5442972183227539], [99, 0.6671881675720215], [100, 0.9027600288391113], [101, 0.5832998752593994], [102, 0.4656500816345215], [103, 0.5248889923095703], [104, 0.5772049427032471], [105, 0.39669179916381836], [106, 0.5774431228637695], [107, 0.6749520301818848], [108, 1.3364100456237793], [109, 0.46939611434936523], [110, 0.42971205711364746], [111, 0.8721950054168701], [112, 0.4660460948944092], [113, 0.5771300792694092], [114, 0.6517970561981201], [115, 0.6316249370574951], [116, 0.5715961456298828], [117, 0.5472278594970703], [118, 0.5374422073364258], [119, 0.44269490242004395], [120, 0.7538909912109375], [121, 0.5620989799499512], [122, 0.4723801612854004], [123, 0.7701418399810791], [124, 0.6239099502563477], [125, 0.6023540496826172], [126, 0.5402300357818604], [127, 0.5670509338378906], [128, 0.5006880760192871], [129, 0.5269501209259033], [130, 0.5671818256378174], [131, 0.48616480827331543], [132, 0.5006141662597656], [133, 0.5649938583374023], [134, 0.4680972099304199], [135, 0.6169338226318359], [136, 0.4725019931793213], [137, 0.8717291355133057], [138, 0.6440989971160889], [139, 0.6232810020446777], [140, 0.6560261249542236], [141, 0.5967371463775635], [142, 0.6792020797729492], [143, 0.5962629318237305], [144, 0.47005605697631836], [145, 0.6057288646697998], [146, 0.611583948135376], [147, 0.6184649467468262], [148, 0.7477869987487793], [149, 0.49071598052978516], [150, 0.5922539234161377], [151, 0.5070579051971436], [152, 0.408858060836792], [153, 0.46236515045166016], [154, 0.5483889579772949], [155, 0.5428779125213623], [156, 0.7807760238647461], [157, 0.6418170928955078], [158, 0.5169370174407959], [159, 0.5803420543670654], [160, 0.6547300815582275], [161, 0.3696589469909668], [162, 0.5010349750518799], [163, 0.48186802864074707], [164, 0.5388529300689697], [165, 0.8171429634094238], [166, 0.608241081237793], [167, 0.7296509742736816], [168, 0.5393381118774414], [169, 0.46938586235046387], [170, 0.5107369422912598], [171, 0.6263210773468018], [172, 0.8889560699462891], [173, 0.5186440944671631], [174, 0.5129950046539307], [175, 0.5716321468353271], [176, 0.46706318855285645], [177, 0.6870291233062744], [178, 0.5781898498535156], [179, 0.5678081512451172], [180, 0.6832790374755859], [181, 0.5573501586914062], [182, 0.4742867946624756], [183, 0.547044038772583], [184, 0.6364350318908691], [185, 0.5042068958282471], [186, 0.54860520362854], [187, 0.6631300449371338], [188, 0.4571688175201416], [189, 0.5696878433227539], [190, 0.5549759864807129], [191, 0.4026150703430176], [192, 0.5101301670074463], [193, 0.6042230129241943], [194, 0.5705370903015137], [195, 0.6859149932861328], [196, 0.5014991760253906], [197, 0.9156219959259033], [198, 0.5795631408691406], [199, 0.5916059017181396], [200, 0.5976219177246094]]], ["neutron.create_subnet (2)", [[1, 2.615718126296997], [2, 1.6087641716003418], [3, 1.9834871292114258], [4, 1.7445969581604004], [5, 1.667691946029663], [6, 1.5202770233154297], [7, 0.9032559394836426], [8, 1.714189052581787], [9, 0.6093599796295166], [10, 1.4489939212799072], [11, 1.7639780044555664], [12, 1.337705135345459], [13, 2.5249199867248535], [14, 0.9865097999572754], [15, 0.9593820571899414], [16, 0.831171989440918], [17, 0.8416509628295898], [18, 0.8635098934173584], [19, 1.2984490394592285], [20, 2.0032801628112793], [21, 0.6652240753173828], [22, 0.62105393409729], [23, 1.0784549713134766], [24, 0.8602380752563477], [25, 0.9948029518127441], [26, 0.7683520317077637], [27, 0.9580328464508057], [28, 1.558016061782837], [29, 2.6831119060516357], [30, 1.3558909893035889], [31, 0.9632980823516846], [32, 1.4244270324707031], [33, 2.169039011001587], [34, 1.2653491497039795], [35, 2.645684003829956], [36, 1.0445919036865234], [37, 0.9435031414031982], [38, 0.9074921607971191], [39, 1.6166701316833496], [40, 2.274329900741577], [41, 0.7313210964202881], [42, 0.6559298038482666], [43, 1.0156769752502441], [44, 3.779075860977173], [45, 0.6941208839416504], [46, 1.3715660572052002], [47, 2.3354949951171875], [48, 1.6782989501953125], [49, 0.9392650127410889], [50, 2.390281915664673], [51, 1.4578940868377686], [52, 0.7517538070678711], [53, 0.8968558311462402], [54, 1.9988138675689697], [55, 1.2335689067840576], [56, 0.7858350276947021], [57, 1.1412279605865479], [58, 0.7249979972839355], [59, 1.7108399868011475], [60, 1.5849878787994385], [61, 0.7740819454193115], [62, 0.6316399574279785], [63, 0.9058499336242676], [64, 0.7412800788879395], [65, 0.9658010005950928], [66, 1.028397798538208], [67, 1.0191969871520996], [68, 1.882505178451538], [69, 0.8606879711151123], [70, 0.7434029579162598], [71, 0.8186578750610352], [72, 1.3448078632354736], [73, 0.7302651405334473], [74, 1.5879008769989014], [75, 0.8789119720458984], [76, 1.1542329788208008], [77, 1.131525993347168], [78, 0.6156539916992188], [79, 1.0784568786621094], [80, 0.7088160514831543], [81, 0.5760848522186279], [82, 0.7467589378356934], [83, 0.9689068794250488], [84, 0.7437348365783691], [85, 1.090188980102539], [86, 0.7069039344787598], [87, 1.0967729091644287], [88, 0.8264389038085938], [89, 1.4280478954315186], [90, 1.5440258979797363], [91, 0.9725069999694824], [92, 1.056736946105957], [93, 1.6003670692443848], [94, 0.8371000289916992], [95, 1.1453938484191895], [96, 1.0463221073150635], [97, 1.3323979377746582], [98, 1.1063780784606934], [99, 1.3425331115722656], [100, 0.5894160270690918], [101, 1.1790552139282227], [102, 0.7375450134277344], [103, 0.682650089263916], [104, 1.765359878540039], [105, 0.9184708595275879], [106, 0.617840051651001], [107, 0.7062509059906006], [108, 2.0889201164245605], [109, 0.9713289737701416], [110, 1.1369030475616455], [111, 1.505415916442871], [112, 1.6310219764709473], [113, 0.8375442028045654], [114, 0.6747980117797852], [115, 1.3915040493011475], [116, 0.7994019985198975], [117, 1.5190250873565674], [118, 1.2266960144042969], [119, 1.0267260074615479], [120, 0.9267568588256836], [121, 1.6793699264526367], [122, 0.8835480213165283], [123, 1.0416569709777832], [124, 0.7724039554595947], [125, 1.184041976928711], [126, 0.9986798763275146], [127, 0.7442660331726074], [128, 1.0603208541870117], [129, 0.7207551002502441], [130, 1.1605401039123535], [131, 0.6437530517578125], [132, 1.1968610286712646], [133, 1.241760015487671], [134, 0.7737500667572021], [135, 1.2348220348358154], [136, 1.6138379573822021], [137, 0.6711859703063965], [138, 1.0078010559082031], [139, 1.3480029106140137], [140, 0.6528618335723877], [141, 0.7999391555786133], [142, 1.9244000911712646], [143, 0.6246559619903564], [144, 1.650136947631836], [145, 1.0444118976593018], [146, 0.7507779598236084], [147, 0.8549990653991699], [148, 1.1939270496368408], [149, 0.945810079574585], [150, 0.8601019382476807], [151, 0.47306108474731445], [152, 1.2456550598144531], [153, 0.6254839897155762], [154, 0.8069770336151123], [155, 0.8023278713226318], [156, 0.816688060760498], [157, 0.4704549312591553], [158, 0.6817851066589355], [159, 0.8518750667572021], [160, 1.1426939964294434], [161, 1.110870122909546], [162, 0.6850299835205078], [163, 0.7012951374053955], [164, 1.2326021194458008], [165, 0.830193042755127], [166, 0.6529750823974609], [167, 1.3424689769744873], [168, 1.03774094581604], [169, 0.9683139324188232], [170, 1.3706798553466797], [171, 0.9210488796234131], [172, 0.7539570331573486], [173, 0.7979259490966797], [174, 1.4865820407867432], [175, 1.725545883178711], [176, 0.666046142578125], [177, 2.0313169956207275], [178, 0.8778970241546631], [179, 1.2086620330810547], [180, 1.0099010467529297], [181, 0.841559886932373], [182, 2.116096019744873], [183, 0.7694849967956543], [184, 1.1550729274749756], [185, 0.6631710529327393], [186, 1.0668010711669922], [187, 0.9109630584716797], [188, 1.0022509098052979], [189, 0.8396828174591064], [190, 0.7787449359893799], [191, 0.808582067489624], [192, 0.9264118671417236], [193, 0.8120110034942627], [194, 0.9498920440673828], [195, 0.7859899997711182], [196, 0.6742868423461914], [197, 1.2127070426940918], [198, 0.7268319129943848], [199, 1.1978960037231445], [200, 0.8308749198913574]]], ["neutron.remove_interface_router (2)", [[1, 1.9231910705566406], [2, 5.47790789604187], [3, 6.069953918457031], [4, 5.650997877120972], [5, 4.459249973297119], [6, 1.7854349613189697], [7, 3.9370150566101074], [8, 4.223592042922974], [9, 1.5608899593353271], [10, 2.6155648231506348], [11, 2.4994149208068848], [12, 2.0708799362182617], [13, 4.170262813568115], [14, 0], [15, 2.725282907485962], [16, 6.936092138290405], [17, 1.9747121334075928], [18, 1.6285431385040283], [19, 3.807547092437744], [20, 2.5266599655151367], [21, 5.2021260261535645], [22, 1.4769909381866455], [23, 3.6155459880828857], [24, 2.609653949737549], [25, 2.5244550704956055], [26, 4.001816034317017], [27, 0], [28, 5.873755931854248], [29, 3.4697439670562744], [30, 1.118100881576538], [31, 5.049694061279297], [32, 1.3737568855285645], [33, 3.16900897026062], [34, 2.6189279556274414], [35, 1.65049409866333], [36, 1.763577938079834], [37, 2.213047981262207], [38, 1.858672857284546], [39, 3.39755916595459], [40, 1.8196589946746826], [41, 2.357806921005249], [42, 2.4414639472961426], [43, 3.1328067779541016], [44, 1.9787161350250244], [45, 3.656157970428467], [46, 2.9824819564819336], [47, 2.9804160594940186], [48, 0], [49, 1.3935749530792236], [50, 0], [51, 3.3180580139160156], [52, 3.0247178077697754], [53, 3.5126090049743652], [54, 3.0561580657958984], [55, 1.8365449905395508], [56, 1.7549490928649902], [57, 2.095075845718384], [58, 2.481832981109619], [59, 2.9876930713653564], [60, 0], [61, 1.4090118408203125], [62, 1.4485411643981934], [63, 2.1954410076141357], [64, 2.578984022140503], [65, 3.2979390621185303], [66, 1.7228999137878418], [67, 2.291935920715332], [68, 0], [69, 3.3189938068389893], [70, 0], [71, 3.5824930667877197], [72, 2.56907320022583], [73, 3.329150915145874], [74, 1.901500940322876], [75, 2.5088889598846436], [76, 3.505092144012451], [77, 0], [78, 2.693410873413086], [79, 3.154801845550537], [80, 1.4704010486602783], [81, 3.193310022354126], [82, 2.200266122817993], [83, 4.270038843154907], [84, 2.903649091720581], [85, 2.1278700828552246], [86, 1.8031549453735352], [87, 1.7834599018096924], [88, 1.6866340637207031], [89, 3.560957908630371], [90, 1.5130228996276855], [91, 2.217060089111328], [92, 1.8715529441833496], [93, 1.3386719226837158], [94, 1.66264009475708], [95, 3.4930310249328613], [96, 1.4674139022827148], [97, 1.6250910758972168], [98, 1.7882459163665771], [99, 1.9700169563293457], [100, 1.5668840408325195], [101, 2.208730936050415], [102, 1.966628074645996], [103, 2.932955026626587], [104, 3.487740993499756], [105, 1.6755831241607666], [106, 1.898935079574585], [107, 2.6648759841918945], [108, 4.19466495513916], [109, 1.8492710590362549], [110, 2.103408098220825], [111, 1.7032248973846436], [112, 2.7449851036071777], [113, 3.3931498527526855], [114, 1.767714023590088], [115, 2.5850441455841064], [116, 3.625394105911255], [117, 2.001044988632202], [118, 3.413949966430664], [119, 4.645521879196167], [120, 1.3435630798339844], [121, 2.313143014907837], [122, 1.4181041717529297], [123, 2.9629578590393066], [124, 2.40840220451355], [125, 2.1897900104522705], [126, 1.4067449569702148], [127, 0], [128, 1.3784420490264893], [129, 7.0816428661346436], [130, 6.392430067062378], [131, 1.5182888507843018], [132, 2.194640874862671], [133, 2.0025129318237305], [134, 3.4318010807037354], [135, 2.733537197113037], [136, 2.138688087463379], [137, 3.5198028087615967], [138, 0], [139, 4.740375995635986], [140, 0], [141, 1.5813391208648682], [142, 1.533146858215332], [143, 1.4680819511413574], [144, 2.2619638442993164], [145, 6.620033025741577], [146, 1.5794661045074463], [147, 2.539818048477173], [148, 2.4500322341918945], [149, 0], [150, 1.8752081394195557], [151, 0], [152, 2.372087001800537], [153, 3.0971128940582275], [154, 4.182005167007446], [155, 5.268453121185303], [156, 1.4039640426635742], [157, 0], [158, 2.302191972732544], [159, 2.0590431690216064], [160, 1.4418418407440186], [161, 2.3341081142425537], [162, 1.6108391284942627], [163, 0], [164, 1.5841929912567139], [165, 2.9420368671417236], [166, 2.0044050216674805], [167, 3.440962076187134], [168, 0], [169, 4.3061909675598145], [170, 4.658691883087158], [171, 1.4229769706726074], [172, 0], [173, 2.035741090774536], [174, 1.945401906967163], [175, 1.5664308071136475], [176, 4.319804906845093], [177, 2.8630378246307373], [178, 1.3661420345306396], [179, 2.3168230056762695], [180, 2.6026320457458496], [181, 1.980863094329834], [182, 1.464061975479126], [183, 1.6389861106872559], [184, 2.9131228923797607], [185, 1.6096320152282715], [186, 1.8693861961364746], [187, 1.7362730503082275], [188, 1.4322688579559326], [189, 2.590193033218384], [190, 2.2831969261169434], [191, 1.7654929161071777], [192, 1.9866669178009033], [193, 1.1376309394836426], [194, 1.4956719875335693], [195, 2.6609370708465576], [196, 2.4256651401519775], [197, 2.621518850326538], [198, 2.1715121269226074], [199, 2.2817530632019043], [200, 1.8623790740966797]]], ["failed_duration", [[1, 0], [2, 0], [3, 0], [4, 0], [5, 0], [6, 0], [7, 0], [8, 0], [9, 0], [10, 0], [11, 0], [12, 0], [13, 0], [14, 0.004210233688354492], [15, 0], [16, 0], [17, 0], [18, 0], [19, 0], [20, 0], [21, 0], [22, 0], [23, 0], [24, 0], [25, 0], [26, 0], [27, 0.0030851364135742188], [28, 0], [29, 0], [30, 0], [31, 0], [32, 0], [33, 0], [34, 0], [35, 0], [36, 0], [37, 0], [38, 0], [39, 0], [40, 0], [41, 0], [42, 0], [43, 0], [44, 0], [45, 0], [46, 0], [47, 0], [48, 0.0004699230194091797], [49, 0], [50, 0.00039315223693847656], [51, 0], [52, 0], [53, 0], [54, 0], [55, 0], [56, 0], [57, 0], [58, 0], [59, 0], [60, 0.0015964508056640625], [61, 0], [62, 0], [63, 0], [64, 0], [65, 0], [66, 0], [67, 0], [68, 0.0004627704620361328], [69, 0], [70, 0.0032889842987060547], [71, 0], [72, 0], [73, 0], [74, 0], [75, 0], [76, 0], [77, 0.00038886070251464844], [78, 0], [79, 0], [80, 0], [81, 0], [82, 0], [83, 0], [84, 0], [85, 0], [86, 0], [87, 0], [88, 0], [89, 0], [90, 0], [91, 0], [92, 0], [93, 0], [94, 0], [95, 0], [96, 0], [97, 0], [98, 0], [99, 0], [100, 0], [101, 0], [102, 0], [103, 0], [104, 0], [105, 0], [106, 0], [107, 0], [108, 0], [109, 0], [110, 0], [111, 0], [112, 0], [113, 0], [114, 0], [115, 0], [116, 0], [117, 0], [118, 0], [119, 0], [120, 0], [121, 0], [122, 0], [123, 0], [124, 0], [125, 0], [126, 0], [127, 0.0004856586456298828], [128, 0], [129, 0], [130, 0], [131, 0], [132, 0], [133, 0], [134, 0], [135, 0], [136, 0], [137, 0], [138, 0.0007848739624023438], [139, 0], [140, 0.0011248588562011719], [141, 0], [142, 0], [143, 0], [144, 0], [145, 0], [146, 0], [147, 0], [148, 0], [149, 0.00032901763916015625], [150, 0], [151, 0.0003960132598876953], [152, 0], [153, 0], [154, 0], [155, 0], [156, 0], [157, 0.00040912628173828125], [158, 0], [159, 0], [160, 0], [161, 0], [162, 0], [163, 0.000415802001953125], [164, 0], [165, 0], [166, 0], [167, 0], [168, 0.0004961490631103516], [169, 0], [170, 0], [171, 0], [172, 0.0005669593811035156], [173, 0], [174, 0], [175, 0], [176, 0], [177, 0], [178, 0], [179, 0], [180, 0], [181, 0], [182, 0], [183, 0], [184, 0], [185, 0], [186, 0], [187, 0], [188, 0], [189, 0], [190, 0], [191, 0], [192, 0], [193, 0], [194, 0], [195, 0], [196, 0], [197, 0], [198, 0], [199, 0], [200, 0]]]], "histogram": {"data": [[{"disabled": 0, "values": [{"y": 84, "x": 5.548071257273357}, {"y": 34, "x": 9.438650592168173}, {"y": 22, "x": 13.329229927062988}, {"y": 16, "x": 17.219809261957806}, {"y": 6, "x": 21.11038859685262}, {"y": 5, "x": 25.000967931747436}, {"y": 7, "x": 28.891547266642252}, {"y": 1, "x": 32.78212660153707}, {"y": 2, "x": 36.67270593643188}, {"y": 4, "x": 40.5632852713267}, {"y": 0, "x": 44.453864606221515}, {"y": 2, "x": 48.34444394111633}, {"y": 2, "x": 52.23502327601115}, {"y": 1, "x": 56.125602610905965}, {"y": 14, "x": 60.01618194580078}], "key": "neutron.create_router", "view": "Square Root Choice"}, {"disabled": 1, "values": [{"y": 91, "x": 5.5416610399882}, {"y": 33, "x": 9.4323211034139}, {"y": 14, "x": 13.3229811668396}, {"y": 9, "x": 17.2136412302653}, {"y": 13, "x": 21.104301293690998}, {"y": 12, "x": 24.9949613571167}, {"y": 4, "x": 28.8856214205424}, {"y": 2, "x": 32.7762814839681}, {"y": 4, "x": 36.6669415473938}, {"y": 1, "x": 40.557601610819496}, {"y": 4, "x": 44.448261674245195}, {"y": 3, "x": 48.3389217376709}, {"y": 3, "x": 52.2295818010966}, {"y": 1, "x": 56.1202418645223}, {"y": 6, "x": 60.010901927948}], "key": "neutron.create_router (2)", "view": "Square Root Choice"}, {"disabled": 2, "values": [{"y": 47, "x": 1.726599136988322}, {"y": 51, "x": 2.190519412358602}, {"y": 27, "x": 2.654439687728882}, {"y": 28, "x": 3.118359963099162}, {"y": 12, "x": 3.582280238469442}, {"y": 9, "x": 4.046200513839722}, {"y": 8, "x": 4.510120789210002}, {"y": 5, "x": 4.974041064580282}, {"y": 4, "x": 5.4379613399505615}, {"y": 5, "x": 5.901881615320842}, {"y": 0, "x": 6.365801890691122}, {"y": 2, "x": 6.829722166061401}, {"y": 1, "x": 7.293642441431682}, {"y": 0, "x": 7.757562716801962}, {"y": 1, "x": 8.221482992172241}], "key": "neutron.remove_interface_router", "view": "Square Root Choice"}, {"disabled": 3, "values": [{"y": 21, "x": 0.7472795168558757}, {"y": 69, "x": 1.007209046681722}, {"y": 41, "x": 1.2671385765075682}, {"y": 27, "x": 1.5270681063334146}, {"y": 22, "x": 1.786997636159261}, {"y": 5, "x": 2.046927165985107}, {"y": 3, "x": 2.3068566958109535}, {"y": 3, "x": 2.5667862256368}, {"y": 3, "x": 2.8267157554626463}, {"y": 0, "x": 3.0866452852884927}, {"y": 0, "x": 3.346574815114339}, {"y": 1, "x": 3.606504344940185}, {"y": 3, "x": 3.8664338747660314}, {"y": 1, "x": 4.126363404591878}, {"y": 1, "x": 4.386292934417725}], "key": "neutron.create_subnet", "view": "Square Root Choice"}, {"disabled": 4, "values": [{"y": 40, "x": 1.1779428323109944}, {"y": 45, "x": 1.4622124830881753}, {"y": 32, "x": 1.7464821338653564}, {"y": 22, "x": 2.030751784642537}, {"y": 12, "x": 2.3150214354197183}, {"y": 16, "x": 2.5992910861968994}, {"y": 9, "x": 2.88356073697408}, {"y": 9, "x": 3.1678303877512612}, {"y": 4, "x": 3.4521000385284424}, {"y": 3, "x": 3.736369689305623}, {"y": 1, "x": 4.020639340082804}, {"y": 2, "x": 4.304908990859985}, {"y": 0, "x": 4.589178641637166}, {"y": 1, "x": 4.873448292414347}, {"y": 4, "x": 5.157717943191528}], "key": "neutron.add_interface_router (2)", "view": "Square Root Choice"}, {"disabled": 5, "values": [{"y": 53, "x": 1.3518273989359537}, {"y": 64, "x": 1.8083787282307942}, {"y": 33, "x": 2.2649300575256346}, {"y": 23, "x": 2.721481386820475}, {"y": 12, "x": 3.178032716115316}, {"y": 5, "x": 3.6345840454101563}, {"y": 4, "x": 4.091135374704997}, {"y": 2, "x": 4.547686703999837}, {"y": 0, "x": 5.004238033294678}, {"y": 0, "x": 5.4607893625895185}, {"y": 1, "x": 5.917340691884359}, {"y": 2, "x": 6.373892021179199}, {"y": 0, "x": 6.83044335047404}, {"y": 0, "x": 7.28699467976888}, {"y": 1, "x": 7.743546009063721}], "key": "neutron.add_interface_router", "view": "Square Root Choice"}, {"disabled": 6, "values": [{"y": 35, "x": 1.3746159394582111}, {"y": 40, "x": 1.757968012491862}, {"y": 43, "x": 2.141320085525513}, {"y": 24, "x": 2.5246721585591634}, {"y": 18, "x": 2.908024231592814}, {"y": 18, "x": 3.291376304626465}, {"y": 8, "x": 3.6747283776601156}, {"y": 4, "x": 4.058080450693766}, {"y": 2, "x": 4.441432523727417}, {"y": 4, "x": 4.824784596761067}, {"y": 1, "x": 5.208136669794718}, {"y": 2, "x": 5.5914887428283695}, {"y": 0, "x": 5.97484081586202}, {"y": 0, "x": 6.358192888895671}, {"y": 1, "x": 6.741544961929321}], "key": "neutron.delete_router", "view": "Square Root Choice"}, {"disabled": 7, "values": [{"y": 43, "x": 1.4217928250630696}, {"y": 43, "x": 1.770089546839396}, {"y": 44, "x": 2.1183862686157227}, {"y": 22, "x": 2.466682990392049}, {"y": 15, "x": 2.8149797121683755}, {"y": 7, "x": 3.163276433944702}, {"y": 13, "x": 3.5115731557210283}, {"y": 4, "x": 3.859869877497355}, {"y": 4, "x": 4.208166599273682}, {"y": 3, "x": 4.556463321050008}, {"y": 0, "x": 4.904760042826334}, {"y": 1, "x": 5.253056764602661}, {"y": 0, "x": 5.601353486378987}, {"y": 0, "x": 5.9496502081553135}, {"y": 1, "x": 6.297946929931641}], "key": "neutron.delete_router (2)", "view": "Square Root Choice"}, {"disabled": 8, "values": [{"y": 117, "x": 0.645401159922282}, {"y": 38, "x": 0.921143372853597}, {"y": 11, "x": 1.196885585784912}, {"y": 10, "x": 1.4726277987162273}, {"y": 8, "x": 1.7483700116475425}, {"y": 11, "x": 2.0241122245788574}, {"y": 1, "x": 2.299854437510173}, {"y": 2, "x": 2.575596650441488}, {"y": 1, "x": 2.8513388633728027}, {"y": 0, "x": 3.127081076304118}, {"y": 0, "x": 3.402823289235433}, {"y": 0, "x": 3.678565502166748}, {"y": 0, "x": 3.9543077150980634}, {"y": 0, "x": 4.230049928029379}, {"y": 1, "x": 4.505792140960693}], "key": "neutron.create_network", "view": "Square Root Choice"}, {"disabled": 9, "values": [{"y": 24, "x": 0.6910296599070231}, {"y": 59, "x": 0.911604388554891}, {"y": 41, "x": 1.1321791172027589}, {"y": 28, "x": 1.3527538458506267}, {"y": 14, "x": 1.5733285744984944}, {"y": 17, "x": 1.7939033031463623}, {"y": 5, "x": 2.01447803179423}, {"y": 4, "x": 2.235052760442098}, {"y": 3, "x": 2.4556274890899656}, {"y": 3, "x": 2.6762022177378335}, {"y": 1, "x": 2.8967769463857014}, {"y": 0, "x": 3.1173516750335692}, {"y": 0, "x": 3.337926403681437}, {"y": 0, "x": 3.558501132329305}, {"y": 1, "x": 3.779075860977173}], "key": "neutron.create_subnet (2)", "view": "Square Root Choice"}, {"disabled": 10, "values": [{"y": 40, "x": 1.5156703472137452}, {"y": 38, "x": 1.9132398128509522}, {"y": 31, "x": 2.310809278488159}, {"y": 27, "x": 2.7083787441253664}, {"y": 15, "x": 3.1059482097625732}, {"y": 16, "x": 3.50351767539978}, {"y": 9, "x": 3.9010871410369874}, {"y": 7, "x": 4.298656606674195}, {"y": 5, "x": 4.696226072311401}, {"y": 2, "x": 5.093795537948608}, {"y": 3, "x": 5.491365003585815}, {"y": 2, "x": 5.888934469223022}, {"y": 1, "x": 6.286503934860229}, {"y": 2, "x": 6.684073400497437}, {"y": 2, "x": 7.0816428661346436}], "key": "neutron.remove_interface_router (2)", "view": "Square Root Choice"}], [{"disabled": 0, "values": [{"y": 107, "x": 8.1417908138699}, {"y": 42, "x": 14.62608970536126}, {"y": 13, "x": 21.11038859685262}, {"y": 7, "x": 27.59468748834398}, {"y": 6, "x": 34.07898637983534}, {"y": 6, "x": 40.5632852713267}, {"y": 1, "x": 47.047584162818055}, {"y": 4, "x": 53.53188305430942}, {"y": 14, "x": 60.01618194580078}], "key": "neutron.create_router", "view": "Sturges Formula"}, {"disabled": 1, "values": [{"y": 120, "x": 8.135434415605333}, {"y": 18, "x": 14.619867854648167}, {"y": 22, "x": 21.104301293691}, {"y": 15, "x": 27.588734732733833}, {"y": 4, "x": 34.073168171776665}, {"y": 4, "x": 40.5576016108195}, {"y": 6, "x": 47.042035049862335}, {"y": 4, "x": 53.52646848890517}, {"y": 7, "x": 60.010901927948}], "key": "neutron.create_router (2)", "view": "Sturges Formula"}, {"disabled": 2, "values": [{"y": 83, "x": 2.0358793205685086}, {"y": 55, "x": 2.8090797795189753}, {"y": 27, "x": 3.582280238469442}, {"y": 16, "x": 4.3554806974199085}, {"y": 7, "x": 5.128681156370375}, {"y": 8, "x": 5.901881615320842}, {"y": 2, "x": 6.675082074271309}, {"y": 1, "x": 7.448282533221775}, {"y": 1, "x": 8.221482992172241}], "key": "neutron.remove_interface_router", "view": "Sturges Formula"}, {"disabled": 3, "values": [{"y": 62, "x": 0.9205658700731065}, {"y": 80, "x": 1.3537817531161838}, {"y": 38, "x": 1.786997636159261}, {"y": 6, "x": 2.2202135192023382}, {"y": 6, "x": 2.6534294022454157}, {"y": 2, "x": 3.0866452852884927}, {"y": 1, "x": 3.5198611683315697}, {"y": 4, "x": 3.953077051374647}, {"y": 1, "x": 4.386292934417725}], "key": "neutron.create_subnet", "view": "Sturges Formula"}, {"disabled": 4, "values": [{"y": 69, "x": 1.3674559328291152}, {"y": 61, "x": 1.8412386841244168}, {"y": 21, "x": 2.3150214354197187}, {"y": 24, "x": 2.78880418671502}, {"y": 12, "x": 3.2625869380103216}, {"y": 5, "x": 3.7363696893056235}, {"y": 2, "x": 4.210152440600925}, {"y": 1, "x": 4.683935191896227}, {"y": 5, "x": 5.157717943191528}], "key": "neutron.add_interface_router (2)", "view": "Sturges Formula"}, {"disabled": 5, "values": [{"y": 103, "x": 1.6561949517991807}, {"y": 55, "x": 2.417113833957248}, {"y": 27, "x": 3.1780327161153155}, {"y": 7, "x": 3.938951598273383}, {"y": 4, "x": 4.699870480431451}, {"y": 0, "x": 5.460789362589518}, {"y": 2, "x": 6.221708244747585}, {"y": 1, "x": 6.982627126905653}, {"y": 1, "x": 7.743546009063721}], "key": "neutron.add_interface_router", "view": "Sturges Formula"}, {"disabled": 6, "values": [{"y": 60, "x": 1.6301839881473117}, {"y": 70, "x": 2.269104109870063}, {"y": 30, "x": 2.908024231592814}, {"y": 24, "x": 3.546944353315565}, {"y": 7, "x": 4.185864475038317}, {"y": 5, "x": 4.824784596761067}, {"y": 1, "x": 5.463704718483818}, {"y": 2, "x": 6.10262484020657}, {"y": 1, "x": 6.741544961929321}], "key": "neutron.delete_router", "view": "Sturges Formula"}, {"disabled": 7, "values": [{"y": 66, "x": 1.6539906395806208}, {"y": 73, "x": 2.2344851758744984}, {"y": 28, "x": 2.8149797121683755}, {"y": 15, "x": 3.395474248462253}, {"y": 11, "x": 3.9759687847561307}, {"y": 5, "x": 4.556463321050008}, {"y": 1, "x": 5.136957857343885}, {"y": 0, "x": 5.717452393637763}, {"y": 1, "x": 6.297946929931641}], "key": "neutron.delete_router (2)", "view": "Sturges Formula"}, {"disabled": 8, "values": [{"y": 146, "x": 0.829229301876492}, {"y": 22, "x": 1.2887996567620172}, {"y": 16, "x": 1.7483700116475422}, {"y": 12, "x": 2.2079403665330677}, {"y": 3, "x": 2.6675107214185925}, {"y": 0, "x": 3.1270810763041177}, {"y": 0, "x": 3.586651431189643}, {"y": 0, "x": 4.046221786075169}, {"y": 1, "x": 4.505792140960693}], "key": "neutron.create_network", "view": "Sturges Formula"}, {"disabled": 9, "values": [{"y": 66, "x": 0.8380794790056016}, {"y": 70, "x": 1.205704026752048}, {"y": 30, "x": 1.5733285744984944}, {"y": 19, "x": 1.9409531222449408}, {"y": 8, "x": 2.3085776699913874}, {"y": 5, "x": 2.6762022177378335}, {"y": 1, "x": 3.0438267654842797}, {"y": 0, "x": 3.4114513132307263}, {"y": 1, "x": 3.779075860977173}], "key": "neutron.create_subnet (2)", "view": "Sturges Formula"}, {"disabled": 10, "values": [{"y": 64, "x": 1.7807166576385498}, {"y": 53, "x": 2.4433324337005615}, {"y": 34, "x": 3.1059482097625732}, {"y": 24, "x": 3.768563985824585}, {"y": 10, "x": 4.431179761886597}, {"y": 5, "x": 5.093795537948608}, {"y": 4, "x": 5.75641131401062}, {"y": 3, "x": 6.419027090072632}, {"y": 3, "x": 7.0816428661346436}], "key": "neutron.remove_interface_router (2)", "view": "Sturges Formula"}], [{"disabled": 0, "values": [{"y": 93, "x": 6.52071609099706}, {"y": 38, "x": 11.38394025961558}, {"y": 23, "x": 16.2471644282341}, {"y": 8, "x": 21.11038859685262}, {"y": 6, "x": 25.973612765471138}, {"y": 6, "x": 30.83683693408966}, {"y": 3, "x": 35.700061102708176}, {"y": 4, "x": 40.5632852713267}, {"y": 0, "x": 45.42650943994522}, {"y": 3, "x": 50.289733608563736}, {"y": 2, "x": 55.15295777718226}, {"y": 14, "x": 60.01618194580078}], "key": "neutron.create_router", "view": "Rice Rule"}, {"disabled": 1, "values": [{"y": 103, "x": 6.5143260558446245}, {"y": 28, "x": 11.377651135126749}, {"y": 15, "x": 16.240976214408875}, {"y": 14, "x": 21.104301293690998}, {"y": 14, "x": 25.967626372973122}, {"y": 4, "x": 30.83095145225525}, {"y": 2, "x": 35.69427653153737}, {"y": 3, "x": 40.557601610819496}, {"y": 5, "x": 45.42092669010162}, {"y": 5, "x": 50.284251769383744}, {"y": 0, "x": 55.14757684866587}, {"y": 7, "x": 60.010901927948}], "key": "neutron.create_router (2)", "view": "Rice Rule"}, {"disabled": 2, "values": [{"y": 65, "x": 1.842579205830892}, {"y": 44, "x": 2.422479550043742}, {"y": 38, "x": 3.002379894256592}, {"y": 18, "x": 3.582280238469442}, {"y": 13, "x": 4.162180582682292}, {"y": 7, "x": 4.742080926895142}, {"y": 5, "x": 5.321981271107992}, {"y": 6, "x": 5.901881615320842}, {"y": 2, "x": 6.481781959533691}, {"y": 1, "x": 7.061682303746542}, {"y": 0, "x": 7.641582647959392}, {"y": 1, "x": 8.221482992172241}], "key": "neutron.remove_interface_router", "view": "Rice Rule"}, {"disabled": 3, "values": [{"y": 31, "x": 0.8122618993123372}, {"y": 81, "x": 1.137173811594645}, {"y": 40, "x": 1.4620857238769531}, {"y": 28, "x": 1.786997636159261}, {"y": 5, "x": 2.111909548441569}, {"y": 4, "x": 2.436821460723877}, {"y": 5, "x": 2.7617333730061846}, {"y": 0, "x": 3.0866452852884927}, {"y": 0, "x": 3.411557197570801}, {"y": 1, "x": 3.7364691098531084}, {"y": 4, "x": 4.061381022135416}, {"y": 1, "x": 4.386292934417725}], "key": "neutron.create_subnet", "view": "Rice Rule"}, {"disabled": 4, "values": [{"y": 55, "x": 1.2490102450052898}, {"y": 48, "x": 1.604347308476766}, {"y": 30, "x": 1.9596843719482422}, {"y": 18, "x": 2.3150214354197187}, {"y": 19, "x": 2.670358498891195}, {"y": 13, "x": 3.025695562362671}, {"y": 6, "x": 3.3810326258341474}, {"y": 3, "x": 3.7363696893056235}, {"y": 1, "x": 4.0917067527771}, {"y": 2, "x": 4.447043816248576}, {"y": 1, "x": 4.802380879720053}, {"y": 4, "x": 5.157717943191528}], "key": "neutron.add_interface_router (2)", "view": "Rice Rule"}, {"disabled": 5, "values": [{"y": 74, "x": 1.465965231259664}, {"y": 65, "x": 2.036654392878215}, {"y": 33, "x": 2.607343554496765}, {"y": 13, "x": 3.178032716115316}, {"y": 6, "x": 3.7487218777338667}, {"y": 5, "x": 4.319411039352417}, {"y": 0, "x": 4.890100200970968}, {"y": 0, "x": 5.4607893625895185}, {"y": 1, "x": 6.031478524208069}, {"y": 2, "x": 6.60216768582662}, {"y": 0, "x": 7.17285684744517}, {"y": 1, "x": 7.743546009063721}], "key": "neutron.add_interface_router", "view": "Rice Rule"}, {"disabled": 6, "values": [{"y": 40, "x": 1.470453957716624}, {"y": 59, "x": 1.9496440490086875}, {"y": 38, "x": 2.4288341403007507}, {"y": 23, "x": 2.9080242315928144}, {"y": 20, "x": 3.3872143228848777}, {"y": 7, "x": 3.866404414176941}, {"y": 4, "x": 4.345594505469005}, {"y": 5, "x": 4.824784596761068}, {"y": 1, "x": 5.303974688053131}, {"y": 2, "x": 5.783164779345195}, {"y": 0, "x": 6.2623548706372585}, {"y": 1, "x": 6.741544961929321}], "key": "neutron.delete_router", "view": "Rice Rule"}, {"disabled": 7, "values": [{"y": 49, "x": 1.5088670055071514}, {"y": 54, "x": 1.9442379077275596}, {"y": 45, "x": 2.3796088099479675}, {"y": 19, "x": 2.814979712168376}, {"y": 10, "x": 3.250350614388784}, {"y": 13, "x": 3.685721516609192}, {"y": 5, "x": 4.1210924188296}, {"y": 3, "x": 4.556463321050009}, {"y": 0, "x": 4.991834223270416}, {"y": 1, "x": 5.427205125490825}, {"y": 0, "x": 5.862576027711233}, {"y": 1, "x": 6.297946929931641}], "key": "neutron.delete_router (2)", "view": "Rice Rule"}, {"disabled": 8, "values": [{"y": 139, "x": 0.7143367131551106}, {"y": 22, "x": 1.0590144793192544}, {"y": 11, "x": 1.4036922454833984}, {"y": 12, "x": 1.7483700116475422}, {"y": 11, "x": 2.093047777811686}, {"y": 1, "x": 2.43772554397583}, {"y": 3, "x": 2.7824033101399737}, {"y": 0, "x": 3.1270810763041177}, {"y": 0, "x": 3.4717588424682617}, {"y": 0, "x": 3.8164366086324053}, {"y": 0, "x": 4.161114374796549}, {"y": 1, "x": 4.505792140960693}], "key": "neutron.create_network", "view": "Rice Rule"}, {"disabled": 9, "values": [{"y": 39, "x": 0.74617334206899}, {"y": 68, "x": 1.0218917528788247}, {"y": 38, "x": 1.2976101636886597}, {"y": 21, "x": 1.5733285744984944}, {"y": 17, "x": 1.8490469853083291}, {"y": 8, "x": 2.124765396118164}, {"y": 4, "x": 2.4004838069279986}, {"y": 3, "x": 2.6762022177378335}, {"y": 1, "x": 2.9519206285476685}, {"y": 0, "x": 3.227639039357503}, {"y": 0, "x": 3.503357450167338}, {"y": 1, "x": 3.779075860977173}], "key": "neutron.create_subnet (2)", "view": "Rice Rule"}, {"disabled": 10, "values": [{"y": 50, "x": 1.6150627136230469}, {"y": 44, "x": 2.1120245456695557}, {"y": 35, "x": 2.6089863777160645}, {"y": 22, "x": 3.1059482097625732}, {"y": 21, "x": 3.602910041809082}, {"y": 6, "x": 4.099871873855591}, {"y": 8, "x": 4.5968337059021}, {"y": 4, "x": 5.093795537948608}, {"y": 3, "x": 5.590757369995117}, {"y": 3, "x": 6.087719202041626}, {"y": 1, "x": 6.584681034088135}, {"y": 3, "x": 7.0816428661346436}], "key": "neutron.remove_interface_router (2)", "view": "Rice Rule"}]], "views": [{"id": 0, "name": "Square Root Choice"}, {"id": 1, "name": "Sturges Formula"}, {"id": 2, "name": "Rice Rule"}]}}, "iterations": {"pie": [["success", 183], ["errors", 17]], "iter": [["duration", [[1, 38.14133405685425], [2, 45.80361199378967], [3, 53.37032198905945], [4, 54.76632118225098], [5, 43.985437870025635], [6, 27.77363109588623], [7, 37.16255497932434], [8, 59.101377964019775], [9, 59.717490911483765], [10, 47.87773895263672], [11, 51.6106379032135], [12, 47.22338080406189], [13, 59.34541392326355], [14, 0], [15, 47.531028032302856], [16, 59.53459191322327], [17, 57.99260878562927], [18, 67.60984683036804], [19, 74.96752190589905], [20, 43.82361602783203], [21, 38.55048990249634], [22, 41.30757403373718], [23, 43.45003700256348], [24, 34.64886808395386], [25, 28.509175062179565], [26, 34.9900438785553], [27, 0], [28, 42.193578004837036], [29, 37.03498888015747], [30, 23.635858058929443], [31, 33.05485796928406], [32, 47.75711798667908], [33, 29.99618101119995], [34, 61.667316913604736], [35, 76.2203369140625], [36, 61.00466299057007], [37, 29.595749139785767], [38, 35.645275831222534], [39, 78.60786414146423], [40, 33.25395202636719], [41, 54.567394971847534], [42, 84.78696203231812], [43, 26.085558891296387], [44, 36.989306926727295], [45, 27.159637928009033], [46, 30.753956079483032], [47, 27.324779987335205], [48, 0], [49, 65.95677900314331], [50, 0], [51, 36.29332613945007], [52, 32.048884868621826], [53, 27.50216293334961], [54, 19.59963893890381], [55, 22.735125064849854], [56, 21.680725812911987], [57, 23.87205195426941], [58, 67.62055897712708], [59, 93.02297306060791], [60, 0], [61, 28.539985179901123], [62, 18.60065984725952], [63, 21.334052085876465], [64, 27.379197120666504], [65, 32.04228496551514], [66, 23.65131402015686], [67, 76.7927360534668], [68, 0], [69, 52.04418206214905], [70, 0], [71, 22.63362693786621], [72, 23.549614906311035], [73, 31.208552837371826], [74, 31.18942904472351], [75, 36.97652792930603], [76, 27.045607089996338], [77, 0], [78, 22.879635095596313], [79, 26.48631000518799], [80, 21.611613988876343], [81, 27.392993927001953], [82, 38.3369619846344], [83, 86.43204307556152], [84, 25.045508861541748], [85, 22.271019220352173], [86, 56.080199003219604], [87, 24.973807096481323], [88, 54.25978183746338], [89, 22.529401063919067], [90, 24.257665157318115], [91, 24.214694023132324], [92, 43.59018278121948], [93, 32.259100914001465], [94, 25.518106937408447], [95, 35.22571110725403], [96, 62.353525161743164], [97, 51.36073112487793], [98, 35.81831908226013], [99, 36.63858890533447], [100, 71.8051028251648], [101, 44.476877212524414], [102, 22.29357099533081], [103, 33.00499081611633], [104, 42.3342661857605], [105, 24.94178581237793], [106, 33.0626962184906], [107, 68.99209880828857], [108, 52.721519947052], [109, 22.036789178848267], [110, 47.28745198249817], [111, 44.01414489746094], [112, 31.601449966430664], [113, 40.86100912094116], [114, 78.81935095787048], [115, 29.71187996864319], [116, 58.220558881759644], [117, 73.53298592567444], [118, 46.29006505012512], [119, 50.54379987716675], [120, 48.82570219039917], [121, 22.19360089302063], [122, 73.6256639957428], [123, 59.54097104072571], [124, 70.79919791221619], [125, 26.827629804611206], [126, 46.34020495414734], [127, 0], [128, 67.08208513259888], [129, 34.45104479789734], [130, 34.77797508239746], [131, 31.645249843597412], [132, 53.877737045288086], [133, 27.48942494392395], [134, 86.26113700866699], [135, 27.23364806175232], [136, 69.4748649597168], [137, 27.114447116851807], [138, 0], [139, 29.56843400001526], [140, 0], [141, 28.932755947113037], [142, 56.173928022384644], [143, 23.5152530670166], [144, 24.96470594406128], [145, 27.029222011566162], [146, 20.55284810066223], [147, 20.236546993255615], [148, 65.97323203086853], [149, 0], [150, 19.927433013916016], [151, 0], [152, 27.60359001159668], [153, 35.04024410247803], [154, 82.84663105010986], [155, 21.314383029937744], [156, 21.429322004318237], [157, 0], [158, 46.20450806617737], [159, 22.438798904418945], [160, 24.606341123580933], [161, 38.53353190422058], [162, 23.466715097427368], [163, 0], [164, 67.68162894248962], [165, 35.55084800720215], [166, 54.888932943344116], [167, 19.87202000617981], [168, 0], [169, 40.38499617576599], [170, 23.268231868743896], [171, 74.89939999580383], [172, 0], [173, 24.2052640914917], [174, 20.219748973846436], [175, 66.59683203697205], [176, 20.343512058258057], [177, 32.3139111995697], [178, 31.08997893333435], [179, 35.308115005493164], [180, 20.196318864822388], [181, 20.802103996276855], [182, 66.16156911849976], [183, 45.295560121536255], [184, 21.30828595161438], [185, 19.275925874710083], [186, 21.592705965042114], [187, 28.551244020462036], [188, 35.615233182907104], [189, 28.736971855163574], [190, 16.939477920532227], [191, 25.531156063079834], [192, 21.742147207260132], [193, 37.288065910339355], [194, 43.96297097206116], [195, 33.44260501861572], [196, 26.23767614364624], [197, 48.88410210609436], [198, 27.77567481994629], [199, 24.96487593650818], [200, 44.65265512466431]]], ["idle_duration", [[1, 0.0], [2, 0.0], [3, 0.0], [4, 0.0], [5, 0.0], [6, 0.0], [7, 0.0], [8, 0.0], [9, 0.0], [10, 0.0], [11, 0.0], [12, 0.0], [13, 0.0], [14, 0], [15, 0.0], [16, 0.0], [17, 0.0], [18, 0.0], [19, 0.0], [20, 0.0], [21, 0.0], [22, 0.0], [23, 0.0], [24, 0.0], [25, 0.0], [26, 0.0], [27, 0], [28, 0.0], [29, 0.0], [30, 0.0], [31, 0.0], [32, 0.0], [33, 0.0], [34, 0.0], [35, 0.0], [36, 0.0], [37, 0.0], [38, 0.0], [39, 0.0], [40, 0.0], [41, 0.0], [42, 0.0], [43, 0.0], [44, 0.0], [45, 0.0], [46, 0.0], [47, 0.0], [48, 0], [49, 0.0], [50, 0], [51, 0.0], [52, 0.0], [53, 0.0], [54, 0.0], [55, 0.0], [56, 0.0], [57, 0.0], [58, 0.0], [59, 0.0], [60, 0], [61, 0.0], [62, 0.0], [63, 0.0], [64, 0.0], [65, 0.0], [66, 0.0], [67, 0.0], [68, 0], [69, 0.0], [70, 0], [71, 0.0], [72, 0.0], [73, 0.0], [74, 0.0], [75, 0.0], [76, 0.0], [77, 0], [78, 0.0], [79, 0.0], [80, 0.0], [81, 0.0], [82, 0.0], [83, 0.0], [84, 0.0], [85, 0.0], [86, 0.0], [87, 0.0], [88, 0.0], [89, 0.0], [90, 0.0], [91, 0.0], [92, 0.0], [93, 0.0], [94, 0.0], [95, 0.0], [96, 0.0], [97, 0.0], [98, 0.0], [99, 0.0], [100, 0.0], [101, 0.0], [102, 0.0], [103, 0.0], [104, 0.0], [105, 0.0], [106, 0.0], [107, 0.0], [108, 0.0], [109, 0.0], [110, 0.0], [111, 0.0], [112, 0.0], [113, 0.0], [114, 0.0], [115, 0.0], [116, 0.0], [117, 0.0], [118, 0.0], [119, 0.0], [120, 0.0], [121, 0.0], [122, 0.0], [123, 0.0], [124, 0.0], [125, 0.0], [126, 0.0], [127, 0], [128, 0.0], [129, 0.0], [130, 0.0], [131, 0.0], [132, 0.0], [133, 0.0], [134, 0.0], [135, 0.0], [136, 0.0], [137, 0.0], [138, 0], [139, 0.0], [140, 0], [141, 0.0], [142, 0.0], [143, 0.0], [144, 0.0], [145, 0.0], [146, 0.0], [147, 0.0], [148, 0.0], [149, 0], [150, 0.0], [151, 0], [152, 0.0], [153, 0.0], [154, 0.0], [155, 0.0], [156, 0.0], [157, 0], [158, 0.0], [159, 0.0], [160, 0.0], [161, 0.0], [162, 0.0], [163, 0], [164, 0.0], [165, 0.0], [166, 0.0], [167, 0.0], [168, 0], [169, 0.0], [170, 0.0], [171, 0.0], [172, 0], [173, 0.0], [174, 0.0], [175, 0.0], [176, 0.0], [177, 0.0], [178, 0.0], [179, 0.0], [180, 0.0], [181, 0.0], [182, 0.0], [183, 0.0], [184, 0.0], [185, 0.0], [186, 0.0], [187, 0.0], [188, 0.0], [189, 0.0], [190, 0.0], [191, 0.0], [192, 0.0], [193, 0.0], [194, 0.0], [195, 0.0], [196, 0.0], [197, 0.0], [198, 0.0], [199, 0.0], [200, 0.0]]], ["failed_duration", [[1, 0], [2, 0], [3, 0], [4, 0], [5, 0], [6, 0], [7, 0], [8, 0], [9, 0], [10, 0], [11, 0], [12, 0], [13, 0], [14, 79.31553816795349], [15, 0], [16, 0], [17, 0], [18, 0], [19, 0], [20, 0], [21, 0], [22, 0], [23, 0], [24, 0], [25, 0], [26, 0], [27, 89.96443915367126], [28, 0], [29, 0], [30, 0], [31, 0], [32, 0], [33, 0], [34, 0], [35, 0], [36, 0], [37, 0], [38, 0], [39, 0], [40, 0], [41, 0], [42, 0], [43, 0], [44, 0], [45, 0], [46, 0], [47, 0], [48, 65.32519507408142], [49, 0], [50, 64.99872899055481], [51, 0], [52, 0], [53, 0], [54, 0], [55, 0], [56, 0], [57, 0], [58, 0], [59, 0], [60, 68.02974700927734], [61, 0], [62, 0], [63, 0], [64, 0], [65, 0], [66, 0], [67, 0], [68, 63.951924085617065], [69, 0], [70, 62.70688509941101], [71, 0], [72, 0], [73, 0], [74, 0], [75, 0], [76, 0], [77, 62.819355964660645], [78, 0], [79, 0], [80, 0], [81, 0], [82, 0], [83, 0], [84, 0], [85, 0], [86, 0], [87, 0], [88, 0], [89, 0], [90, 0], [91, 0], [92, 0], [93, 0], [94, 0], [95, 0], [96, 0], [97, 0], [98, 0], [99, 0], [100, 0], [101, 0], [102, 0], [103, 0], [104, 0], [105, 0], [106, 0], [107, 0], [108, 0], [109, 0], [110, 0], [111, 0], [112, 0], [113, 0], [114, 0], [115, 0], [116, 0], [117, 0], [118, 0], [119, 0], [120, 0], [121, 0], [122, 0], [123, 0], [124, 0], [125, 0], [126, 0], [127, 66.23284602165222], [128, 0], [129, 0], [130, 0], [131, 0], [132, 0], [133, 0], [134, 0], [135, 0], [136, 0], [137, 0], [138, 62.61978793144226], [139, 0], [140, 63.137749910354614], [141, 0], [142, 0], [143, 0], [144, 0], [145, 0], [146, 0], [147, 0], [148, 0], [149, 62.7046799659729], [150, 0], [151, 61.88558387756348], [152, 0], [153, 0], [154, 0], [155, 0], [156, 0], [157, 62.14729309082031], [158, 0], [159, 0], [160, 0], [161, 0], [162, 0], [163, 62.64950513839722], [164, 0], [165, 0], [166, 0], [167, 0], [168, 69.81121802330017], [169, 0], [170, 0], [171, 0], [172, 62.53959107398987], [173, 0], [174, 0], [175, 0], [176, 0], [177, 0], [178, 0], [179, 0], [180, 0], [181, 0], [182, 0], [183, 0], [184, 0], [185, 0], [186, 0], [187, 0], [188, 0], [189, 0], [190, 0], [191, 0], [192, 0], [193, 0], [194, 0], [195, 0], [196, 0], [197, 0], [198, 0], [199, 0], [200, 0]]]], "histogram": {"data": [[{"disabled": null, "values": [{"y": 37, "x": 22.011710929870606}, {"y": 33, "x": 27.083943939208986}, {"y": 28, "x": 32.15617694854736}, {"y": 24, "x": 37.228409957885745}, {"y": 9, "x": 42.30064296722412}, {"y": 16, "x": 47.3728759765625}, {"y": 9, "x": 52.44510898590088}, {"y": 9, "x": 57.517341995239256}, {"y": 10, "x": 62.58957500457763}, {"y": 7, "x": 67.66180801391602}, {"y": 5, "x": 72.73404102325439}, {"y": 6, "x": 77.80627403259277}, {"y": 3, "x": 82.87850704193114}, {"y": 3, "x": 87.95074005126953}, {"y": 1, "x": 93.02297306060791}], "key": "task", "view": "Square Root Choice"}], [{"disabled": null, "values": [{"y": 62, "x": 25.393199602762856}, {"y": 43, "x": 33.846921284993485}, {"y": 26, "x": 42.30064296722412}, {"y": 22, "x": 50.75436464945475}, {"y": 15, "x": 59.20808633168538}, {"y": 14, "x": 67.66180801391602}, {"y": 9, "x": 76.11552969614664}, {"y": 5, "x": 84.56925137837727}, {"y": 4, "x": 93.02297306060791}], "key": "task", "view": "Sturges Formula"}], [{"disabled": null, "values": [{"y": 47, "x": 23.2797691822052}, {"y": 41, "x": 29.620060443878174}, {"y": 28, "x": 35.96035170555115}, {"y": 15, "x": 42.30064296722412}, {"y": 19, "x": 48.640934228897095}, {"y": 13, "x": 54.98122549057007}, {"y": 10, "x": 61.32151675224304}, {"y": 9, "x": 67.66180801391602}, {"y": 7, "x": 74.00209927558899}, {"y": 6, "x": 80.34239053726196}, {"y": 4, "x": 86.68268179893494}, {"y": 1, "x": 93.02297306060791}], "key": "task", "view": "Rice Rule"}]], "views": [{"id": 0, "name": "Square Root Choice"}, {"id": 1, "name": "Sturges Formula"}, {"id": 2, "name": "Rice Rule"}]}}, "additive_output": [], "table": {"rows": [["neutron.create_router", 1.657, 6.64, 27.59, 39.166, 58.454, 10.916, "91.5%", 200], ["neutron.create_router (2)", 1.651, 6.621, 28.817, 41.702, 59.907, 12.182, "97.3%", 188], ["neutron.remove_interface_router", 1.263, 2.414, 4.458, 5.398, 8.221, 2.727, "100.0%", 183], ["neutron.create_subnet", 0.487, 1.04, 1.758, 2.427, 4.386, 1.244, "91.5%", 200], ["neutron.add_interface_router (2)", 0.894, 1.671, 3.01, 3.651, 5.158, 1.927, "100.0%", 183], ["neutron.add_interface_router", 0.895, 1.699, 2.991, 3.695, 7.744, 1.986, "97.3%", 188], ["neutron.delete_router", 0.991, 2.039, 3.442, 4.125, 6.742, 2.298, "100.0%", 183], ["neutron.delete_router (2)", 1.073, 1.968, 3.383, 3.699, 6.298, 2.169, "100.0%", 183], ["neutron.create_network", 0.37, 0.603, 1.558, 1.919, 4.506, 0.825, "91.5%", 200], ["neutron.create_subnet (2)", 0.576, 0.999, 1.723, 2.083, 3.779, 1.137, "91.5%", 200], ["neutron.remove_interface_router (2)", 1.118, 2.302, 4.218, 5.187, 7.082, 2.635, "100.0%", 183], ["total", 16.939, 34.99, 67.618, 74.961, 93.023, 40.049, "91.5%", 200]], "cols": ["Action", "Min (sec)", "Median (sec)", "90%ile (sec)", "95%ile (sec)", "Max (sec)", "Avg (sec)", "Success", "Count"]}, "full_duration": 388.48900604248047, "config": "{\n  \"NeutronNetworks.create_and_delete_routers\": [\n    {\n      \"runner\": {\n        \"type\": \"constant\", \n        \"concurrency\": 30, \n        \"times\": 200\n      }, \n      \"args\": {\n        \"network_create_args\": {}, \n        \"subnet_create_args\": {}, \n        \"subnets_per_network\": 2, \n        \"subnet_cidr_start\": \"1.1.0.0/30\", \n        \"router_create_args\": {}\n      }, \n      \"sla\": {\n        \"failure_rate\": {\n          \"max\": 0\n        }\n      }, \n      \"context\": {\n        \"users\": {\n          \"users_per_tenant\": 3, \n          \"project_domain\": \"default\", \n          \"user_choice_method\": \"random\", \n          \"user_domain\": \"default\", \n          \"tenants\": 1, \n          \"resource_management_workers\": 20\n        }, \n        \"quotas\": {\n          \"neutron\": {\n            \"subnet\": -1, \n            \"port\": -1, \n            \"network\": -1, \n            \"router\": -1\n          }\n        }\n      }\n    }\n  ]\n}", "sla": [{"criterion": "failure_rate", "detail": "Failure rate criteria 0.00% <= 8.50% <= 0.00% - Failed", "success": false}], "complete_output": [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []], "cls": "NeutronNetworks"}];
+
+      $scope.location = {
+        /* #/path/hash/sub/div */
+        normalize: function(str) {
+          /* Remove unwanted characters from string */
+          if (typeof str !== "string") { return "" }
+          return str.replace(/[^\w\-\.]/g, "")
+        },
+        uri: function(obj) {
+          /* Getter/Setter */
+          if (! obj) {
+            var uri = {path: "", hash: "", sub: "", div: ""};
+            var arr = ["div", "sub", "hash", "path"];
+            angular.forEach($location.url().split("/"), function(value){
+              var v = $scope.location.normalize(value);
+              if (v) { var k = arr.pop(); if (k) { this[k] = v }}
+            }, uri);
+            return uri
+          }
+          var arr = [obj.path, obj.hash, obj.sub, obj.div], res = [];
+          for (var i in arr) { if (! arr[i]) { break }; res.push(arr[i]) }
+          return $location.url("/" + res.join("/"))
+        },
+        path: function(path, hash) {
+          /* Getter/Setter */
+          if (path === "") { return this.uri({}) }
+          path = this.normalize(path);
+          var uri = this.uri();
+          if (! path) { return uri.path }
+          uri.path = path;
+          var _hash = this.normalize(hash);
+          if (_hash || hash === "") { uri.hash = _hash }
+          return this.uri(uri)
+        },
+        hash: function(hash) {
+          /* Getter/Setter */
+          if (hash) { this.uri({path:this.uri().path, hash:hash}) }
+          return this.uri().hash
+        }
+      }
+
+      /* Dispatch */
+
+      $scope.route = function(uri) {
+        if (! $scope.scenarios_map) { return }
+        if (uri.path in $scope.scenarios_map) {
+          $scope.view = {is_scenario:true};
+          $scope.scenario = $scope.scenarios_map[uri.path];
+          $scope.nav_idx = $scope.nav_map[uri.path];
+          if ($scope.scenario.iterations.histogram.views.length) {
+            $scope.mainHistogram = $scope.scenario.iterations.histogram.views[0]
+          }
+          if ($scope.scenario.atomic.histogram.views.length) {
+            $scope.atomicHistogram = $scope.scenario.atomic.histogram.views[0]
+          }
+          $scope.outputIteration = 0;
+          $scope.showTab(uri);
+        } else {
+          $scope.scenario = null;
+          if (uri.path === "source") {
+            $scope.view = {is_source:true}
+          } else {
+            $scope.view = {is_main:true}
+          }
+        }
+      }
+
+      $scope.$on("$locationChangeSuccess", function (event, newUrl, oldUrl) {
+        $scope.route($scope.location.uri())
+      });
+
+      $scope.showNav = function(nav_idx) { $scope.nav_idx = nav_idx }
+
+      /* Tabs */
+
+      $scope.tabs = [
+        {
+          id: "overview",
+          name: "Overview",
+          visible: function(){ return !! $scope.scenario.iterations.pie.length }
+        },{
+          id: "details",
+          name: "Details",
+          visible: function(){ return !! $scope.scenario.atomic.pie.length }
+        },{
+          id: "output",
+          name: "Scenario Data",
+          visible: function(){ return $scope.scenario.output.length }
+        },{
+          id: "failures",
+          name: "Failures",
+          visible: function(){ return !! $scope.scenario.errors.length }
+        },{
+          id: "task",
+          name: "Input task",
+          visible: function(){ return !! $scope.scenario.config }
+        }
+      ];
+      $scope.tabs_map = {};
+      angular.forEach($scope.tabs,
+                      function(tab){ this[tab.id] = tab }, $scope.tabs_map);
+
+      $scope.showTab = function(uri) {
+        $scope.tab = uri.hash in $scope.tabs_map ? uri.hash : "overview";
+        if (! $scope.scenario.output) {
+          var has_additive = !! $scope.scenario.additive_output.length;
+          var has_complete = !! ($scope.scenario.complete_output.length
+                                 && $scope.scenario.complete_output[0].length);
+          $scope.scenario.output = {
+            has_additive: has_additive,
+            has_complete: has_complete,
+            length: has_additive + has_complete,
+            active: has_additive ? "additive" : (has_complete ? "complete" : "")
+          }
+        }
+        if (uri.hash === "output") {
+          if (uri.sub && $scope.scenario.output["has_" + uri.sub]) {
+            $scope.scenario.output.active = uri.sub
+          }
+        }
+      }
+
+      for (var i in $scope.tabs) {
+        if ($scope.tabs[i].id === $scope.location.hash()) {
+          $scope.tab = $scope.tabs[i].id
+        }
+        $scope.tabs[i].isVisible = function() {
+          if ($scope.scenario) {
+            if (this.visible()) { return true }
+            /* If tab should be hidden but is selected - show another one */
+            if (this.id === $scope.location.hash()) {
+              for (var i in $scope.tabs) {
+                var tab = $scope.tabs[i];
+                if (tab.id != this.id && tab.visible()) {
+                  $scope.tab = tab.id;
+                  return false
+                }
+              }
+            }
+          }
+          return false
+        }
+      }
+
+      $scope.showError = function(message) {
+          return (function (e) {
+            e.style.display = "block";
+            e.textContent = message
+          })(document.getElementById("page-error"))
+      }
+
+      /* Initialization */
+
+      angular.element(document).ready(function(){
+        if (! $scope.scenarios.length) {
+          return $scope.showError("No data...")
+        }
+
+        /* Compose data mapping */
+
+        $scope.nav = [];
+        $scope.nav_map = {};
+        $scope.scenarios_map = {};
+        var met = [], itr = 0, cls_idx = 0;
+        var prev_cls, prev_met;
+
+        for (var idx in $scope.scenarios) {
+          var sc = $scope.scenarios[idx];
+          if (! prev_cls) {
+            prev_cls = sc.cls
+          }
+          else if (prev_cls !== sc.cls) {
+            $scope.nav.push({cls:prev_cls, met:met, idx:cls_idx});
+            prev_cls = sc.cls;
+            met = [];
+            itr = 1;
+            cls_idx += 1
+          }
+
+          if (prev_met !== sc.met) { itr = 1 };
+          sc.ref = $scope.location.normalize(sc.cls+"."+sc.met+(itr > 1 ? "-"+itr : ""));
+          $scope.scenarios_map[sc.ref] = sc;
+          $scope.nav_map[sc.ref] = cls_idx;
+          met.push({name:sc.name, itr:itr, idx:idx, ref:sc.ref});
+          prev_met = sc.met;
+          itr += 1;
+        }
+
+        if (met.length) {
+          $scope.nav.push({cls:prev_cls, met:met, idx:cls_idx})
+        }
+
+        /* Start */
+
+        var uri = $scope.location.uri();
+        uri.path = $scope.location.path();
+        $scope.route(uri);
+        $scope.$digest()
+      })
+    };
+
+    if (typeof angular === "object") {
+      angular.module("App", [])
+        .controller("Controller", ["$scope", "$location", controllerFunction])
+        .directive("widget", widgetDirective)
+    }
+
+
+</script>
+  <style>
+    body { margin:0; padding:0 0 50px; font-size:14px; font-family:Helvetica,Arial,sans-serif }
+    a, a:active, a:focus, a:visited { text-decoration:none; outline:none }
+    p { margin:0; padding:5px 0 }
+    p.thesis { padding:10px 0 }
+    h1 { color:#666; margin:0 0 20px; font-size:30px; font-weight:normal }
+    h2, .h2 { color:#666; margin:24px 0 6px; font-size:25px; font-weight:normal }
+    h3, .h3 { color:#777; margin:12px 0 4px; font-size:18px; font-weight:normal }
+    table { border-collapse:collapse; border-spacing:0; width:100%; font-size:12px; margin:0 0 10px }
+    table th { text-align:left; padding:8px; color:#000; border:2px solid #ddd; border-width:0 0 2px 0 }
+    table th.sortable { cursor:pointer }
+    table td { text-align:left; border-top:1px solid #ddd; padding:8px; color:#333 }
+    table.compact td { padding:4px 8px }
+    table.striped tr:nth-child(odd) td { background:#f9f9f9 }
+    table.linked tbody tr:hover { background:#f9f9f9; cursor:pointer }
+    .rich, .rich td { font-weight:bold }
+    .code { padding:10px; font-size:13px; color:#333; background:#f6f6f6; border:1px solid #e5e5e5; border-radius:4px }
+
+    .header { text-align:left; background:#333; font-size:18px; padding:13px 0; margin-bottom:20px; color:#fff; background-image:linear-gradient(to bottom, #444 0px, #222 100%) }
+    .header a, .header a:visited, .header a:focus { color:#999 }
+
+    .notify-error { padding:5px 10px; background:#fee; color:red }
+    .status-skip, .status-skip td { color:grey }
+    .status-pass, .status-pass td { color:green }
+    .status-fail, .status-fail td { color:red }
+    .capitalize { text-transform:capitalize }
+    
+    .aside { margin:0 20px 0 0; display:block; width:255px; float:left }
+    .aside > div { margin-bottom: 15px }
+    .aside > div div:first-child { border-top-left-radius:4px; border-top-right-radius:4px }
+    .aside > div div:last-child { border-bottom-left-radius:4px; border-bottom-right-radius:4px }
+    .navcls { color:#678; background:#eee; border:1px solid #ddd; margin-bottom:-1px; display:block; padding:8px 9px; font-weight:bold; text-align:left; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; cursor:pointer }
+    .navcls.expanded { color:#469 }
+    .navcls.active { background:#428bca; background-image:linear-gradient(to bottom, #428bca 0px, #3278b3 100%); border-color:#3278b3; color:#fff }
+    .navmet { color:#555; background:#fff; border:1px solid #ddd; font-size:12px; display:block; margin-bottom:-1px; padding:8px 10px; text-align:left; text-overflow:ellipsis; white-space:nowrap; overflow:hidden; cursor:pointer }
+    .navmet:hover { background:#f8f8f8 }
+    .navmet.active, .navmet.active:hover { background:#428bca; background-image:linear-gradient(to bottom, #428bca 0px, #3278b3 100%); border-color:#3278b3; color:#fff }
+
+    .tabs { list-style:outside none none; margin:0 0 5px; padding:0; border-bottom:1px solid #ddd }
+    .tabs:after { clear:both }
+    .tabs li { float:left; margin-bottom:-1px; display:block; position:relative }
+    .tabs li div { border:1px solid transparent; border-radius:4px 4px 0 0; line-height:20px; margin-right:2px; padding:10px 15px; color:#428bca }
+    .tabs li div:hover { border-color:#eee #eee #ddd; background:#eee; cursor:pointer; }
+    .tabs li.active div { background:#fff; border-color:#ddd #ddd transparent; border-style:solid; border-width:1px; color:#555; cursor:default }
+    .failure-mesg { color:#900 }
+    .failure-trace { color:#333; white-space:pre; overflow:auto }
+
+    .link { color:#428BCA; padding:5px 15px 5px 5px; text-decoration:underline; cursor:pointer }
+    .link.active { color:#333; text-decoration:none }
+
+    .chart { padding:0; margin:0; width:890px }
+    .chart svg { height:300px; padding:0; margin:0; overflow:visible; float:right }
+    .chart.lower svg { height:180px }
+    .chart-label-y { font-size:12px; position:relative; top:5px; padding:0; margin:0 }
+
+    .expandable { cursor:pointer }
+    .clearfix { clear:both }
+    .sortable > .arrow { display:inline-block; width:12px; height:inherit; color:#c90 }
+    .content-main { margin:0 5px; display:block; float:left }
+
+    .content-wrap {  margin:0 auto; padding:0 5px </%block>}
+    
+    @media only screen and (min-width: 320px)  { .content-wrap { width:900px  } .content-main { width:600px } }
+    @media only screen and (min-width: 900px)  { .content-wrap { width:880px  } .content-main { width:590px } }
+    @media only screen and (min-width: 1000px) { .content-wrap { width:980px  } .content-main { width:690px } }
+    @media only screen and (min-width: 1100px) { .content-wrap { width:1080px } .content-main { width:790px } }
+    @media only screen and (min-width: 1200px) { .content-wrap { width:1180px } .content-main { width:890px } }
+
+  </style>
+</head>
+<body ng-controller="Controller">
+
+  <div class="header">
+    <div class="content-wrap">
+      <a href="https://github.com/openstack/rally">Rally</a>&nbsp;
+      <span>task results</span>
+    </div>
+  </div>
+
+  <div class="content-wrap">
+    
+
+    <p id="page-error" class="notify-error" style="display:none"></p>
+
+    <div id="content-nav" class="aside" ng-show="scenarios.length" ng-cloack>
+      <div>
+        <div class="navcls"
+             ng-class="{active:view.is_main}"
+             ng-click="location.path('')">Task overview</div>
+        <div class="navcls"
+             ng-class="{active:view.is_source}"
+             ng-click="location.path('source', '')">Input file</div>
+      </div>
+      <div>
+        <div class="navcls" title="{{n.cls}}"
+             ng-repeat-start="n in nav track by $index"
+             ng-click="showNav(n.idx)"
+             ng-class="{expanded:n.idx==nav_idx}">
+                <span ng-hide="n.idx==nav_idx">&#9658;</span>
+                <span ng-show="n.idx==nav_idx">&#9660;</span>
+                {{n.cls}}</div>
+        <div class="navmet" title="{{m.name}}"
+             ng-show="n.idx==nav_idx"
+             ng-class="{active:m.ref==scenario.ref}"
+             ng-click="location.path(m.ref)"
+             ng-repeat="m in n.met track by $index"
+             ng-repeat-end>{{m.name}}</div>
+      </div>
+    </div>
+
+    <div id="content-main" class="content-main" ng-show="scenarios.length" ng-cloak>
+
+      <div ng-show="view.is_main">
+        <h1>Task overview</h1>
+        <table class="linked compact"
+               ng-init="ov_srt='ref'; ov_dir=false">
+          <thead>
+            <tr>
+              <th class="sortable"
+                  title="Scenario name, with optional suffix of call number"
+                  ng-click="ov_srt='ref'; ov_dir=!ov_dir">
+                Scenario
+                <span class="arrow">
+                  <b ng-show="ov_srt=='ref' && !ov_dir">&#x25b4;</b>
+                  <b ng-show="ov_srt=='ref' && ov_dir">&#x25be;</b>
+                </span>
+              <th class="sortable"
+                  title="How long the scenario run, without context duration"
+                  ng-click="ov_srt='load_duration'; ov_dir=!ov_dir">
+                Load duration (s)
+                <span class="arrow">
+                  <b ng-show="ov_srt=='load_duration' && !ov_dir">&#x25b4;</b>
+                  <b ng-show="ov_srt=='load_duration' && ov_dir">&#x25be;</b>
+                </span>
+              <th class="sortable"
+                  title="Scenario duration plus context duration"
+                  ng-click="ov_srt='full_duration'; ov_dir=!ov_dir">
+                Full duration (s)
+                <span class="arrow">
+                  <b ng-show="ov_srt=='full_duration' && !ov_dir">&#x25b4;</b>
+                  <b ng-show="ov_srt=='full_duration' && ov_dir">&#x25be;</b>
+                </span>
+              <th class="sortable" title="Number of iterations"
+                  ng-click="ov_srt='iterations_count'; ov_dir=!ov_dir">
+                Iterations
+                <span class="arrow">
+                  <b ng-show="ov_srt=='iterations_count' && !ov_dir">&#x25b4;</b>
+                  <b ng-show="ov_srt=='iterations_count' && ov_dir">&#x25be;</b>
+                </span>
+              <th class="sortable" title="Scenario runner type"
+                  ng-click="ov_srt='runner'; ov_dir=!ov_dir">
+                Runner
+                <span class="arrow">
+                  <b ng-show="ov_srt=='runner' && !ov_dir">&#x25b4;</b>
+                  <b ng-show="ov_srt=='runner' && ov_dir">&#x25be;</b>
+                </span>
+              <th class="sortable" title="Number of errors occurred"
+                  ng-click="ov_srt='errors.length'; ov_dir=!ov_dir">
+                Errors
+                <span class="arrow">
+                  <b ng-show="ov_srt=='errors.length' && !ov_dir">&#x25b4;</b>
+                  <b ng-show="ov_srt=='errors.length' && ov_dir">&#x25be;</b>
+                </span>
+              <th class="sortable" title="Whether SLA check is successful"
+                  ng-click="ov_srt='sla_success'; ov_dir=!ov_dir">
+                Success (SLA)
+                <span class="arrow">
+                  <b ng-show="ov_srt=='sla_success' && !ov_dir">&#x25b4;</b>
+                  <b ng-show="ov_srt=='sla_success' && ov_dir">&#x25be;</b>
+                </span>
+            <tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="sc in scenarios | orderBy:ov_srt:ov_dir"
+                ng-click="location.path(sc.ref)">
+              <td>{{sc.ref}}
+              <td>{{sc.load_duration | number:3}}
+              <td>{{sc.full_duration | number:3}}
+              <td>{{sc.iterations_count}}
+              <td>{{sc.runner}}
+              <td>{{sc.errors.length}}
+              <td>
+                <span ng-show="sc.sla_success" class="status-pass">&#x2714;</span>
+                <span ng-hide="sc.sla_success" class="status-fail">&#x2716;</span>
+            <tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div ng-show="view.is_source">
+        <h1>Input file</h1>
+        <pre class="code">{{source}}</pre>
+      </div>
+
+      <div ng-show="view.is_scenario">
+        <h1>{{scenario.cls}}.<wbr>{{scenario.name}} ({{scenario.full_duration | number:3}}s)</h1>
+        <ul class="tabs">
+          <li ng-repeat="t in tabs"
+              ng-show="t.isVisible()"
+              ng-class="{active:t.id == tab}"
+              ng-click="location.hash(t.id)">
+            <div>{{t.name}}</div>
+          </li>
+          <div class="clearfix"></div>
+        </ul>
+        <div ng-include="tab"></div>
+
+        <script type="text/ng-template" id="overview">
+          <p class="thesis">
+            Load duration: <b>{{scenario.load_duration | number:3}} s</b> &nbsp;
+            Full duration: <b>{{scenario.full_duration | number:3}} s</b> &nbsp;
+            Iterations: <b>{{scenario.iterations_count}}</b> &nbsp;
+            Failures: <b>{{scenario.errors.length}}</b>
+          </p>
+
+          <div ng-show="scenario.sla.length">
+            <h2>Service-level agreement</h2>
+            <table class="striped">
+              <thead>
+                <tr>
+                  <th>Criterion
+                  <th>Detail
+                  <th>Success
+                <tr>
+              </thead>
+              <tbody>
+                <tr class="rich"
+                    ng-repeat="row in scenario.sla track by $index"
+                    ng-class="{'status-fail':!row.success, 'status-pass':row.success}">
+                  <td>{{row.criterion}}
+                  <td>{{row.detail}}
+                  <td class="capitalize">{{row.success}}
+                <tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div widget="Table"
+               data="scenario.table"
+               lastrow-class="rich"
+               title="Total durations">
+          </div>
+
+          <div widget="StackedArea"
+               data="scenario.iterations.iter"
+               name-x="Iteration sequence number"
+               controls="true"
+               guide="true">
+          </div>
+
+          <div widget="StackedArea"
+               data="scenario.load_profile"
+               title="Load Profile"
+               title-class="h3"
+               name-x="Timeline (seconds)"
+               format-y="d"
+               format-x=",.2f"
+               class="lower">
+          </div>
+
+          <div widget="Pie"
+               data="scenario.iterations.pie"
+               title="Distribution"
+               title-class="h3"
+               style="float:left; width:40%; margin-top:15px">
+          </div>
+
+          <div widget="Histogram"
+               ng-if="scenario.iterations.histogram.data.length"
+               data="scenario.iterations.histogram.data[mainHistogram.id]"
+               style="float:left; width:59%; margin-top:15px; position:relative; top:40px">
+          </div>
+
+          <select ng-model="mainHistogram"
+                  ng-show="scenario.iterations.histogram.data.length"
+                  ng-options="i.name for i in scenario.iterations.histogram.views track by i.id"
+                  style="float:right; margin:45px 35px 0">
+          </select>
+
+          <div class="clearfix"></div>
+
+        </script>
+
+        <script type="text/ng-template" id="details">
+
+          <div widget="StackedArea"
+               data="scenario.atomic.iter"
+               title="Atomic Action Durations"
+               name-x="Iteration sequence number"
+               controls="true"
+               guide="true">
+          </div>
+
+          <div widget="Pie"
+               data="scenario.atomic.pie"
+               title="Distribution"
+               title-class="h3"
+               style="float:left; width:40%; margin-top:15px">
+          </div>
+
+          <div widget="Histogram" data="scenario.atomic.histogram.data[atomicHistogram.id]"
+               ng-if="scenario.atomic.histogram.data.length"
+               style="float:left; width:59%; margin-top:15px; position:relative; top:40px">
+          </div>
+
+          <select ng-show="scenario.atomic.histogram.data.length"
+                  ng-model="atomicHistogram"
+                  ng-options="i.name for i in scenario.atomic.histogram.views track by i.id"
+                  style="float:right; margin:45px 35px 0">
+          </select>
+
+          <div class="clearfix"></div>
+
+        </script>
+
+        <script type="text/ng-template" id="output">
+
+          <div style="padding:10px 0 0">
+            <span class="link"
+                  ng-click="location.hash('output/additive')"
+                  ng-class="{active:scenario.output.active === 'additive'}"
+                  ng-if="scenario.output.has_additive">Aggregated</span>
+            <span class="link"
+                  ng-click="location.hash('output/complete')"
+                  ng-class="{active:scenario.output.active === 'complete'}"
+                  ng-if="scenario.output.has_complete">Per iteration</span>
+          </div>
+
+          <div ng-repeat="chart in scenario.additive_output"
+               ng-if="scenario.output.active === 'additive'">
+            <div widget="{{chart.widget}}"
+                 title="{{chart.title}}"
+                 description="{{chart.description}}"
+                 name-x="{{chart.axis_label}}"
+                 name-y="{{chart.label}}"
+                 data="chart.data">
+            </div>
+          </div>
+
+          <div ng-if="scenario.output.active === 'complete'" style="padding:10px 0 0">
+            <select ng-model="outputIteration">
+              <option ng-repeat="i in scenario.complete_output track by $index"
+                      value="{{$index}}">
+                Iteration {{$index}}
+            </select>
+
+            <div ng-repeat="chart in scenario.complete_output[outputIteration]">
+              <div widget="{{chart.widget}}"
+                   title="{{chart.title}}"
+                   description="{{chart.description}}"
+                   name-x="{{chart.axis_label}}"
+                   name-y="{{chart.label}}"
+                   data="chart.data">
+              </div>
+            </div>
+          </div>
+        </script>
+
+        <script type="text/ng-template" id="failures">
+          <h2>Task failures (<ng-pluralize
+            count="scenario.errors.length"
+            when="{'1': '1 iteration', 'other': '{} iterations'}"></ng-pluralize> failed)
+          </h2>
+          <table class="striped">
+            <thead>
+              <tr>
+                <th>
+                <th>Iteration
+                <th>Exception type
+                <th>Exception message
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="expandable"
+                  ng-repeat-start="i in scenario.errors track by $index"
+                  ng-click="i.expanded = ! i.expanded">
+                <td>
+                  <span ng-hide="i.expanded">&#9658;</span>
+                  <span ng-show="i.expanded">&#9660;</span>
+                <td>{{i.iteration}}
+                <td>{{i.type}}
+                <td class="failure-mesg">{{i.message}}
+              </tr>
+              <tr ng-show="i.expanded" ng-repeat-end>
+                <td colspan="4" class="failure-trace">{{i.traceback}}
+              </tr>
+            </tbody>
+          </table>
+        </script>
+
+        <script type="text/ng-template" id="task">
+          <h2>Subtask Configuration</h2>
+          <pre class="code">{{scenario.config}}</pre>
+        </script>
+      </div>
+
+    </div>
+    <div class="clearfix"></div>
+
+
+  </div>
+
+  <script type="text/javascript">
+    if (! window.angular) {(function(f){
+      f(document.getElementById("content-nav"), "none");
+      f(document.getElementById("content-main"), "none");
+      f(document.getElementById("page-error"), "block").textContent = "Failed to load AngularJS framework"
+    })(function(e, s){e.style.display = s; return e})}
+</script>
+</body>
+</html>
