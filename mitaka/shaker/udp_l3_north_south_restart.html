@@ -1,0 +1,714 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="en-US">
+<head profile="http://gmpg.org/xfn/11">
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+
+  <title>Shaker | The distributed data-plane testing tool for OpenStack</title>
+
+  <!-- LIBS -->
+
+  <script type="application/javascript"
+          src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+  <script type="application/javascript"
+          src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
+  <script type="application/javascript"
+          src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.4/js/bootstrap.js"></script>
+  <script type="text/javascript"
+          src="https://cdn.datatables.net/1.10.2/js/jquery.dataTables.min.js"></script>
+  <script type="text/javascript"
+          src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/3.0.1/handlebars.min.js"></script>
+  <script type="application/javascript"
+          src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/3.2.7/js-yaml.min.js"></script>
+  <script type="application/javascript"
+          src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+  <script type="application/javascript"
+          src="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.10/c3.js"></script>
+
+  <!-- STYLES -->
+
+  <link rel="stylesheet"
+        href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.4/simplex/bootstrap.min.css">
+  <link rel=stylesheet type=text/css
+        href="https://cdn.datatables.net/1.10.2/css/jquery.dataTables.min.css">
+  <link rel=stylesheet type=text/css
+        href="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.10/c3.css">
+  <link rel='stylesheet' type='text/css'
+        href='http://fonts.googleapis.com/css?family=Open+Sans:400,700,400italic&subset=latin,cyrillic'>
+
+  <script type="application/javascript">
+    var report = {"scenarios": {"shaker-scenarios/networking/udp_l3_north_south.yaml": {"file_name": "shaker-scenarios/networking/udp_l3_north_south.yaml", "title": "shaker-scenarios/networking/udp_l3_north_south.yaml", "execution": {"tests": [{"udp": 1, "threads": 2, "title": "Iperf UDP", "buffer_size": 8950, "bandwidth": "1000M", "class": "iperf"}], "progression": "quadratic"}, "description": "This scenario launches pairs of VMs on different compute nodes. VMs are in the different networks connected via different routers, master accesses slave by floating ip", "deployment": {"accommodation": ["pair", "single_room"], "template": "l3_north_south.hot"}}}, "records": {"23a8f980-2cf8-42a7-a333-ae105f4d7350": {"status": "ok", "node": "node-248.domain.tld", "finish": 1467628599.925025, "concurrency": 22, "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "stdout": "------------------------------------------------------------\nClient connecting to 172.16.46.41, UDP port 5001\nSending 8950 byte datagrams\nUDP buffer size: 0.20 MByte (default)\n------------------------------------------------------------\n[  4] local 10.1.0.19 port 47100 connected with 172.16.46.41 port 5001\n[  3] local 10.1.0.19 port 50794 connected with 172.16.46.41 port 5001\n[ ID] Interval       Transfer     Bandwidth\n[  4]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  4] Sent 845070 datagrams\n[  3]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  3] Sent 845067 datagrams\n[SUM]  0.0-60.0 sec  14426 MBytes  2017 Mbits/sec\n", "schedule": 1467628505.39054, "agent": "shaker_arfodk_master_12", "start": 1467628537.399224, "command": {"data": "iperf --client 172.16.46.41 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "stderr": "[  3] WARNING: did not receive ack of last datagram after 10 tries.\n[  4] WARNING: did not receive ack of last datagram after 10 tries.\n", "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "23a8f980-2cf8-42a7-a333-ae105f4d7350"}, "a491510f-3e9c-4f3a-aab4-9ad6184edb9b": {"status": "lost", "node": "node-288.domain.tld", "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "schedule": 1467628505.39054, "agent": "shaker_arfodk_master_2", "command": {"data": "iperf --client 172.16.46.29 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "concurrency": 22, "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "a491510f-3e9c-4f3a-aab4-9ad6184edb9b"}, "0625d84b-8fc8-46fe-b1d8-7c97b7241469": {"status": "ok", "node": "node-272.domain.tld", "finish": 1467628485.289799, "concurrency": 11, "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "stdout": "------------------------------------------------------------\nClient connecting to 172.16.46.21, UDP port 5001\nSending 8950 byte datagrams\nUDP buffer size: 0.20 MByte (default)\n------------------------------------------------------------\n[  4] local 10.1.0.13 port 36213 connected with 172.16.46.21 port 5001\n[  3] local 10.1.0.13 port 53969 connected with 172.16.46.21 port 5001\n[ ID] Interval       Transfer     Bandwidth\n[  4]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  4] Sent 845069 datagrams\n[  3]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  3] Sent 845068 datagrams\n[SUM]  0.0-60.0 sec  14426 MBytes  2017 Mbits/sec\n[  3] Server Report:\n[  3]  0.0-60.1 sec  17.2 MBytes  2.40 Mbits/sec  15.445 ms 832798/845064 (99%)\n[  3]  0.0-60.1 sec  16 datagrams received out-of-order\n[  4] Server Report:\n[  4]  0.0-60.1 sec  18.3 MBytes  2.55 Mbits/sec  15.505 ms 832045/845067 (98%)\n[  4]  0.0-60.1 sec  9 datagrams received out-of-order\n", "schedule": 1467628424.333749, "agent": "shaker_arfodk_master_14", "start": 1467628424.347473, "command": {"data": "iperf --client 172.16.46.21 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "stderr": "", "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "0625d84b-8fc8-46fe-b1d8-7c97b7241469"}, "0440398b-6f20-44c7-b5ef-e9fafc3d1116": {"status": "ok", "node": "node-274.domain.tld", "finish": 1467628484.838839, "concurrency": 11, "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "stdout": "------------------------------------------------------------\nClient connecting to 172.16.46.33, UDP port 5001\nSending 8950 byte datagrams\nUDP buffer size: 0.20 MByte (default)\n------------------------------------------------------------\n[  4] local 10.1.0.6 port 48788 connected with 172.16.46.33 port 5001\n[  3] local 10.1.0.6 port 51891 connected with 172.16.46.33 port 5001\n[ ID] Interval       Transfer     Bandwidth\n[  4]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  4] Sent 845070 datagrams\n[  3]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  3] Sent 845065 datagrams\n[SUM]  0.0-60.0 sec  14426 MBytes  2017 Mbits/sec\n[  4] Server Report:\n[  4]  0.0-143.9 sec  38.3 MBytes  2.23 Mbits/sec   0.083 ms 817765/845069 (97%)\n[  4]  0.0-143.9 sec  39 datagrams received out-of-order\n[  3] Server Report:\n[  3]  0.0-144.3 sec  40.2 MBytes  2.34 Mbits/sec   0.093 ms 816380/845064 (97%)\n[  3]  0.0-144.3 sec  11 datagrams received out-of-order\n", "schedule": 1467628424.333749, "agent": "shaker_arfodk_master_18", "start": 1467628424.344914, "command": {"data": "iperf --client 172.16.46.33 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "stderr": "", "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "0440398b-6f20-44c7-b5ef-e9fafc3d1116"}, "3ad03bd8-c3fa-4c94-8d70-f858e338648d": {"status": "ok", "node": "node-281.domain.tld", "finish": 1467628567.936122, "concurrency": 22, "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "stdout": "------------------------------------------------------------\nClient connecting to 172.16.46.42, UDP port 5001\nSending 8950 byte datagrams\nUDP buffer size: 0.20 MByte (default)\n------------------------------------------------------------\n[  4] local 10.1.0.10 port 55749 connected with 172.16.46.42 port 5001\n[  3] local 10.1.0.10 port 42995 connected with 172.16.46.42 port 5001\n[ ID] Interval       Transfer     Bandwidth\n[  4]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  4] Sent 845068 datagrams\n[  3]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  3] Sent 845068 datagrams\n[SUM]  0.0-60.0 sec  14426 MBytes  2017 Mbits/sec\n[  3] Server Report:\n[  3]  0.0-31.0 sec  47.6 MBytes  12.9 Mbits/sec  10.835 ms 811139/845059 (96%)\n[  3]  0.0-31.0 sec  6227 datagrams received out-of-order\n", "schedule": 1467628505.39054, "agent": "shaker_arfodk_master_3", "start": 1467628505.409039, "command": {"data": "iperf --client 172.16.46.42 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "stderr": "[  4] WARNING: did not receive ack of last datagram after 10 tries.\n", "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "3ad03bd8-c3fa-4c94-8d70-f858e338648d"}, "f5939873-9a8f-4398-bd6f-7965c93233bb": {"status": "ok", "node": "node-266.domain.tld", "finish": 1467628485.031187, "concurrency": 11, "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "stdout": "------------------------------------------------------------\nClient connecting to 172.16.46.39, UDP port 5001\nSending 8950 byte datagrams\nUDP buffer size: 0.20 MByte (default)\n------------------------------------------------------------\n[  4] local 10.1.0.25 port 60011 connected with 172.16.46.39 port 5001\n[  3] local 10.1.0.25 port 41806 connected with 172.16.46.39 port 5001\n[ ID] Interval       Transfer     Bandwidth\n[  4]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  4] Sent 845070 datagrams\n[  3]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  3] Sent 845067 datagrams\n[SUM]  0.0-60.0 sec  14426 MBytes  2017 Mbits/sec\n[  4] Server Report:\n[  4]  0.0-317.5 sec  24.1 MBytes  0.64 Mbits/sec   0.069 ms 827887/845069 (98%)\n[  4]  0.0-317.5 sec  112 datagrams received out-of-order\n[  3] Server Report:\n[  3]  0.0-318.0 sec  21.8 MBytes  0.57 Mbits/sec   0.066 ms 829542/845066 (98%)\n[  3]  0.0-318.0 sec  5 datagrams received out-of-order\n", "schedule": 1467628424.333749, "agent": "shaker_arfodk_master_9", "start": 1467628424.344273, "command": {"data": "iperf --client 172.16.46.39 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "stderr": "", "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "f5939873-9a8f-4398-bd6f-7965c93233bb"}, "20260d9f-820b-46f9-a644-34e7ddfc75de": {"status": "ok", "node": "node-274.domain.tld", "finish": 1467628320.224523, "concurrency": 2, "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "stdout": "------------------------------------------------------------\nClient connecting to 172.16.46.33, UDP port 5001\nSending 8950 byte datagrams\nUDP buffer size: 0.20 MByte (default)\n------------------------------------------------------------\n[  4] local 10.1.0.6 port 58191 connected with 172.16.46.33 port 5001\n[  3] local 10.1.0.6 port 42651 connected with 172.16.46.33 port 5001\n[ ID] Interval       Transfer     Bandwidth\n[  4]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  4] Sent 845070 datagrams\n[  3]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  3] Sent 845068 datagrams\n[SUM]  0.0-60.0 sec  14426 MBytes  2017 Mbits/sec\n", "schedule": 1467628251.468479, "agent": "shaker_arfodk_master_18", "start": 1467628257.699729, "command": {"data": "iperf --client 172.16.46.33 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "stderr": "[  4] WARNING: did not receive ack of last datagram after 10 tries.\n[  3] WARNING: did not receive ack of last datagram after 10 tries.\n", "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "20260d9f-820b-46f9-a644-34e7ddfc75de"}, "e934e9bb-34c5-40e5-9dbd-7135eaf9eefe": {"status": "lost", "node": "node-272.domain.tld", "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "schedule": 1467628505.39054, "agent": "shaker_arfodk_master_14", "command": {"data": "iperf --client 172.16.46.21 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "concurrency": 22, "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "e934e9bb-34c5-40e5-9dbd-7135eaf9eefe"}, "0f3326e5-9d48-4b55-ab0f-c3e1bfc6be5a": {"status": "ok", "node": "node-258.domain.tld", "finish": 1467628758.972125, "concurrency": 22, "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "stdout": "------------------------------------------------------------\nClient connecting to 172.16.46.24, UDP port 5001\nSending 8950 byte datagrams\nUDP buffer size: 0.20 MByte (default)\n------------------------------------------------------------\n[  4] local 10.1.0.4 port 40463 connected with 172.16.46.24 port 5001\n[  3] local 10.1.0.4 port 37168 connected with 172.16.46.24 port 5001\n[ ID] Interval       Transfer     Bandwidth\n[  4]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  4] Sent 845070 datagrams\n[  3]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  3] Sent 845068 datagrams\n[SUM]  0.0-60.0 sec  14426 MBytes  2017 Mbits/sec\n", "schedule": 1467628505.39054, "agent": "shaker_arfodk_master_17", "start": 1467628696.448534, "command": {"data": "iperf --client 172.16.46.24 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "stderr": "[  3] WARNING: did not receive ack of last datagram after 10 tries.\n[  4] WARNING: did not receive ack of last datagram after 10 tries.\n", "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "0f3326e5-9d48-4b55-ab0f-c3e1bfc6be5a"}, "eb210998-6e0a-4481-ac83-ef2e71611bc5": {"status": "ok", "node": "node-264.domain.tld", "finish": 1467628484.631419, "concurrency": 11, "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "stdout": "------------------------------------------------------------\nClient connecting to 172.16.46.36, UDP port 5001\nSending 8950 byte datagrams\nUDP buffer size: 0.20 MByte (default)\n------------------------------------------------------------\n[  4] local 10.1.0.18 port 32998 connected with 172.16.46.36 port 5001\n[  3] local 10.1.0.18 port 32907 connected with 172.16.46.36 port 5001\n[ ID] Interval       Transfer     Bandwidth\n[  4]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  4] Sent 845071 datagrams\n[  3]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  3] Sent 845064 datagrams\n[SUM]  0.0-60.0 sec  14426 MBytes  2017 Mbits/sec\n[  3] Server Report:\n[  3]  0.0-60.2 sec  39.0 MBytes  5.44 Mbits/sec  15.114 ms 817200/845052 (97%)\n[  3]  0.0-60.2 sec  14 datagrams received out-of-order\n[  4] Server Report:\n[  4]  0.0-60.2 sec  38.2 MBytes  5.32 Mbits/sec  15.561 ms 817849/845070 (97%)\n[  4]  0.0-60.2 sec  23 datagrams received out-of-order\n", "schedule": 1467628424.333749, "agent": "shaker_arfodk_master_10", "start": 1467628424.345297, "command": {"data": "iperf --client 172.16.46.36 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "stderr": "", "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "eb210998-6e0a-4481-ac83-ef2e71611bc5"}, "67b71020-c1e7-45e6-8f8d-3fea7c224959": {"status": "ok", "node": "node-243.domain.tld", "finish": 1467628692.193628, "concurrency": 22, "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "stdout": "------------------------------------------------------------\nClient connecting to 172.16.46.38, UDP port 5001\nSending 8950 byte datagrams\nUDP buffer size: 0.20 MByte (default)\n------------------------------------------------------------\n[  4] local 10.1.0.16 port 47343 connected with 172.16.46.38 port 5001\n[  3] local 10.1.0.16 port 40429 connected with 172.16.46.38 port 5001\n[ ID] Interval       Transfer     Bandwidth\n[  4]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  4] Sent 845063 datagrams\n[  3]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  3] Sent 845068 datagrams\n[SUM]  0.0-60.0 sec  14426 MBytes  2017 Mbits/sec\n", "schedule": 1467628505.39054, "agent": "shaker_arfodk_master_15", "start": 1467628629.670633, "command": {"data": "iperf --client 172.16.46.38 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "stderr": "[  4] WARNING: did not receive ack of last datagram after 10 tries.\n[  3] WARNING: did not receive ack of last datagram after 10 tries.\n", "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "67b71020-c1e7-45e6-8f8d-3fea7c224959"}, "63b26ef0-6cf3-4588-ae8a-c58f3a6c7bc2": {"status": "ok", "node": "node-268.domain.tld", "finish": 1467628485.305355, "concurrency": 11, "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "stdout": "------------------------------------------------------------\nClient connecting to 172.16.46.32, UDP port 5001\nSending 8950 byte datagrams\nUDP buffer size: 0.20 MByte (default)\n------------------------------------------------------------\n[  4] local 10.1.0.15 port 60601 connected with 172.16.46.32 port 5001\n[  3] local 10.1.0.15 port 45012 connected with 172.16.46.32 port 5001\n[ ID] Interval       Transfer     Bandwidth\n[  4]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  4] Sent 845067 datagrams\n[  3]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  3] Sent 845066 datagrams\n[SUM]  0.0-60.0 sec  14426 MBytes  2017 Mbits/sec\n[  3] Server Report:\n[  3]  0.0-60.5 sec  18.1 MBytes  2.51 Mbits/sec  10.737 ms 832143/845055 (98%)\n[  3]  0.0-60.5 sec  72 datagrams received out-of-order\n[  4] Server Report:\n[  4]  0.0-60.9 sec  19.5 MBytes  2.68 Mbits/sec  12.154 ms 831173/845054 (98%)\n[  4]  0.0-60.9 sec  168 datagrams received out-of-order\n", "schedule": 1467628424.333749, "agent": "shaker_arfodk_master_11", "start": 1467628424.345309, "command": {"data": "iperf --client 172.16.46.32 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "stderr": "", "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "63b26ef0-6cf3-4588-ae8a-c58f3a6c7bc2"}, "bb262edc-1798-4b2e-8f8d-5bc9b211d2f0": {"status": "lost", "node": "node-263.domain.tld", "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "schedule": 1467628505.39054, "agent": "shaker_arfodk_master_7", "command": {"data": "iperf --client 172.16.46.23 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "concurrency": 22, "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "bb262edc-1798-4b2e-8f8d-5bc9b211d2f0"}, "1ed43449-3734-457f-bfe8-91fa1f83eb9f": {"status": "ok", "node": "node-276.domain.tld", "finish": 1467628402.892446, "concurrency": 5, "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "stdout": "------------------------------------------------------------\nClient connecting to 172.16.46.35, UDP port 5001\nSending 8950 byte datagrams\nUDP buffer size: 0.20 MByte (default)\n------------------------------------------------------------\n[  4] local 10.1.0.9 port 58962 connected with 172.16.46.35 port 5001\n[  3] local 10.1.0.9 port 37668 connected with 172.16.46.35 port 5001\n[ ID] Interval       Transfer     Bandwidth\n[  4]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  4] Sent 845071 datagrams\n[  3]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  3] Sent 845062 datagrams\n[SUM]  0.0-60.0 sec  14426 MBytes  2017 Mbits/sec\n", "schedule": 1467628340.357601, "agent": "shaker_arfodk_master_19", "start": 1467628340.374822, "command": {"data": "iperf --client 172.16.46.35 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "stderr": "[  4] WARNING: did not receive ack of last datagram after 10 tries.\n[  3] WARNING: did not receive ack of last datagram after 10 tries.\n", "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "1ed43449-3734-457f-bfe8-91fa1f83eb9f"}, "ca40fe82-2600-4dc4-8275-e8b3c393861a": {"status": "ok", "node": "node-274.domain.tld", "finish": 1467628402.889662, "concurrency": 5, "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "stdout": "------------------------------------------------------------\nClient connecting to 172.16.46.33, UDP port 5001\nSending 8950 byte datagrams\nUDP buffer size: 0.20 MByte (default)\n------------------------------------------------------------\n[  4] local 10.1.0.6 port 40233 connected with 172.16.46.33 port 5001\n[  3] local 10.1.0.6 port 39448 connected with 172.16.46.33 port 5001\n[ ID] Interval       Transfer     Bandwidth\n[  4]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  4] Sent 845070 datagrams\n[  3]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  3] Sent 845063 datagrams\n[SUM]  0.0-60.0 sec  14426 MBytes  2017 Mbits/sec\n", "schedule": 1467628340.357601, "agent": "shaker_arfodk_master_18", "start": 1467628340.365934, "command": {"data": "iperf --client 172.16.46.33 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "stderr": "[  3] WARNING: did not receive ack of last datagram after 10 tries.\n[  4] WARNING: did not receive ack of last datagram after 10 tries.\n", "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "ca40fe82-2600-4dc4-8275-e8b3c393861a"}, "d632e2fb-d5f4-4298-86df-9fb1042114d3": {"status": "ok", "node": "node-244.domain.tld", "finish": 1467628485.094351, "concurrency": 11, "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "stdout": "------------------------------------------------------------\nClient connecting to 172.16.46.30, UDP port 5001\nSending 8950 byte datagrams\nUDP buffer size: 0.20 MByte (default)\n------------------------------------------------------------\n[  4] local 10.1.0.17 port 46979 connected with 172.16.46.30 port 5001\n[  3] local 10.1.0.17 port 33599 connected with 172.16.46.30 port 5001\n[ ID] Interval       Transfer     Bandwidth\n[  4]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  4] Sent 845071 datagrams\n[  3]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  3] Sent 845069 datagrams\n[SUM]  0.0-60.0 sec  14426 MBytes  2017 Mbits/sec\n[  3] Server Report:\n[  3]  0.0-60.1 sec  36.6 MBytes  5.11 Mbits/sec   0.051 ms 818949/845068 (97%)\n[  3]  0.0-60.1 sec  23 datagrams received out-of-order\n[  4] Server Report:\n[  4]  0.0-60.7 sec  41.1 MBytes  5.68 Mbits/sec   0.105 ms 815755/845070 (97%)\n[  4]  0.0-60.7 sec  24 datagrams received out-of-order\n", "schedule": 1467628424.333749, "agent": "shaker_arfodk_master_13", "start": 1467628424.351206, "command": {"data": "iperf --client 172.16.46.30 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "stderr": "", "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "d632e2fb-d5f4-4298-86df-9fb1042114d3"}, "cab04856-db49-4530-8d5a-081527765bd6": {"status": "ok", "node": "node-266.domain.tld", "finish": 1467628229.439638, "concurrency": 1, "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "stdout": "------------------------------------------------------------\nClient connecting to 172.16.46.39, UDP port 5001\nSending 8950 byte datagrams\nUDP buffer size: 0.20 MByte (default)\n------------------------------------------------------------\n[  4] local 10.1.0.25 port 52624 connected with 172.16.46.39 port 5001\n[  3] local 10.1.0.25 port 45100 connected with 172.16.46.39 port 5001\n[ ID] Interval       Transfer     Bandwidth\n[  4]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  4] Sent 845068 datagrams\n[  3]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  3] Sent 845068 datagrams\n[SUM]  0.0-60.0 sec  14426 MBytes  2017 Mbits/sec\n", "schedule": 1467628166.90958, "agent": "shaker_arfodk_master_9", "start": 1467628166.920281, "command": {"data": "iperf --client 172.16.46.39 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "stderr": "[  3] WARNING: did not receive ack of last datagram after 10 tries.\n[  4] WARNING: did not receive ack of last datagram after 10 tries.\n", "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "cab04856-db49-4530-8d5a-081527765bd6"}, "195b5190-b5e3-4417-8769-bb9544377e87": {"status": "ok", "node": "node-268.domain.tld", "finish": 1467628597.899633, "concurrency": 22, "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "stdout": "------------------------------------------------------------\nClient connecting to 172.16.46.32, UDP port 5001\nSending 8950 byte datagrams\nUDP buffer size: 0.20 MByte (default)\n------------------------------------------------------------\n[  4] local 10.1.0.15 port 53357 connected with 172.16.46.32 port 5001\n[  3] local 10.1.0.15 port 42942 connected with 172.16.46.32 port 5001\n[ ID] Interval       Transfer     Bandwidth\n[  4]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  4] Sent 845070 datagrams\n[  3]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  3] Sent 845066 datagrams\n[SUM]  0.0-60.0 sec  14426 MBytes  2017 Mbits/sec\n", "schedule": 1467628505.39054, "agent": "shaker_arfodk_master_11", "start": 1467628535.38183, "command": {"data": "iperf --client 172.16.46.32 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "stderr": "[  3] WARNING: did not receive ack of last datagram after 10 tries.\n[  4] WARNING: did not receive ack of last datagram after 10 tries.\n", "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "195b5190-b5e3-4417-8769-bb9544377e87"}, "c13e00f4-553f-403b-90c2-196ee6039281": {"status": "ok", "node": "node-264.domain.tld", "finish": 1467628586.844712, "concurrency": 22, "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "stdout": "------------------------------------------------------------\nClient connecting to 172.16.46.36, UDP port 5001\nSending 8950 byte datagrams\nUDP buffer size: 0.20 MByte (default)\n------------------------------------------------------------\n[  4] local 10.1.0.18 port 40664 connected with 172.16.46.36 port 5001\n[  3] local 10.1.0.18 port 57440 connected with 172.16.46.36 port 5001\n[ ID] Interval       Transfer     Bandwidth\n[  4]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  4] Sent 845016 datagrams\n[  3]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  3] Sent 845062 datagrams\n[SUM]  0.0-60.0 sec  14425 MBytes  2017 Mbits/sec\n[  4] Server Report:\n[  4]  0.0-49.9 sec   140 MBytes  23.5 Mbits/sec  15.710 ms 745282/845015 (88%)\n[  4]  0.0-49.9 sec  7846 datagrams received out-of-order\n[  3] Server Report:\n[  3]  0.0-50.7 sec   133 MBytes  22.0 Mbits/sec  18.541 ms 750176/845061 (89%)\n[  3]  0.0-50.7 sec  60 datagrams received out-of-order\n", "schedule": 1467628505.39054, "agent": "shaker_arfodk_master_10", "start": 1467628525.782304, "command": {"data": "iperf --client 172.16.46.36 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "stderr": "", "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "c13e00f4-553f-403b-90c2-196ee6039281"}, "ab51ee4c-886a-4f8c-9b75-df8567e19438": {"status": "ok", "node": "node-246.domain.tld", "finish": 1467628567.935907, "concurrency": 22, "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "stdout": "------------------------------------------------------------\nClient connecting to 172.16.46.34, UDP port 5001\nSending 8950 byte datagrams\nUDP buffer size: 0.20 MByte (default)\n------------------------------------------------------------\n[  4] local 10.1.0.7 port 46897 connected with 172.16.46.34 port 5001\n[  3] local 10.1.0.7 port 52600 connected with 172.16.46.34 port 5001\n[ ID] Interval       Transfer     Bandwidth\n[  4]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  4] Sent 845071 datagrams\n[  3]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  3] Sent 845018 datagrams\n[SUM]  0.0-60.0 sec  14426 MBytes  2017 Mbits/sec\n[  4] Server Report:\n[  4]  0.0-27.6 sec  29.1 MBytes  8.83 Mbits/sec  15.780 ms 824318/845064 (98%)\n[  4]  0.0-27.6 sec  21 datagrams received out-of-order\n", "schedule": 1467628505.39054, "agent": "shaker_arfodk_master_8", "start": 1467628505.409114, "command": {"data": "iperf --client 172.16.46.34 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "stderr": "[  3] WARNING: did not receive ack of last datagram after 10 tries.\n", "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "ab51ee4c-886a-4f8c-9b75-df8567e19438"}, "a2f77010-e637-4e00-9d1a-0257db4cef2c": {"status": "ok", "node": "node-258.domain.tld", "finish": 1467628484.627368, "concurrency": 11, "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "stdout": "------------------------------------------------------------\nClient connecting to 172.16.46.24, UDP port 5001\nSending 8950 byte datagrams\nUDP buffer size: 0.20 MByte (default)\n------------------------------------------------------------\n[  4] local 10.1.0.4 port 60611 connected with 172.16.46.24 port 5001\n[  3] local 10.1.0.4 port 50774 connected with 172.16.46.24 port 5001\n[ ID] Interval       Transfer     Bandwidth\n[  4]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  4] Sent 845066 datagrams\n[  3]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  3] Sent 845067 datagrams\n[SUM]  0.0-60.0 sec  14426 MBytes  2017 Mbits/sec\n[  3] Server Report:\n[  3]  0.0-60.0 sec  42.4 MBytes  5.93 Mbits/sec   0.257 ms 814829/845065 (96%)\n[  3]  0.0-60.0 sec  55 datagrams received out-of-order\n[  4] Server Report:\n[  4]  0.0-60.2 sec  39.0 MBytes  5.43 Mbits/sec  15.495 ms 817233/845062 (97%)\n[  4]  0.0-60.2 sec  27 datagrams received out-of-order\n", "schedule": 1467628424.333749, "agent": "shaker_arfodk_master_17", "start": 1467628424.350897, "command": {"data": "iperf --client 172.16.46.24 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "stderr": "", "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "a2f77010-e637-4e00-9d1a-0257db4cef2c"}, "ad6e5cd5-cfec-4a36-a5cb-edfeedbcb462": {"status": "ok", "node": "node-252.domain.tld", "finish": 1467628567.131678, "concurrency": 22, "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "stdout": "------------------------------------------------------------\nClient connecting to 172.16.46.37, UDP port 5001\nSending 8950 byte datagrams\nUDP buffer size: 0.20 MByte (default)\n------------------------------------------------------------\n[  4] local 10.1.0.24 port 44027 connected with 172.16.46.37 port 5001\n[  3] local 10.1.0.24 port 47070 connected with 172.16.46.37 port 5001\n[ ID] Interval       Transfer     Bandwidth\n[  4]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  4] Sent 845070 datagrams\n[  3]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  3] Sent 845069 datagrams\n[SUM]  0.0-60.0 sec  14426 MBytes  2017 Mbits/sec\n[  3] Server Report:\n[  3]  0.0-30.1 sec  38.7 MBytes  10.8 Mbits/sec  62.236 ms 817441/845066 (97%)\n[  3]  0.0-30.1 sec  28 datagrams received out-of-order\n[  4] Server Report:\n[  4]  0.0-31.1 sec  37.8 MBytes  10.2 Mbits/sec  19.849 ms 818117/845064 (97%)\n[  4]  0.0-31.1 sec  4579 datagrams received out-of-order\n", "schedule": 1467628505.39054, "agent": "shaker_arfodk_master_20", "start": 1467628505.401442, "command": {"data": "iperf --client 172.16.46.37 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "stderr": "", "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "ad6e5cd5-cfec-4a36-a5cb-edfeedbcb462"}, "35926f03-9bc0-4a13-9823-ba58793b4770": {"status": "ok", "node": "node-274.domain.tld", "finish": 1467628689.629186, "concurrency": 22, "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "stdout": "------------------------------------------------------------\nClient connecting to 172.16.46.33, UDP port 5001\nSending 8950 byte datagrams\nUDP buffer size: 0.20 MByte (default)\n------------------------------------------------------------\n[  4] local 10.1.0.6 port 40167 connected with 172.16.46.33 port 5001\n[  3] local 10.1.0.6 port 39227 connected with 172.16.46.33 port 5001\n[ ID] Interval       Transfer     Bandwidth\n[  4]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  4] Sent 845065 datagrams\n[  3]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  3] Sent 845067 datagrams\n[SUM]  0.0-60.0 sec  14426 MBytes  2017 Mbits/sec\n", "schedule": 1467628505.39054, "agent": "shaker_arfodk_master_18", "start": 1467628627.108757, "command": {"data": "iperf --client 172.16.46.33 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "stderr": "[  4] WARNING: did not receive ack of last datagram after 10 tries.\n[  3] WARNING: did not receive ack of last datagram after 10 tries.\n", "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "35926f03-9bc0-4a13-9823-ba58793b4770"}, "a010472d-8136-44a7-9a83-c6f079745ecc": {"status": "lost", "node": "node-255.domain.tld", "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "schedule": 1467628505.39054, "agent": "shaker_arfodk_master_1", "command": {"data": "iperf --client 172.16.46.26 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "concurrency": 22, "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "a010472d-8136-44a7-9a83-c6f079745ecc"}, "bc0ed80c-6eec-4ca9-8689-5249a0b7cc53": {"status": "ok", "node": "node-268.domain.tld", "finish": 1467628402.893454, "concurrency": 5, "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "stdout": "------------------------------------------------------------\nClient connecting to 172.16.46.32, UDP port 5001\nSending 8950 byte datagrams\nUDP buffer size: 0.20 MByte (default)\n------------------------------------------------------------\n[  4] local 10.1.0.15 port 50495 connected with 172.16.46.32 port 5001\n[  3] local 10.1.0.15 port 35926 connected with 172.16.46.32 port 5001\n[ ID] Interval       Transfer     Bandwidth\n[  4]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  4] Sent 845068 datagrams\n[  3]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  3] Sent 845063 datagrams\n[SUM]  0.0-60.0 sec  14426 MBytes  2017 Mbits/sec\n", "schedule": 1467628340.357601, "agent": "shaker_arfodk_master_11", "start": 1467628340.370766, "command": {"data": "iperf --client 172.16.46.32 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "stderr": "[  3] WARNING: did not receive ack of last datagram after 10 tries.\n[  4] WARNING: did not receive ack of last datagram after 10 tries.\n", "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "bc0ed80c-6eec-4ca9-8689-5249a0b7cc53"}, "512c096a-8183-4f36-8da8-dfaaf377a7e5": {"status": "ok", "node": "node-285.domain.tld", "finish": 1467628565.937955, "concurrency": 22, "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "stdout": "------------------------------------------------------------\nClient connecting to 172.16.46.31, UDP port 5001\nSending 8950 byte datagrams\nUDP buffer size: 0.20 MByte (default)\n------------------------------------------------------------\n[  4] local 10.1.0.8 port 36672 connected with 172.16.46.31 port 5001\n[  3] local 10.1.0.8 port 38007 connected with 172.16.46.31 port 5001\n[ ID] Interval       Transfer     Bandwidth\n[  4]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  4] Sent 845070 datagrams\n[  3]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  3] Sent 845067 datagrams\n[SUM]  0.0-60.0 sec  14426 MBytes  2017 Mbits/sec\n[  3] Server Report:\n[  3]  0.0-28.6 sec  31.3 MBytes  9.15 Mbits/sec  15.848 ms 822767/845063 (97%)\n[  3]  0.0-28.6 sec  5 datagrams received out-of-order\n[  4] Server Report:\n[  4]  0.0-28.9 sec  40.9 MBytes  11.9 Mbits/sec  31.621 ms 815924/845068 (97%)\n[  4]  0.0-28.9 sec  1 datagrams received out-of-order\n", "schedule": 1467628505.39054, "agent": "shaker_arfodk_master_5", "start": 1467628505.402907, "command": {"data": "iperf --client 172.16.46.31 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "stderr": "", "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "512c096a-8183-4f36-8da8-dfaaf377a7e5"}, "bdc69efa-b407-43b5-ad2a-20170d97ca73": {"status": "ok", "node": "node-243.domain.tld", "finish": 1467628485.384605, "concurrency": 11, "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "stdout": "------------------------------------------------------------\nClient connecting to 172.16.46.38, UDP port 5001\nSending 8950 byte datagrams\nUDP buffer size: 0.20 MByte (default)\n------------------------------------------------------------\n[  4] local 10.1.0.16 port 45807 connected with 172.16.46.38 port 5001\n[  3] local 10.1.0.16 port 32809 connected with 172.16.46.38 port 5001\n[ ID] Interval       Transfer     Bandwidth\n[  4]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  4] Sent 845070 datagrams\n[  3]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  3] Sent 845066 datagrams\n[SUM]  0.0-60.0 sec  14426 MBytes  2017 Mbits/sec\n[  4] Server Report:\n[  4]  0.0-59.9 sec  15.2 MBytes  2.13 Mbits/sec   0.131 ms 834228/845069 (99%)\n[  4]  0.0-59.9 sec  9 datagrams received out-of-order\n[  3] Server Report:\n[  3]  0.0-60.2 sec  15.5 MBytes  2.16 Mbits/sec  15.292 ms 833994/845064 (99%)\n[  3]  0.0-60.2 sec  6 datagrams received out-of-order\n", "schedule": 1467628424.333749, "agent": "shaker_arfodk_master_15", "start": 1467628424.352155, "command": {"data": "iperf --client 172.16.46.38 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "stderr": "", "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "bdc69efa-b407-43b5-ad2a-20170d97ca73"}, "78e75307-4889-4477-988e-939751752320": {"status": "ok", "node": "node-283.domain.tld", "finish": 1467628692.121714, "concurrency": 22, "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "stdout": "------------------------------------------------------------\nClient connecting to 172.16.46.27, UDP port 5001\nSending 8950 byte datagrams\nUDP buffer size: 0.20 MByte (default)\n------------------------------------------------------------\n[  4] local 10.1.0.21 port 48238 connected with 172.16.46.27 port 5001\n[  3] local 10.1.0.21 port 53300 connected with 172.16.46.27 port 5001\n[ ID] Interval       Transfer     Bandwidth\n[  4]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  4] Sent 845050 datagrams\n[  3]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  3] Sent 845069 datagrams\n[SUM]  0.0-60.0 sec  14426 MBytes  2017 Mbits/sec\n", "schedule": 1467628505.39054, "agent": "shaker_arfodk_master_4", "start": 1467628629.599887, "command": {"data": "iperf --client 172.16.46.27 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "stderr": "[  4] WARNING: did not receive ack of last datagram after 10 tries.\n[  3] WARNING: did not receive ack of last datagram after 10 tries.\n", "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "78e75307-4889-4477-988e-939751752320"}, "5ea7cedc-bcfa-4cb4-b397-14afbbe6b64a": {"status": "ok", "node": "node-276.domain.tld", "finish": 1467628485.333008, "concurrency": 11, "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "stdout": "------------------------------------------------------------\nClient connecting to 172.16.46.35, UDP port 5001\nSending 8950 byte datagrams\nUDP buffer size: 0.20 MByte (default)\n------------------------------------------------------------\n[  4] local 10.1.0.9 port 45867 connected with 172.16.46.35 port 5001\n[  3] local 10.1.0.9 port 44505 connected with 172.16.46.35 port 5001\n[ ID] Interval       Transfer     Bandwidth\n[  4]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  4] Sent 845070 datagrams\n[  3]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  3] Sent 845068 datagrams\n[SUM]  0.0-60.0 sec  14426 MBytes  2017 Mbits/sec\n[  4] Server Report:\n[  4]  0.0-144.3 sec  21.0 MBytes  1.22 Mbits/sec   0.419 ms 830103/845066 (98%)\n[  4]  0.0-144.3 sec  24 datagrams received out-of-order\n[  3] Server Report:\n[  3]  0.0-144.8 sec  19.7 MBytes  1.14 Mbits/sec  13.134 ms 831039/845062 (98%)\n[  3]  0.0-144.8 sec  18 datagrams received out-of-order\n", "schedule": 1467628424.333749, "agent": "shaker_arfodk_master_19", "start": 1467628424.343898, "command": {"data": "iperf --client 172.16.46.35 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "stderr": "", "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "5ea7cedc-bcfa-4cb4-b397-14afbbe6b64a"}, "e2f77ffa-eafd-46db-be90-996378676606": {"status": "ok", "node": "node-270.domain.tld", "finish": 1467628484.698706, "concurrency": 11, "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "stdout": "------------------------------------------------------------\nClient connecting to 172.16.46.22, UDP port 5001\nSending 8950 byte datagrams\nUDP buffer size: 0.20 MByte (default)\n------------------------------------------------------------\n[  4] local 10.1.0.5 port 37737 connected with 172.16.46.22 port 5001\n[  3] local 10.1.0.5 port 53518 connected with 172.16.46.22 port 5001\n[ ID] Interval       Transfer     Bandwidth\n[  4]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  4] Sent 845069 datagrams\n[  3]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  3] Sent 845067 datagrams\n[SUM]  0.0-60.0 sec  14426 MBytes  2017 Mbits/sec\n[  3] Server Report:\n[  3]  0.0-60.0 sec  37.7 MBytes  5.27 Mbits/sec   0.075 ms 818155/845066 (97%)\n[  3]  0.0-60.0 sec  6 datagrams received out-of-order\n[  4] Server Report:\n[  4]  0.0-60.2 sec  39.0 MBytes  5.43 Mbits/sec   0.044 ms 817278/845068 (97%)\n[  4]  0.0-60.2 sec  1 datagrams received out-of-order\n", "schedule": 1467628424.333749, "agent": "shaker_arfodk_master_16", "start": 1467628424.347505, "command": {"data": "iperf --client 172.16.46.22 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "stderr": "", "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "e2f77ffa-eafd-46db-be90-996378676606"}, "ac509fc7-dc76-44ab-af27-65e2c17ee689": {"status": "ok", "node": "node-250.domain.tld", "finish": 1467628665.213427, "concurrency": 22, "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "stdout": "------------------------------------------------------------\nClient connecting to 172.16.46.40, UDP port 5001\nSending 8950 byte datagrams\nUDP buffer size: 0.20 MByte (default)\n------------------------------------------------------------\n[  4] local 10.1.0.14 port 44775 connected with 172.16.46.40 port 5001\n[  3] local 10.1.0.14 port 44959 connected with 172.16.46.40 port 5001\n[ ID] Interval       Transfer     Bandwidth\n[  4]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  4] Sent 845070 datagrams\n[  3]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  3] Sent 845066 datagrams\n[SUM]  0.0-60.0 sec  14426 MBytes  2017 Mbits/sec\n", "schedule": 1467628505.39054, "agent": "shaker_arfodk_master_21", "start": 1467628602.688433, "command": {"data": "iperf --client 172.16.46.40 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "stderr": "[  3] WARNING: did not receive ack of last datagram after 10 tries.\n[  4] WARNING: did not receive ack of last datagram after 10 tries.\n", "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "ac509fc7-dc76-44ab-af27-65e2c17ee689"}, "abc91c73-7327-4696-bd53-f3a897685dd3": {"status": "ok", "node": "node-248.domain.tld", "finish": 1467628484.625599, "concurrency": 11, "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "stdout": "------------------------------------------------------------\nClient connecting to 172.16.46.41, UDP port 5001\nSending 8950 byte datagrams\nUDP buffer size: 0.20 MByte (default)\n------------------------------------------------------------\n[  4] local 10.1.0.19 port 32817 connected with 172.16.46.41 port 5001\n[  3] local 10.1.0.19 port 46568 connected with 172.16.46.41 port 5001\n[ ID] Interval       Transfer     Bandwidth\n[  4]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  4] Sent 845064 datagrams\n[  3]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  3] Sent 845066 datagrams\n[SUM]  0.0-60.0 sec  14426 MBytes  2017 Mbits/sec\n[  3] Server Report:\n[  3]  0.0-60.0 sec  40.4 MBytes  5.65 Mbits/sec   0.067 ms 816261/845065 (97%)\n[  3]  0.0-60.0 sec  9 datagrams received out-of-order\n[  4] Server Report:\n[  4]  0.0-60.2 sec  38.9 MBytes  5.43 Mbits/sec  14.326 ms 817264/845044 (97%)\n[  4]  0.0-60.2 sec  27 datagrams received out-of-order\n", "schedule": 1467628424.333749, "agent": "shaker_arfodk_master_12", "start": 1467628424.344605, "command": {"data": "iperf --client 172.16.46.41 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "stderr": "", "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "abc91c73-7327-4696-bd53-f3a897685dd3"}, "92bc032c-9e2b-42be-b539-7d113cb1f7ed": {"status": "ok", "node": "node-266.domain.tld", "finish": 1467628402.88261, "concurrency": 5, "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "stdout": "------------------------------------------------------------\nClient connecting to 172.16.46.39, UDP port 5001\nSending 8950 byte datagrams\nUDP buffer size: 0.20 MByte (default)\n------------------------------------------------------------\n[  4] local 10.1.0.25 port 36739 connected with 172.16.46.39 port 5001\n[  3] local 10.1.0.25 port 36468 connected with 172.16.46.39 port 5001\n[ ID] Interval       Transfer     Bandwidth\n[  4]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  4] Sent 845072 datagrams\n[  3]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  3] Sent 845068 datagrams\n[SUM]  0.0-60.0 sec  14426 MBytes  2017 Mbits/sec\n[  4] Server Report:\n[  4]  0.0-235.4 sec  23.2 MBytes  0.83 Mbits/sec   2.491 ms 828486/845069 (98%)\n[  4]  0.0-235.4 sec  3 datagrams received out-of-order\n", "schedule": 1467628340.357601, "agent": "shaker_arfodk_master_9", "start": 1467628340.360936, "command": {"data": "iperf --client 172.16.46.39 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "stderr": "[  3] WARNING: did not receive ack of last datagram after 10 tries.\n", "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "92bc032c-9e2b-42be-b539-7d113cb1f7ed"}, "ca58300d-cead-4be6-99ce-d49bf487826d": {"status": "ok", "node": "node-286.domain.tld", "finish": 1467628567.931118, "concurrency": 22, "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "stdout": "------------------------------------------------------------\nClient connecting to 172.16.46.28, UDP port 5001\nSending 8950 byte datagrams\nUDP buffer size: 0.20 MByte (default)\n------------------------------------------------------------\n[  4] local 10.1.0.12 port 58161 connected with 172.16.46.28 port 5001\n[  3] local 10.1.0.12 port 60289 connected with 172.16.46.28 port 5001\n[ ID] Interval       Transfer     Bandwidth\n[  4]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  4] Sent 845071 datagrams\n[  3]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  3] Sent 845063 datagrams\n[SUM]  0.0-60.0 sec  14426 MBytes  2017 Mbits/sec\n[  3] Server Report:\n[  3]  0.0-27.5 sec  31.8 MBytes  9.70 Mbits/sec  15.814 ms 822396/845054 (97%)\n[  3]  0.0-27.5 sec  12 datagrams received out-of-order\n", "schedule": 1467628505.39054, "agent": "shaker_arfodk_master_6", "start": 1467628505.406317, "command": {"data": "iperf --client 172.16.46.28 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "stderr": "[  4] WARNING: did not receive ack of last datagram after 10 tries.\n", "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "ca58300d-cead-4be6-99ce-d49bf487826d"}, "299a2517-1d04-49dc-a7ba-fb3eb0ab3723": {"status": "ok", "node": "node-266.domain.tld", "finish": 1467628314.003115, "concurrency": 2, "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "stdout": "------------------------------------------------------------\nClient connecting to 172.16.46.39, UDP port 5001\nSending 8950 byte datagrams\nUDP buffer size: 0.20 MByte (default)\n------------------------------------------------------------\n[  4] local 10.1.0.25 port 43485 connected with 172.16.46.39 port 5001\n[  3] local 10.1.0.25 port 34242 connected with 172.16.46.39 port 5001\n[ ID] Interval       Transfer     Bandwidth\n[  4]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  4] Sent 845069 datagrams\n[  3]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  3] Sent 845069 datagrams\n[SUM]  0.0-60.0 sec  14426 MBytes  2017 Mbits/sec\n", "schedule": 1467628251.468479, "agent": "shaker_arfodk_master_9", "start": 1467628251.4791, "command": {"data": "iperf --client 172.16.46.39 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "stderr": "[  4] WARNING: did not receive ack of last datagram after 10 tries.\n[  3] WARNING: did not receive ack of last datagram after 10 tries.\n", "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "299a2517-1d04-49dc-a7ba-fb3eb0ab3723"}, "76bc25b9-6c9a-4ad2-b1e1-d4e772e81f25": {"status": "ok", "node": "node-257.domain.tld", "finish": 1467628599.439115, "concurrency": 22, "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "stdout": "------------------------------------------------------------\nClient connecting to 172.16.46.25, UDP port 5001\nSending 8950 byte datagrams\nUDP buffer size: 0.20 MByte (default)\n------------------------------------------------------------\n[  4] local 10.1.0.20 port 52556 connected with 172.16.46.25 port 5001\n[  3] local 10.1.0.20 port 51709 connected with 172.16.46.25 port 5001\n[ ID] Interval       Transfer     Bandwidth\n[  4]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  4] Sent 845070 datagrams\n[  3]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  3] Sent 845069 datagrams\n[SUM]  0.0-60.0 sec  14426 MBytes  2017 Mbits/sec\n", "schedule": 1467628505.39054, "agent": "shaker_arfodk_master_0", "start": 1467628536.914435, "command": {"data": "iperf --client 172.16.46.25 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "stderr": "[  4] WARNING: did not receive ack of last datagram after 10 tries.\n[  3] WARNING: did not receive ack of last datagram after 10 tries.\n", "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "76bc25b9-6c9a-4ad2-b1e1-d4e772e81f25"}, "706724ad-50a2-4cab-a627-f72c9b85033a": {"status": "ok", "node": "node-244.domain.tld", "finish": 1467628587.258735, "concurrency": 22, "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "stdout": "------------------------------------------------------------\nClient connecting to 172.16.46.30, UDP port 5001\nSending 8950 byte datagrams\nUDP buffer size: 0.20 MByte (default)\n------------------------------------------------------------\n[  4] local 10.1.0.17 port 55016 connected with 172.16.46.30 port 5001\n[  3] local 10.1.0.17 port 38907 connected with 172.16.46.30 port 5001\n[ ID] Interval       Transfer     Bandwidth\n[  4]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  4] Sent 845071 datagrams\n[  3]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  3] Sent 845067 datagrams\n[SUM]  0.0-60.0 sec  14426 MBytes  2017 Mbits/sec\n", "schedule": 1467628505.39054, "agent": "shaker_arfodk_master_13", "start": 1467628524.731837, "command": {"data": "iperf --client 172.16.46.30 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "stderr": "[  3] WARNING: did not receive ack of last datagram after 10 tries.\n[  4] WARNING: did not receive ack of last datagram after 10 tries.\n", "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "706724ad-50a2-4cab-a627-f72c9b85033a"}, "dfc92311-3646-4e66-97fa-18417d489be0": {"status": "ok", "node": "node-266.domain.tld", "finish": 1467628718.719159, "concurrency": 22, "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "stdout": "------------------------------------------------------------\nClient connecting to 172.16.46.39, UDP port 5001\nSending 8950 byte datagrams\nUDP buffer size: 0.20 MByte (default)\n------------------------------------------------------------\n[  4] local 10.1.0.25 port 60491 connected with 172.16.46.39 port 5001\n[  3] local 10.1.0.25 port 55619 connected with 172.16.46.39 port 5001\n[ ID] Interval       Transfer     Bandwidth\n[  4]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  4] Sent 845070 datagrams\n[  3]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  3] Sent 845069 datagrams\n[SUM]  0.0-60.0 sec  14426 MBytes  2017 Mbits/sec\n", "schedule": 1467628505.39054, "agent": "shaker_arfodk_master_9", "start": 1467628656.197867, "command": {"data": "iperf --client 172.16.46.39 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "stderr": "[  3] WARNING: did not receive ack of last datagram after 10 tries.\n[  4] WARNING: did not receive ack of last datagram after 10 tries.\n", "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "dfc92311-3646-4e66-97fa-18417d489be0"}, "36991f1c-fdc5-4db3-8987-7046dcea88f8": {"status": "ok", "node": "node-276.domain.tld", "finish": 1467628607.17452, "concurrency": 22, "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "stdout": "------------------------------------------------------------\nClient connecting to 172.16.46.35, UDP port 5001\nSending 8950 byte datagrams\nUDP buffer size: 0.20 MByte (default)\n------------------------------------------------------------\n[  4] local 10.1.0.9 port 41109 connected with 172.16.46.35 port 5001\n[  3] local 10.1.0.9 port 42459 connected with 172.16.46.35 port 5001\n[ ID] Interval       Transfer     Bandwidth\n[  4]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  4] Sent 845070 datagrams\n[  3]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  3] Sent 845068 datagrams\n[SUM]  0.0-60.0 sec  14426 MBytes  2017 Mbits/sec\n", "schedule": 1467628505.39054, "agent": "shaker_arfodk_master_19", "start": 1467628544.654694, "command": {"data": "iperf --client 172.16.46.35 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "stderr": "[  4] WARNING: did not receive ack of last datagram after 10 tries.\n[  3] WARNING: did not receive ack of last datagram after 10 tries.\n", "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "36991f1c-fdc5-4db3-8987-7046dcea88f8"}, "314c1fc8-8c3f-4ef1-8936-4fe5290b1959": {"status": "ok", "node": "node-270.domain.tld", "finish": 1467628744.845736, "concurrency": 22, "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "stdout": "------------------------------------------------------------\nClient connecting to 172.16.46.22, UDP port 5001\nSending 8950 byte datagrams\nUDP buffer size: 0.20 MByte (default)\n------------------------------------------------------------\n[  4] local 10.1.0.5 port 37027 connected with 172.16.46.22 port 5001\n[  3] local 10.1.0.5 port 58221 connected with 172.16.46.22 port 5001\n[ ID] Interval       Transfer     Bandwidth\n[  4]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  4] Sent 845068 datagrams\n[  3]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  3] Sent 845064 datagrams\n[SUM]  0.0-60.0 sec  14426 MBytes  2017 Mbits/sec\n", "schedule": 1467628505.39054, "agent": "shaker_arfodk_master_16", "start": 1467628682.325264, "command": {"data": "iperf --client 172.16.46.22 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "stderr": "[  4] WARNING: did not receive ack of last datagram after 10 tries.\n[  3] WARNING: did not receive ack of last datagram after 10 tries.\n", "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "314c1fc8-8c3f-4ef1-8936-4fe5290b1959"}, "56ff4d99-35bb-4688-b0f5-85970f1a62e7": {"status": "ok", "node": "node-264.domain.tld", "finish": 1467628402.897612, "concurrency": 5, "scenario": "shaker-scenarios/networking/udp_l3_north_south.yaml", "stdout": "------------------------------------------------------------\nClient connecting to 172.16.46.36, UDP port 5001\nSending 8950 byte datagrams\nUDP buffer size: 0.20 MByte (default)\n------------------------------------------------------------\n[  4] local 10.1.0.18 port 47982 connected with 172.16.46.36 port 5001\n[  3] local 10.1.0.18 port 49182 connected with 172.16.46.36 port 5001\n[ ID] Interval       Transfer     Bandwidth\n[  4]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  4] Sent 845069 datagrams\n[  3]  0.0-60.0 sec  7213 MBytes  1008 Mbits/sec\n[  3] Sent 845053 datagrams\n[SUM]  0.0-60.0 sec  14426 MBytes  2017 Mbits/sec\n[  4] Server Report:\n[  4]  0.0-61.2 sec  84.4 MBytes  11.6 Mbits/sec  78.031 ms 784847/845049 (93%)\n[  4]  0.0-61.2 sec  52 datagrams received out-of-order\n", "schedule": 1467628340.357601, "agent": "shaker_arfodk_master_10", "start": 1467628340.37361, "command": {"data": "iperf --client 172.16.46.36 --format m --len 8950 --udp --bandwidth 1000M --time 60 --parallel 2 --nodelay", "type": "program"}, "stderr": "[  3] WARNING: did not receive ack of last datagram after 10 tries.\n", "executor": "iperf", "test": "Iperf UDP", "type": "agent", "id": "56ff4d99-35bb-4688-b0f5-85970f1a62e7"}}, "tests": {"Iperf UDP": {"udp": 1, "title": "Iperf UDP", "bandwidth": "1000M", "threads": 2, "buffer_size": 8950, "class": "iperf"}}, "agents": {"shaker_arfodk_slave_3": {"node": "node-280.domain.tld", "zone": "nova", "availability_zone": "nova:node-280.domain.tld", "ip": "172.16.46.42", "master": {"node": "node-281.domain.tld", "zone": "nova", "availability_zone": "nova:node-281.domain.tld", "ip": "10.1.0.10", "mode": "master", "slave_id": "shaker_arfodk_slave_3", "id": "shaker_arfodk_master_3"}, "mode": "slave", "master_id": "shaker_arfodk_master_3", "id": "shaker_arfodk_slave_3"}, "shaker_arfodk_slave_21": {"node": "node-251.domain.tld", "zone": "nova", "availability_zone": "nova:node-251.domain.tld", "ip": "172.16.46.40", "master": {"node": "node-250.domain.tld", "zone": "nova", "availability_zone": "nova:node-250.domain.tld", "ip": "10.1.0.14", "mode": "master", "slave_id": "shaker_arfodk_slave_21", "id": "shaker_arfodk_master_21"}, "mode": "slave", "master_id": "shaker_arfodk_master_21", "id": "shaker_arfodk_slave_21"}, "shaker_arfodk_slave_20": {"node": "node-279.domain.tld", "zone": "nova", "availability_zone": "nova:node-279.domain.tld", "ip": "172.16.46.37", "master": {"node": "node-252.domain.tld", "zone": "nova", "availability_zone": "nova:node-252.domain.tld", "ip": "10.1.0.24", "mode": "master", "slave_id": "shaker_arfodk_slave_20", "id": "shaker_arfodk_master_20"}, "mode": "slave", "master_id": "shaker_arfodk_master_20", "id": "shaker_arfodk_slave_20"}, "shaker_arfodk_master_18": {"node": "node-274.domain.tld", "slave": {"node": "node-275.domain.tld", "zone": "nova", "availability_zone": "nova:node-275.domain.tld", "ip": "172.16.46.33", "mode": "slave", "master_id": "shaker_arfodk_master_18", "id": "shaker_arfodk_slave_18"}, "zone": "nova", "availability_zone": "nova:node-274.domain.tld", "ip": "10.1.0.6", "mode": "master", "slave_id": "shaker_arfodk_slave_18", "id": "shaker_arfodk_master_18"}, "shaker_arfodk_master_19": {"node": "node-276.domain.tld", "slave": {"node": "node-277.domain.tld", "zone": "nova", "availability_zone": "nova:node-277.domain.tld", "ip": "172.16.46.35", "mode": "slave", "master_id": "shaker_arfodk_master_19", "id": "shaker_arfodk_slave_19"}, "zone": "nova", "availability_zone": "nova:node-276.domain.tld", "ip": "10.1.0.9", "mode": "master", "slave_id": "shaker_arfodk_slave_19", "id": "shaker_arfodk_master_19"}, "shaker_arfodk_master_10": {"node": "node-264.domain.tld", "slave": {"node": "node-269.domain.tld", "zone": "nova", "availability_zone": "nova:node-269.domain.tld", "ip": "172.16.46.36", "mode": "slave", "master_id": "shaker_arfodk_master_10", "id": "shaker_arfodk_slave_10"}, "zone": "nova", "availability_zone": "nova:node-264.domain.tld", "ip": "10.1.0.18", "mode": "master", "slave_id": "shaker_arfodk_slave_10", "id": "shaker_arfodk_master_10"}, "shaker_arfodk_master_11": {"node": "node-268.domain.tld", "slave": {"node": "node-249.domain.tld", "zone": "nova", "availability_zone": "nova:node-249.domain.tld", "ip": "172.16.46.32", "mode": "slave", "master_id": "shaker_arfodk_master_11", "id": "shaker_arfodk_slave_11"}, "zone": "nova", "availability_zone": "nova:node-268.domain.tld", "ip": "10.1.0.15", "mode": "master", "slave_id": "shaker_arfodk_slave_11", "id": "shaker_arfodk_master_11"}, "shaker_arfodk_master_12": {"node": "node-248.domain.tld", "slave": {"node": "node-245.domain.tld", "zone": "nova", "availability_zone": "nova:node-245.domain.tld", "ip": "172.16.46.41", "mode": "slave", "master_id": "shaker_arfodk_master_12", "id": "shaker_arfodk_slave_12"}, "zone": "nova", "availability_zone": "nova:node-248.domain.tld", "ip": "10.1.0.19", "mode": "master", "slave_id": "shaker_arfodk_slave_12", "id": "shaker_arfodk_master_12"}, "shaker_arfodk_master_13": {"node": "node-244.domain.tld", "slave": {"node": "node-247.domain.tld", "zone": "nova", "availability_zone": "nova:node-247.domain.tld", "ip": "172.16.46.30", "mode": "slave", "master_id": "shaker_arfodk_master_13", "id": "shaker_arfodk_slave_13"}, "zone": "nova", "availability_zone": "nova:node-244.domain.tld", "ip": "10.1.0.17", "mode": "master", "slave_id": "shaker_arfodk_slave_13", "id": "shaker_arfodk_master_13"}, "shaker_arfodk_master_14": {"node": "node-272.domain.tld", "slave": {"node": "node-273.domain.tld", "zone": "nova", "availability_zone": "nova:node-273.domain.tld", "ip": "172.16.46.21", "mode": "slave", "master_id": "shaker_arfodk_master_14", "id": "shaker_arfodk_slave_14"}, "zone": "nova", "availability_zone": "nova:node-272.domain.tld", "ip": "10.1.0.13", "mode": "master", "slave_id": "shaker_arfodk_slave_14", "id": "shaker_arfodk_master_14"}, "shaker_arfodk_master_15": {"node": "node-243.domain.tld", "slave": {"node": "node-242.domain.tld", "zone": "nova", "availability_zone": "nova:node-242.domain.tld", "ip": "172.16.46.38", "mode": "slave", "master_id": "shaker_arfodk_master_15", "id": "shaker_arfodk_slave_15"}, "zone": "nova", "availability_zone": "nova:node-243.domain.tld", "ip": "10.1.0.16", "mode": "master", "slave_id": "shaker_arfodk_slave_15", "id": "shaker_arfodk_master_15"}, "shaker_arfodk_master_16": {"node": "node-270.domain.tld", "slave": {"node": "node-271.domain.tld", "zone": "nova", "availability_zone": "nova:node-271.domain.tld", "ip": "172.16.46.22", "mode": "slave", "master_id": "shaker_arfodk_master_16", "id": "shaker_arfodk_slave_16"}, "zone": "nova", "availability_zone": "nova:node-270.domain.tld", "ip": "10.1.0.5", "mode": "master", "slave_id": "shaker_arfodk_slave_16", "id": "shaker_arfodk_master_16"}, "shaker_arfodk_master_17": {"node": "node-258.domain.tld", "slave": {"node": "node-259.domain.tld", "zone": "nova", "availability_zone": "nova:node-259.domain.tld", "ip": "172.16.46.24", "mode": "slave", "master_id": "shaker_arfodk_master_17", "id": "shaker_arfodk_slave_17"}, "zone": "nova", "availability_zone": "nova:node-258.domain.tld", "ip": "10.1.0.4", "mode": "master", "slave_id": "shaker_arfodk_slave_17", "id": "shaker_arfodk_master_17"}, "shaker_arfodk_master_2": {"node": "node-288.domain.tld", "slave": {"node": "node-260.domain.tld", "zone": "nova", "availability_zone": "nova:node-260.domain.tld", "ip": "172.16.46.29", "mode": "slave", "master_id": "shaker_arfodk_master_2", "id": "shaker_arfodk_slave_2"}, "zone": "nova", "availability_zone": "nova:node-288.domain.tld", "ip": "10.1.0.23", "mode": "master", "slave_id": "shaker_arfodk_slave_2", "id": "shaker_arfodk_master_2"}, "shaker_arfodk_master_21": {"node": "node-250.domain.tld", "slave": {"node": "node-251.domain.tld", "zone": "nova", "availability_zone": "nova:node-251.domain.tld", "ip": "172.16.46.40", "mode": "slave", "master_id": "shaker_arfodk_master_21", "id": "shaker_arfodk_slave_21"}, "zone": "nova", "availability_zone": "nova:node-250.domain.tld", "ip": "10.1.0.14", "mode": "master", "slave_id": "shaker_arfodk_slave_21", "id": "shaker_arfodk_master_21"}, "shaker_arfodk_master_20": {"node": "node-252.domain.tld", "slave": {"node": "node-279.domain.tld", "zone": "nova", "availability_zone": "nova:node-279.domain.tld", "ip": "172.16.46.37", "mode": "slave", "master_id": "shaker_arfodk_master_20", "id": "shaker_arfodk_slave_20"}, "zone": "nova", "availability_zone": "nova:node-252.domain.tld", "ip": "10.1.0.24", "mode": "master", "slave_id": "shaker_arfodk_slave_20", "id": "shaker_arfodk_master_20"}, "shaker_arfodk_master_3": {"node": "node-281.domain.tld", "slave": {"node": "node-280.domain.tld", "zone": "nova", "availability_zone": "nova:node-280.domain.tld", "ip": "172.16.46.42", "mode": "slave", "master_id": "shaker_arfodk_master_3", "id": "shaker_arfodk_slave_3"}, "zone": "nova", "availability_zone": "nova:node-281.domain.tld", "ip": "10.1.0.10", "mode": "master", "slave_id": "shaker_arfodk_slave_3", "id": "shaker_arfodk_master_3"}, "shaker_arfodk_slave_12": {"node": "node-245.domain.tld", "zone": "nova", "availability_zone": "nova:node-245.domain.tld", "ip": "172.16.46.41", "master": {"node": "node-248.domain.tld", "zone": "nova", "availability_zone": "nova:node-248.domain.tld", "ip": "10.1.0.19", "mode": "master", "slave_id": "shaker_arfodk_slave_12", "id": "shaker_arfodk_master_12"}, "mode": "slave", "master_id": "shaker_arfodk_master_12", "id": "shaker_arfodk_slave_12"}, "shaker_arfodk_slave_13": {"node": "node-247.domain.tld", "zone": "nova", "availability_zone": "nova:node-247.domain.tld", "ip": "172.16.46.30", "master": {"node": "node-244.domain.tld", "zone": "nova", "availability_zone": "nova:node-244.domain.tld", "ip": "10.1.0.17", "mode": "master", "slave_id": "shaker_arfodk_slave_13", "id": "shaker_arfodk_master_13"}, "mode": "slave", "master_id": "shaker_arfodk_master_13", "id": "shaker_arfodk_slave_13"}, "shaker_arfodk_slave_10": {"node": "node-269.domain.tld", "zone": "nova", "availability_zone": "nova:node-269.domain.tld", "ip": "172.16.46.36", "master": {"node": "node-264.domain.tld", "zone": "nova", "availability_zone": "nova:node-264.domain.tld", "ip": "10.1.0.18", "mode": "master", "slave_id": "shaker_arfodk_slave_10", "id": "shaker_arfodk_master_10"}, "mode": "slave", "master_id": "shaker_arfodk_master_10", "id": "shaker_arfodk_slave_10"}, "shaker_arfodk_slave_11": {"node": "node-249.domain.tld", "zone": "nova", "availability_zone": "nova:node-249.domain.tld", "ip": "172.16.46.32", "master": {"node": "node-268.domain.tld", "zone": "nova", "availability_zone": "nova:node-268.domain.tld", "ip": "10.1.0.15", "mode": "master", "slave_id": "shaker_arfodk_slave_11", "id": "shaker_arfodk_master_11"}, "mode": "slave", "master_id": "shaker_arfodk_master_11", "id": "shaker_arfodk_slave_11"}, "shaker_arfodk_slave_16": {"node": "node-271.domain.tld", "zone": "nova", "availability_zone": "nova:node-271.domain.tld", "ip": "172.16.46.22", "master": {"node": "node-270.domain.tld", "zone": "nova", "availability_zone": "nova:node-270.domain.tld", "ip": "10.1.0.5", "mode": "master", "slave_id": "shaker_arfodk_slave_16", "id": "shaker_arfodk_master_16"}, "mode": "slave", "master_id": "shaker_arfodk_master_16", "id": "shaker_arfodk_slave_16"}, "shaker_arfodk_slave_17": {"node": "node-259.domain.tld", "zone": "nova", "availability_zone": "nova:node-259.domain.tld", "ip": "172.16.46.24", "master": {"node": "node-258.domain.tld", "zone": "nova", "availability_zone": "nova:node-258.domain.tld", "ip": "10.1.0.4", "mode": "master", "slave_id": "shaker_arfodk_slave_17", "id": "shaker_arfodk_master_17"}, "mode": "slave", "master_id": "shaker_arfodk_master_17", "id": "shaker_arfodk_slave_17"}, "shaker_arfodk_slave_14": {"node": "node-273.domain.tld", "zone": "nova", "availability_zone": "nova:node-273.domain.tld", "ip": "172.16.46.21", "master": {"node": "node-272.domain.tld", "zone": "nova", "availability_zone": "nova:node-272.domain.tld", "ip": "10.1.0.13", "mode": "master", "slave_id": "shaker_arfodk_slave_14", "id": "shaker_arfodk_master_14"}, "mode": "slave", "master_id": "shaker_arfodk_master_14", "id": "shaker_arfodk_slave_14"}, "shaker_arfodk_slave_15": {"node": "node-242.domain.tld", "zone": "nova", "availability_zone": "nova:node-242.domain.tld", "ip": "172.16.46.38", "master": {"node": "node-243.domain.tld", "zone": "nova", "availability_zone": "nova:node-243.domain.tld", "ip": "10.1.0.16", "mode": "master", "slave_id": "shaker_arfodk_slave_15", "id": "shaker_arfodk_master_15"}, "mode": "slave", "master_id": "shaker_arfodk_master_15", "id": "shaker_arfodk_slave_15"}, "shaker_arfodk_slave_18": {"node": "node-275.domain.tld", "zone": "nova", "availability_zone": "nova:node-275.domain.tld", "ip": "172.16.46.33", "master": {"node": "node-274.domain.tld", "zone": "nova", "availability_zone": "nova:node-274.domain.tld", "ip": "10.1.0.6", "mode": "master", "slave_id": "shaker_arfodk_slave_18", "id": "shaker_arfodk_master_18"}, "mode": "slave", "master_id": "shaker_arfodk_master_18", "id": "shaker_arfodk_slave_18"}, "shaker_arfodk_slave_19": {"node": "node-277.domain.tld", "zone": "nova", "availability_zone": "nova:node-277.domain.tld", "ip": "172.16.46.35", "master": {"node": "node-276.domain.tld", "zone": "nova", "availability_zone": "nova:node-276.domain.tld", "ip": "10.1.0.9", "mode": "master", "slave_id": "shaker_arfodk_slave_19", "id": "shaker_arfodk_master_19"}, "mode": "slave", "master_id": "shaker_arfodk_master_19", "id": "shaker_arfodk_slave_19"}, "shaker_arfodk_slave_8": {"node": "node-267.domain.tld", "zone": "nova", "availability_zone": "nova:node-267.domain.tld", "ip": "172.16.46.34", "master": {"node": "node-246.domain.tld", "zone": "nova", "availability_zone": "nova:node-246.domain.tld", "ip": "10.1.0.7", "mode": "master", "slave_id": "shaker_arfodk_slave_8", "id": "shaker_arfodk_master_8"}, "mode": "slave", "master_id": "shaker_arfodk_master_8", "id": "shaker_arfodk_slave_8"}, "shaker_arfodk_slave_9": {"node": "node-265.domain.tld", "zone": "nova", "availability_zone": "nova:node-265.domain.tld", "ip": "172.16.46.39", "master": {"node": "node-266.domain.tld", "zone": "nova", "availability_zone": "nova:node-266.domain.tld", "ip": "10.1.0.25", "mode": "master", "slave_id": "shaker_arfodk_slave_9", "id": "shaker_arfodk_master_9"}, "mode": "slave", "master_id": "shaker_arfodk_master_9", "id": "shaker_arfodk_slave_9"}, "shaker_arfodk_master_0": {"node": "node-257.domain.tld", "slave": {"node": "node-254.domain.tld", "zone": "nova", "availability_zone": "nova:node-254.domain.tld", "ip": "172.16.46.25", "mode": "slave", "master_id": "shaker_arfodk_master_0", "id": "shaker_arfodk_slave_0"}, "zone": "nova", "availability_zone": "nova:node-257.domain.tld", "ip": "10.1.0.20", "mode": "master", "slave_id": "shaker_arfodk_slave_0", "id": "shaker_arfodk_master_0"}, "shaker_arfodk_master_1": {"node": "node-255.domain.tld", "slave": {"node": "node-256.domain.tld", "zone": "nova", "availability_zone": "nova:node-256.domain.tld", "ip": "172.16.46.26", "mode": "slave", "master_id": "shaker_arfodk_master_1", "id": "shaker_arfodk_slave_1"}, "zone": "nova", "availability_zone": "nova:node-255.domain.tld", "ip": "10.1.0.22", "mode": "master", "slave_id": "shaker_arfodk_slave_1", "id": "shaker_arfodk_master_1"}, "shaker_arfodk_master_6": {"node": "node-286.domain.tld", "slave": {"node": "node-278.domain.tld", "zone": "nova", "availability_zone": "nova:node-278.domain.tld", "ip": "172.16.46.28", "mode": "slave", "master_id": "shaker_arfodk_master_6", "id": "shaker_arfodk_slave_6"}, "zone": "nova", "availability_zone": "nova:node-286.domain.tld", "ip": "10.1.0.12", "mode": "master", "slave_id": "shaker_arfodk_slave_6", "id": "shaker_arfodk_master_6"}, "shaker_arfodk_master_7": {"node": "node-263.domain.tld", "slave": {"node": "node-262.domain.tld", "zone": "nova", "availability_zone": "nova:node-262.domain.tld", "ip": "172.16.46.23", "mode": "slave", "master_id": "shaker_arfodk_master_7", "id": "shaker_arfodk_slave_7"}, "zone": "nova", "availability_zone": "nova:node-263.domain.tld", "ip": "10.1.0.11", "mode": "master", "slave_id": "shaker_arfodk_slave_7", "id": "shaker_arfodk_master_7"}, "shaker_arfodk_master_4": {"node": "node-283.domain.tld", "slave": {"node": "node-282.domain.tld", "zone": "nova", "availability_zone": "nova:node-282.domain.tld", "ip": "172.16.46.27", "mode": "slave", "master_id": "shaker_arfodk_master_4", "id": "shaker_arfodk_slave_4"}, "zone": "nova", "availability_zone": "nova:node-283.domain.tld", "ip": "10.1.0.21", "mode": "master", "slave_id": "shaker_arfodk_slave_4", "id": "shaker_arfodk_master_4"}, "shaker_arfodk_master_5": {"node": "node-285.domain.tld", "slave": {"node": "node-284.domain.tld", "zone": "nova", "availability_zone": "nova:node-284.domain.tld", "ip": "172.16.46.31", "mode": "slave", "master_id": "shaker_arfodk_master_5", "id": "shaker_arfodk_slave_5"}, "zone": "nova", "availability_zone": "nova:node-285.domain.tld", "ip": "10.1.0.8", "mode": "master", "slave_id": "shaker_arfodk_slave_5", "id": "shaker_arfodk_master_5"}, "shaker_arfodk_slave_0": {"node": "node-254.domain.tld", "zone": "nova", "availability_zone": "nova:node-254.domain.tld", "ip": "172.16.46.25", "master": {"node": "node-257.domain.tld", "zone": "nova", "availability_zone": "nova:node-257.domain.tld", "ip": "10.1.0.20", "mode": "master", "slave_id": "shaker_arfodk_slave_0", "id": "shaker_arfodk_master_0"}, "mode": "slave", "master_id": "shaker_arfodk_master_0", "id": "shaker_arfodk_slave_0"}, "shaker_arfodk_slave_1": {"node": "node-256.domain.tld", "zone": "nova", "availability_zone": "nova:node-256.domain.tld", "ip": "172.16.46.26", "master": {"node": "node-255.domain.tld", "zone": "nova", "availability_zone": "nova:node-255.domain.tld", "ip": "10.1.0.22", "mode": "master", "slave_id": "shaker_arfodk_slave_1", "id": "shaker_arfodk_master_1"}, "mode": "slave", "master_id": "shaker_arfodk_master_1", "id": "shaker_arfodk_slave_1"}, "shaker_arfodk_slave_2": {"node": "node-260.domain.tld", "zone": "nova", "availability_zone": "nova:node-260.domain.tld", "ip": "172.16.46.29", "master": {"node": "node-288.domain.tld", "zone": "nova", "availability_zone": "nova:node-288.domain.tld", "ip": "10.1.0.23", "mode": "master", "slave_id": "shaker_arfodk_slave_2", "id": "shaker_arfodk_master_2"}, "mode": "slave", "master_id": "shaker_arfodk_master_2", "id": "shaker_arfodk_slave_2"}, "shaker_arfodk_master_9": {"node": "node-266.domain.tld", "slave": {"node": "node-265.domain.tld", "zone": "nova", "availability_zone": "nova:node-265.domain.tld", "ip": "172.16.46.39", "mode": "slave", "master_id": "shaker_arfodk_master_9", "id": "shaker_arfodk_slave_9"}, "zone": "nova", "availability_zone": "nova:node-266.domain.tld", "ip": "10.1.0.25", "mode": "master", "slave_id": "shaker_arfodk_slave_9", "id": "shaker_arfodk_master_9"}, "shaker_arfodk_slave_4": {"node": "node-282.domain.tld", "zone": "nova", "availability_zone": "nova:node-282.domain.tld", "ip": "172.16.46.27", "master": {"node": "node-283.domain.tld", "zone": "nova", "availability_zone": "nova:node-283.domain.tld", "ip": "10.1.0.21", "mode": "master", "slave_id": "shaker_arfodk_slave_4", "id": "shaker_arfodk_master_4"}, "mode": "slave", "master_id": "shaker_arfodk_master_4", "id": "shaker_arfodk_slave_4"}, "shaker_arfodk_slave_5": {"node": "node-284.domain.tld", "zone": "nova", "availability_zone": "nova:node-284.domain.tld", "ip": "172.16.46.31", "master": {"node": "node-285.domain.tld", "zone": "nova", "availability_zone": "nova:node-285.domain.tld", "ip": "10.1.0.8", "mode": "master", "slave_id": "shaker_arfodk_slave_5", "id": "shaker_arfodk_master_5"}, "mode": "slave", "master_id": "shaker_arfodk_master_5", "id": "shaker_arfodk_slave_5"}, "shaker_arfodk_slave_6": {"node": "node-278.domain.tld", "zone": "nova", "availability_zone": "nova:node-278.domain.tld", "ip": "172.16.46.28", "master": {"node": "node-286.domain.tld", "zone": "nova", "availability_zone": "nova:node-286.domain.tld", "ip": "10.1.0.12", "mode": "master", "slave_id": "shaker_arfodk_slave_6", "id": "shaker_arfodk_master_6"}, "mode": "slave", "master_id": "shaker_arfodk_master_6", "id": "shaker_arfodk_slave_6"}, "shaker_arfodk_slave_7": {"node": "node-262.domain.tld", "zone": "nova", "availability_zone": "nova:node-262.domain.tld", "ip": "172.16.46.23", "master": {"node": "node-263.domain.tld", "zone": "nova", "availability_zone": "nova:node-263.domain.tld", "ip": "10.1.0.11", "mode": "master", "slave_id": "shaker_arfodk_slave_7", "id": "shaker_arfodk_master_7"}, "mode": "slave", "master_id": "shaker_arfodk_master_7", "id": "shaker_arfodk_slave_7"}, "shaker_arfodk_master_8": {"node": "node-246.domain.tld", "slave": {"node": "node-267.domain.tld", "zone": "nova", "availability_zone": "nova:node-267.domain.tld", "ip": "172.16.46.34", "mode": "slave", "master_id": "shaker_arfodk_master_8", "id": "shaker_arfodk_slave_8"}, "zone": "nova", "availability_zone": "nova:node-246.domain.tld", "ip": "10.1.0.7", "mode": "master", "slave_id": "shaker_arfodk_slave_8", "id": "shaker_arfodk_master_8"}}, "sla": []};
+  </script>
+
+  <script type="text/javascript">
+    "use strict";
+
+    $(function () {
+
+      var fields = ["scenario", "test", "concurrency", "node", "agent"];
+      var state = {
+        scenario: "",
+        test: "",
+        concurrency: "",
+        node: "",
+        agent: ""
+      };
+      var tablePageSize = 10;
+
+      // compiled templates
+      var scenario_source_template = Handlebars.compile($("#scenario_source_template").html());
+      var test_specification_template = Handlebars.compile($("#test_specification_template").html());
+      var agents_table_template = Handlebars.compile($("#agents_table_template").html());
+      var records_table_template = Handlebars.compile($("#records_table_template").html());
+      var executor_template = Handlebars.compile($("#executor_template").html());
+      var concurrency_summary_template = Handlebars.compile($("#concurrency_summary_template").html());
+      var test_summary_template = Handlebars.compile($("#test_summary_template").html());
+      var sla_table_template = Handlebars.compile($("#sla_table_template").html());
+      var errors_template = Handlebars.compile($("#errors_template").html());
+
+      function concatenate(strings) {
+        // returns strings concatenated via comma (like join() but omits empty strings)
+        var f = false;
+        var result = "";
+        $.each(strings, function (_i, string) {
+          if (string.length > 0) {
+            if (f) result += ", ";
+            result += string;
+            f = true;
+          }
+        });
+        return result;
+      }
+
+      function initSingleSelector(name, values) {
+        var selectorId = "#" + name + "_selector";
+
+        var selector_inst = $(selectorId);
+        selector_inst.empty();
+        selector_inst.append($("<option>", {
+          style: "font-style: italic; text-decoration: underline;",
+          value: "",
+          text: selector_inst.data('placeholder')
+        }));
+
+        $.each(values, function (key, item) {
+          selector_inst.append($('<option>', {
+            value: item, //(key + 1),
+            text: item
+          }));
+        });
+
+        selector_inst.val(state[name]);
+
+        selector_inst.
+            on("change", function (e) {
+              state[name] = this.value;
+
+              // convert state -> url
+              var tokens = [];
+              $.each(fields.sort(), function (i, field) {
+                if (state[field] != "") {
+                  tokens.push(field + "=" + state[field]);
+                }
+              });
+              window.location.href = "#" + tokens.join(":");
+            });
+      }
+
+      function getFieldValues(field, records) {
+        var values_set = {};
+
+        $.each(records, function (j, record) {
+          if (record[field]) {
+            values_set["" + record[field]] = true;
+          }
+        });
+
+        return $.map(values_set, function (_i, value) {
+          return value;
+        }).sort();
+      }
+
+      function updateSelectors() {
+        $.each(fields, function (i, field) {
+          var values = getFieldValues(field, filterRecords(report.records, null, field));
+          console.log(values);
+          initSingleSelector(field, values);
+        });
+      }
+
+      function filterRecords(records, type, except_field) {
+        var res = [];
+        $.each(records, function(_i, record){
+          if (!type || typeof type === 'undefined' || record.type == type) {
+            var flag = true;
+            $.each(state, function (key, value) {
+              if (key != except_field && value) {
+                flag &= record[key] == value;
+              }
+            });
+            if (flag) {
+              res.push(record);
+            }
+          }
+        });
+        return res;
+      }
+
+      function getAgentsByIds(agent_ids) {
+        var agents = [];
+        $.each(agent_ids, function(agent_id){
+          agents.push(report.agents[agent_id]);
+        });
+        return agents;
+      }
+
+      /* Template Rendering Funcs */
+
+      function showScenarioSource(contentArea, scenario) {
+        contentArea.append(scenario_source_template(
+            {data: jsyaml.safeDump(scenario)}));
+      }
+
+      function showTestSpecification(contentArea, test) {
+        contentArea.append(test_specification_template(
+            {data: jsyaml.safeDump(test)}
+        ))
+      }
+
+      function showAgentRecord(contentArea, record) {
+        var chart_id = "chart_" + Math.round(Math.random() * 10000);
+        var ext_options = {
+          command_yaml: jsyaml.safeDump(record["command"]),
+          chart_id: chart_id};
+        if (record["stats"]) {
+          ext_options["stats_yaml"] = jsyaml.safeDump(record["stats"]);
+        }
+        contentArea.append(executor_template(
+            {record: $.extend({}, record, ext_options)}
+        ));
+        if (record["samples"]) {
+          var meta = record["meta"];
+          var axes = [];
+          axes[meta[1][0]] = 'y';
+          var axis = {
+            x: {label: concatenate(meta[0])},
+            y: {label: concatenate(meta[1]), min: 0}
+          };
+          if (meta.length > 2) {
+            axes[meta[2][0]] = 'y2';
+            axis['y2'] = {label: concatenate(meta[2]), min: 0, show: true}
+          }
+
+          var chart = [];
+          $.each(meta, function(_i, meta_item){  // row titles
+            chart.push([meta_item[0]]);
+          });
+          var samples = record["samples"];
+          for (var i=0; i < samples.length; i++) {
+            var point = samples[i];
+            for (var j=0; j < point.length; j++) {
+              chart[j].push(point[j]);
+            }
+          }
+
+          c3.generate({
+            bindto: "#" + chart_id,
+            data: {
+              x: 'time',
+              columns: chart,
+              axes: axes
+            },
+            axis: axis
+          });
+        }
+      }
+
+      function showConcurrencySummary(contentArea, record) {
+        var chart_id = "chart_" + Math.round(Math.random() * 10000);
+        var node_chart_id = "node_chart_" + Math.round(Math.random() * 10000);
+        var ext_options = { chart_id: chart_id, node_chart_id: node_chart_id };
+        if (record["stats"]) {
+          ext_options["stats_yaml"] = jsyaml.safeDump(record["stats"]);
+        }
+        console.log(record);
+        contentArea.append(concurrency_summary_template(
+            {record: $.extend({}, record, ext_options)}
+        ));
+        if (record["node_chart"]) {
+          c3.generate({
+            bindto: "#" + node_chart_id,
+            data: {
+              x: 'x',
+              columns: record["node_chart"],
+              type: 'step',
+              order: null
+            },
+            axis: {
+              x: { type: 'category' }
+            }
+          });
+        }
+      }
+
+      function showTestSummary(contentArea, record) {
+        console.log(record);
+        var chart_id = "chart_" + Math.round(Math.random() * 10000);
+        var ext_options = { chart_id: chart_id };
+        if (record["stats"]) {
+          ext_options["stats_yaml"] = jsyaml.safeDump(record["stats"]);
+        }
+        contentArea.append(test_summary_template(
+            {record: $.extend({}, record, ext_options)}
+        ));
+        if (record["chart"]) {
+          var meta = record["meta"];
+          var axes = [];
+          axes[meta[1][0]] = 'y';
+          var axis = {
+            x: {label: concatenate(meta[0])},
+            y: {label: concatenate(meta[1]), min: 0}
+          };
+          if (meta.length > 2) {
+            axes[meta[2][0]] = 'y2';
+            axis['y2'] = {label: concatenate(meta[2]), min: 0, show: true}
+          }
+
+          c3.generate({
+            bindto: "#" + chart_id,
+            data: {
+              x: 'concurrency',
+              columns: record["chart"],
+              axes: axes
+            },
+            axis: axis
+          });
+        }
+      }
+
+      function showAgentsTable(contentArea, filteredRecords) {
+        var agent_ids = {};
+        $.each(filteredRecords, function(_i, record){
+          if (record.agent) {
+            agent_ids[record.agent] = true;
+          }
+        });
+
+        var agents = getAgentsByIds(agent_ids);
+        if (agents.length == 0) return;
+
+        // add slave agents
+        var slave_agent_ids = {};
+        $.each(agents, function(_i, agent){
+          if (agent.slave_id) {
+            slave_agent_ids[agent.slave_id] = true;
+          }
+        });
+        agents = $.merge(agents, getAgentsByIds(slave_agent_ids));
+
+        contentArea.append(agents_table_template({
+          agents: agents,
+          table_id: "agents_table"
+        }));
+        $("#agents_table").dataTable({
+          "autoWidth": true,
+          "paging": false,
+          "ordering": true,
+          "info": false
+        });
+      }
+
+      function makeURL(record, s) {
+        var extra = {};
+        extra[s] = record[s];
+        return "#" + $.map($.extend({}, state, extra), function (val, index) {
+          return val? (index + "=" + val) : null;
+        }).join(":")
+      }
+
+      function showRecordsTable(contentArea, filteredRecords) {
+        $.each(filteredRecords, function(_i, record) {
+          $.each(fields, function(_j, field){
+            if (record[field]) {
+              record[field + "_url"] = makeURL(record, field);
+            }
+          });
+        });
+
+        contentArea.append(records_table_template({
+          records: filteredRecords,
+          table_id: "records_table"
+        }));
+        $("#records_table").dataTable({
+          autoWidth: true,
+          paging: filteredRecords.length > tablePageSize,
+          ordering: true,
+          info: false,
+          searching: filteredRecords.length > tablePageSize
+        });
+      }
+
+      function showSlaTable(contentArea, records) {
+        if (records.length == 0) return;
+
+        contentArea.append(sla_table_template({
+          records: records,
+          table_id: "sla_table"
+        }));
+        $("#records_table").dataTable({
+          autoWidth: true,
+          paging: records.length > tablePageSize,
+          ordering: true,
+          info: false,
+          searching: records.length > tablePageSize
+        });
+      }
+
+      function showErrors(contentArea, records) {
+        if (records.length == 0) return;
+
+        contentArea.append(errors_template({
+          records: records,
+          table_id: "errors_list"
+        }));
+      }
+
+      /* Update cycle */
+
+      function update() {
+        var filteredRecords = filterRecords(report.records);
+        console.log(filteredRecords);
+        var slaRecords = [];
+        var errorRecords = [];
+        $.each(filterRecords(report.records), function(_i, record) {
+          if (record["sla_info"]) {
+            slaRecords.push(record);
+          }
+          if (record["is_status_error"]) {
+            errorRecords.push(record);
+          }
+        });
+
+        var contentArea = $("#content_area");
+        contentArea.empty();
+
+        updateSelectors();
+
+        showRecordsTable(contentArea, filteredRecords);
+        showSlaTable(contentArea, slaRecords);
+        showErrors(contentArea, errorRecords);
+
+        if (state["scenario"] != "" && state["test"] != "" &&
+                state["concurrency"] != "" &&
+                state["agent"] != "") {
+          showAgentRecord(contentArea, filteredRecords[0]);
+        }
+        if (state["scenario"] != "" && state["test"] != "" &&
+                state["concurrency"] != "" && state["node"] == "" &&
+                state["agent"] == "") {
+          var agg_recs = filterRecords(report.records, "concurrency");
+          if (agg_recs.length > 0) {
+            showConcurrencySummary(contentArea, agg_recs[0]);
+          }
+        }
+        if (state["scenario"] != "" && state["test"] != "" &&
+                state["concurrency"] == "" && state["node"] == "" &&
+                state["agent"] == "") {
+          var test_recs = filterRecords(report.records, "test");
+          if (test_recs.length > 0) {
+            showTestSummary(contentArea, test_recs[0]);
+          }
+        }
+        if (state["test"] != "") {
+          showTestSpecification(contentArea, report.tests[state["test"]]);
+        }
+        if (state["agent"] == "") {
+          showAgentsTable(contentArea, filteredRecords);
+        }
+        if (state["scenario"] != "") {
+          showScenarioSource(contentArea, report.scenarios[state["scenario"]]);
+        }
+      }
+
+      function parseUrlToState() {
+        var hashUrl = window.location.hash.substr(1);
+
+        $.each(hashUrl.split(":"), function (_i, pair) {
+          var kv = pair.split("=");
+          if (kv.length == 2) {
+            state[kv[0]] = decodeURIComponent(kv[1]);
+          }
+        });
+      }
+
+      // entry-point
+      parseUrlToState();
+      console.log(state);
+
+      // pre-process records
+      $.each(report.records, function(_i, record) {
+        if (record.status) {
+          record["is_status_ok"] = record.status == "ok";
+          record["is_status_lost"] = record.status == "lost";
+          record["is_status_interrupted"] = record.status == "interrupted";
+          record["is_status_error"] = record.status == "error";
+        }
+      });
+
+      // auto-select filters with 1 option
+      $.each(fields, function(_i, field) {
+        var values = getFieldValues(field, report.records);
+        if (values.length == 1) {
+          state[field] = values[0];
+        }
+      });
+
+      update();
+
+      $(window).on('hashchange', function() {
+        parseUrlToState();
+        update()
+      });
+
+      $('[data-toggle="tooltip"]').tooltip();
+    });
+  </script>
+
+  <style type="text/css">
+  </style>
+
+</head>
+
+<body>
+
+<div class="container" id="container">
+  <div class="row text-center">
+    <h1>Shaker | The Report</h1>
+  </div>
+  <hr>
+  <div class="row">
+    <div class="col-md-2">
+      <label for="scenario_selector" title="Scenario name">Scenario</label>
+      <select id="scenario_selector" class="form-control" data-placeholder="- Any scenario -"></select>
+    </div>
+    <div class="col-md-2">
+      <label for="test_selector" title="Test name">Test Case</label>
+      <select id="test_selector" class="form-control" data-placeholder="- Any test case -"></select>
+    </div>
+    <div class="col-md-2">
+      <label for="concurrency_selector" title="Concurrency">Concurrency</label>
+      <select id="concurrency_selector" class="form-control" data-placeholder="- Any concurrency -"></select>
+    </div>
+    <div class="col-md-2">
+      <label for="node_selector" title="Host / Compute node">Host</label>
+      <select id="node_selector" class="form-control" data-placeholder="- Any node -"></select>
+    </div>
+    <div class="col-md-2">
+      <label for="agent_selector" title="Agent">Agent</label>
+      <select id="agent_selector" class="form-control" data-placeholder="- Any agent -"></select>
+    </div>
+  </div>
+
+  <div id="content_area" class="row">
+    <!-- Container for the screen content -->
+  </div>
+
+  <div id="footer" class="row">&nbsp;</div>
+</div>
+
+<!-- TEMPLATES --------------------------------------------------------------->
+
+<!-- Scenario File -->
+<script id="scenario_source_template" type="text/x-handlebars-template">
+  <h3>Scenario</h3>
+  <pre>{{ data }}</pre>
+</script>
+
+<!-- Test Specification -->
+<script id="test_specification_template" type="text/x-handlebars-template">
+  <h3>Test Specification</h3>
+  <pre>{{ data }}</pre>
+</script>
+
+<!-- Executor Result -->
+<script id="executor_template" type="text/x-handlebars-template">
+  <h3>Execution Summary</h3>
+  {{#with record}}
+  <div id="{{ chart_id }}"></div>
+  {{#if is_status_ok}}<span class="label label-success"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span>success</span>{{/if}}
+  {{#if is_status_lost}}<span class="label label-danger"><span class="glyphicon glyphicon-alert" aria-hidden="true"></span>lost</span>{{/if}}
+  {{#if is_status_interrupted}}<span class="label label-warning"><span class="glyphicon glyphicon-stop" aria-hidden="true"></span>interrupted</span>{{/if}}
+  {{#if is_status_error}}<span class="label label-danger"><span class="glyphicon glyphicon-alert" aria-hidden="true"></span>error</span>{{/if}}
+  {{#if stats_yaml}}
+    <h4>Stats</h4>
+    <pre>{{ stats_yaml }}</pre>
+  {{/if}}
+  <h4>Command</h4>
+  <pre>{{ command_yaml }}</pre>
+  {{#if stdout}}
+    <h4>Stdout</h4>
+    <pre>{{ stdout }}</pre>
+  {{/if}}
+  {{#if verbose}}
+    <h4>Verbose Info</h4>
+    <pre>{{ verbose }}</pre>
+  {{/if}}
+  {{#if stderr}}
+    <h4>Stderr</h4>
+    <pre>{{ stderr }}</pre>
+  {{/if}}
+  {{/with}}
+</script>
+
+<!-- Concurrency summary -->
+<script id="concurrency_summary_template" type="text/x-handlebars-template">
+  {{#with record}}
+  <div id="{{ chart_id  }}"></div>
+  <h3>Per-node chart</h3>
+  <div id="{{ node_chart_id  }}"></div>
+  <h3>Stats</h3>
+  <pre>{{ stats_yaml }}</pre>
+  {{/with}}
+</script>
+
+<!-- Test summary -->
+<script id="test_summary_template" type="text/x-handlebars-template">
+  {{#with record}}
+  <div id="{{ chart_id   }}"></div>
+  {{#if stats_yaml}}
+    <h3>Stats</h3>
+    <pre>{{ stats_yaml }}</pre>
+  {{/if}}
+  {{/with}}
+</script>
+
+<!-- Records Table -->
+<script id="records_table_template" type="text/x-handlebars-template">
+  <h3>Records</h3>
+  <table class="table table-striped" id="{{ table_id  }}">
+    <thead>
+    <tr>
+      <th>Scenario</th>
+      <th>Test Case</th>
+      <th>Concurrency</th>
+      <th>Host / Compute Node</th>
+      <th>Agent</th>
+      <th>Status</th>
+    </tr>
+    </thead>
+    <tbody>
+    {{#records}}
+    <tr>
+      <td><a href="{{ scenario_url }}">{{ scenario }}</a></td>
+      <td><a href="{{ test_url }}">{{ test }}</a></td>
+      <td><a href="{{ concurrency_url }}">{{ concurrency }}</a></td>
+      <td><a href="{{ node_url }}">{{ node }}</a></td>
+      <td><a href="{{ agent_url }}">{{ agent }}</a></td>
+      <td>
+        {{#if is_status_ok }}
+          <span class="label label-success">
+            <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+            success
+          </span>
+        {{/if}}
+        {{#if is_status_lost }}
+          <span class="label label-danger">
+            <span class="glyphicon glyphicon-alert" aria-hidden="true"></span>
+            lost
+          </span>
+        {{/if}}
+        {{#if is_status_interrupted }}
+          <span class="label label-warning">
+            <span class="glyphicon glyphicon-stop" aria-hidden="true"></span>
+            interrupted
+          </span>
+        {{/if}}
+        {{#if is_status_error }}
+          <span class="label label-danger">
+            <span class="glyphicon glyphicon-stop" aria-hidden="true"></span>
+            error
+          </span>
+        {{/if}}
+      </td>
+    </tr>
+    {{/records}}
+    </tbody>
+  </table>
+</script>
+
+<!-- Agents List -->
+<script id="agents_table_template" type="text/x-handlebars-template">
+  <h3>Agents</h3>
+  <table class="table table-striped" id="{{ table_id }}">
+    <thead>
+    <tr>
+      <th>Agent</th>
+      <th>Mode</th>
+      <th>IP</th>
+      <th>Node</th>
+      <th>AZ</th>
+    </tr>
+    </thead>
+    <tbody>
+    {{#agents}}
+    <tr>
+      <td>{{ id }}</td>
+      <td>{{ mode }}</td>
+      <td>{{ ip }}</td>
+      <td>{{ node }}</td>
+      <td>{{ zone }}</td>
+    </tr>
+    {{/agents}}
+    </tbody>
+  </table>
+</script>
+
+<!-- SLA List -->
+<script id="sla_table_template" type="text/x-handlebars-template">
+  <h3>Agents</h3>
+  <table class="table table-striped" id="{{  table_id }}">
+    <thead>
+    <tr>
+      <th>Condition</th>
+      <th>Location</th>
+      <th>Status</th>
+    </tr>
+    </thead>
+    <tbody>
+    {{#records}}
+    <tr>
+      <td>{{ sla }}</td>
+      <td>{{ location }}</td>
+      <td>
+        {{#if is_status_ok }}
+          <span class="text-success">
+            <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+            {{ status }}
+          </span>
+        {{else}}
+          <span class="text-danger">
+            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+            {{ status }}
+          </span>
+        {{/if}}
+      </td>
+    </tr>
+    {{/records}}
+    </tbody>
+  </table>
+</script>
+
+<!-- Errors -->
+<script id="errors_template" type="text/x-handlebars-template">
+  <h3>Errors</h3>
+  <div class="text-danger">
+    <ul>
+    {{#records}}
+      <li>{{ info }}<br/>{{ stderr }}{{ traceback }}</li>
+    {{/records}}
+    </ul>
+  </div>
+</script>
+
+</body>
+</html>

@@ -1,0 +1,856 @@
+<!doctype html>
+<html ng-app="App">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rally | Rally Task Report</title>
+  
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.1.15-beta/nv.d3.min.css">
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.3/angular.min.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.4.13/d3.min.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.1.15-beta/nv.d3.min.js"></script>
+  
+
+  <script type="text/javascript">
+    "use strict";
+    var widgetDirective = function($compile) {
+  var Chart = {
+    _render: function(node, data, chart, do_after){
+      nv.addGraph(function() {
+        d3.select(node)
+          .datum(data).transition().duration(0)
+          .call(chart);
+        if (typeof do_after === "function") {
+          do_after(node, chart)
+        }
+        nv.utils.windowResize(chart.update);
+      })
+    },
+    /* NOTE(amaretskiy): this is actually a result of
+       d3.scale.category20().range(), excluding red color (#d62728)
+       which is reserved for errors */
+    _colors: ["#1f77b4", "#aec7e8", "#ff7f0e", "#ffbb78", "#2ca02c",
+              "#98df8a", "#ff9896", "#9467bd", "#c5b0d5", "#8c564b",
+              "#c49c94", "#e377c2", "#f7b6d2", "#7f7f7f", "#c7c7c7",
+              "#bcbd22", "#dbdb8d", "#17becf", "#9edae5"],
+    _widgets: {
+      Pie: "pie",
+      StackedArea: "stack",
+      Lines: "lines",
+      Histogram: "histogram"
+    },
+    get_chart: function(widget) {
+      if (widget in this._widgets) {
+        var name = this._widgets[widget];
+        return Chart[name]
+      }
+      return function() { console.log("Error: unexpected widget:", widget) }
+    },
+    pie: function(node, data, opts, do_after) {
+      var chart = nv.models.pieChart()
+        .x(function(d) { return d.key })
+        .y(function(d) { return d.values })
+        .showLabels(true)
+        .labelType("percent")
+        .donut(true)
+        .donutRatio(0.25)
+        .donutLabelsOutside(true)
+        .color(function(d){
+          if (d.data && d.data.color) { return d.data.color }
+        });
+
+      var data_ = [], colors = [], colors_map = {errors: "#d62728"};
+      for (var i in data) {
+        var key = data[i][0];
+        if (! (key in colors_map)) {
+          if (! colors.length) { colors = Chart._colors.slice() }
+          colors_map[key] = colors.shift()
+        }
+        data_.push({key:key, values:data[i][1], color:colors_map[key]})
+      }
+      Chart._render(node, data_, chart)
+    },
+    stack: function(node, data, opts, do_after) {
+      var chart = nv.models.stackedAreaChart()
+        .x(function(d) { return d[0] })
+        .y(function(d) { return d[1] })
+        .useInteractiveGuideline(opts.guide)
+        .showControls(opts.controls)
+        .clipEdge(true);
+      chart.xAxis
+        .tickFormat(d3.format(opts.xformat || "d"))
+        .axisLabel(opts.xname || "")
+        .showMaxMin(false);
+      chart.yAxis
+        .orient("left")
+        .tickFormat(d3.format(opts.yformat || ",.3f"));
+      var data_ = [];
+      for (var i in data) {
+        var d = {key:data[i][0], values:data[i][1]};
+        if (d.key === "failed_duration") {
+          d.color = "#d62728"
+        }
+        data_.push(d);
+      }
+      Chart._render(node, data_, chart, do_after);
+    },
+    lines: function(node, data, opts, do_after) {
+      var chart = nv.models.lineChart()
+        .x(function(d) { return d[0] })
+        .y(function(d) { return d[1] })
+        .useInteractiveGuideline(opts.guide)
+        .clipEdge(true);
+      chart.xAxis
+        .tickFormat(d3.format(opts.xformat || "d"))
+        .axisLabel(opts.xname || "")
+        .showMaxMin(false);
+      chart.yAxis
+        .orient("left")
+        .tickFormat(d3.format(opts.yformat || ",.3f"));
+      var data_ = [];
+      for (var i in data) {
+        var d = {key:data[i][0], values:data[i][1]};
+        if (d.key === "failed_duration") {
+          d.color = "#d62728"
+        }
+        data_.push(d)
+      }
+      Chart._render(node, data_, chart, do_after)
+    },
+    histogram: function(node, data, opts) {
+      var chart = nv.models.multiBarChart()
+        .reduceXTicks(true)
+        .showControls(false)
+        .transitionDuration(0)
+        .groupSpacing(0.05);
+      chart
+        .legend.radioButtonMode(true);
+      chart.xAxis
+        .axisLabel("Duration (seconds)")
+        .tickFormat(d3.format(",.2f"));
+      chart.yAxis
+        .axisLabel("Iterations (frequency)")
+        .tickFormat(d3.format("d"));
+      Chart._render(node, data, chart)
+    }
+  };
+
+  return {
+    restrict: "A",
+    scope: { data: "=" },
+    link: function(scope, element, attrs) {
+      scope.$watch("data", function(data) {
+        if (! data) { return console.log("Chart has no data to render!") }
+        if (attrs.widget === "Table") {
+          var ng_class = attrs.lastrowClass ? " ng-class='{"+attrs.lastrowClass+":$last}'" : "";
+          var template = "<table class='striped'><thead>" +
+            "<tr><th ng-repeat='i in data.cols track by $index'>{{i}}<tr>" +
+            "</thead><tbody>" +
+            "<tr" + ng_class + " ng-repeat='row in data.rows track by $index'>" +
+            "<td ng-repeat='i in row track by $index'>{{i}}" +
+            "<tr>" +
+            "</tbody></table>";
+          var el = element.empty().append($compile(template)(scope)).children()[0]
+        } else {
+
+          var el_chart = element.addClass("chart").css({display:"block"});
+          var el = el_chart.html("<svg></svg>").children()[0];
+
+          var do_after = null;
+
+          if (attrs.widget in {StackedArea:0, Lines:0}) {
+
+            /* Hide widget if not enough data */
+            if ((! data.length) || (data[0].length < 1) || (data[0][1].length < 2)) {
+              return element.empty().css({display:"none"})
+            }
+
+            /* NOTE(amaretskiy): Dirty fix for changing chart width in case
+               if there are too long Y values that overlaps chart box. */
+            var do_after = function(node, chart){
+              var g_box = angular.element(el_chart[0].querySelector(".nv-y.nv-axis"));
+
+              if (g_box && g_box[0] && g_box[0].getBBox) {
+
+                try {
+                  // 30 is padding aroung graphs
+                  var width = g_box[0].getBBox().width + 30;
+                } catch (err) {
+                  // This happens sometimes, just skip silently
+                  return
+                }
+
+                // 890 is chart width (set by CSS)
+                if (typeof width === "number" && width > 890) {
+                  width = (890 * 2) - width;
+                  if (width > 0) {
+                    angular.element(node).css({width:width+"px"});
+                    chart.update()
+                  }
+                }
+              }
+            }
+          }
+          else if (attrs.widget === "Pie") {
+            if (! data.length) {
+              return element.empty().css({display:"none"})
+            }
+          }
+
+          var options = {
+            xname: attrs.nameX || "",
+            xformat: attrs.formatX || "d",
+            yformat: attrs.formatY || ",.3f",
+            controls: attrs.controls === "true",
+            guide: attrs.guide === "true"
+          };
+          Chart.get_chart(attrs.widget)(el, data, options, do_after);
+        }
+
+        if (attrs.nameY) {
+          /* NOTE(amaretskiy): Dirty fix for displaying Y-axis label correctly.
+             I believe sometimes NVD3 will allow doing this in normal way */
+          var label_y = angular.element("<div>").addClass("chart-label-y").text(attrs.nameY);
+          angular.element(el).parent().prepend(label_y)
+        }
+
+        if (attrs.description) {
+          var desc_el = angular.element("<div>").addClass(attrs.descriptionClass || "h3").text(attrs.description);
+          angular.element(el).parent().prepend(desc_el)
+        }
+
+        if (attrs.title) {
+          var title_el = angular.element("<div>").addClass(attrs.titleClass || "h2").text(attrs.title);
+          angular.element(el).parent().prepend(title_el)
+        }
+
+        angular.element(el).parent().append(angular.element("<div style='clear:both'>"))
+      });
+    }
+  }
+};
+
+    var controllerFunction = function($scope, $location) {
+        $scope.source = "{\n  \"NeutronNetworks.create_and_delete_routers\": [\n    {\n      \"args\": {\n        \"network_create_args\": {}, \n        \"router_create_args\": {}, \n        \"subnet_cidr_start\": \"1.1.0.0/30\", \n        \"subnet_create_args\": {}, \n        \"subnets_per_network\": 2\n      }, \n      \"context\": {\n        \"quotas\": {\n          \"neutron\": {\n            \"network\": -1, \n            \"port\": -1, \n            \"router\": -1, \n            \"subnet\": -1\n          }\n        }, \n        \"users\": {\n          \"project_domain\": \"default\", \n          \"resource_management_workers\": 20, \n          \"tenants\": 3, \n          \"user_domain\": \"default\", \n          \"users_per_tenant\": 1\n        }\n      }, \n      \"runner\": {\n        \"concurrency\": 3, \n        \"times\": 10, \n        \"type\": \"constant\"\n      }, \n      \"sla\": {\n        \"failure_rate\": {\n          \"max\": 0\n        }\n      }\n    }\n  ], \n  \"NeutronNetworks.create_and_list_routers\": [\n    {\n      \"args\": {\n        \"network_create_args\": {}, \n        \"router_create_args\": {}, \n        \"subnet_cidr_start\": \"1.1.0.0/30\", \n        \"subnet_create_args\": {}, \n        \"subnets_per_network\": 5\n      }, \n      \"context\": {\n        \"quotas\": {\n          \"neutron\": {\n            \"network\": -1, \n            \"router\": -1, \n            \"subnet\": -1\n          }\n        }, \n        \"users\": {\n          \"project_domain\": \"default\", \n          \"resource_management_workers\": 20, \n          \"tenants\": 4, \n          \"user_domain\": \"default\", \n          \"users_per_tenant\": 2\n        }\n      }, \n      \"runner\": {\n        \"concurrency\": 3, \n        \"times\": 10, \n        \"type\": \"constant\"\n      }, \n      \"sla\": {\n        \"failure_rate\": {\n          \"max\": 0\n        }\n      }\n    }\n  ], \n  \"NeutronNetworks.create_and_update_routers\": [\n    {\n      \"args\": {\n        \"network_create_args\": {}, \n        \"router_create_args\": {}, \n        \"router_update_args\": {\n          \"admin_state_up\": false, \n          \"name\": \"_router_updated\"\n        }, \n        \"subnet_cidr_start\": \"1.1.0.0/30\", \n        \"subnet_create_args\": {}, \n        \"subnets_per_network\": 2\n      }, \n      \"context\": {\n        \"quotas\": {\n          \"neutron\": {\n            \"network\": -1, \n            \"port\": -1, \n            \"router\": -1, \n            \"subnet\": -1\n          }\n        }, \n        \"users\": {\n          \"project_domain\": \"default\", \n          \"resource_management_workers\": 20, \n          \"tenants\": 3, \n          \"user_domain\": \"default\", \n          \"users_per_tenant\": 1\n        }\n      }, \n      \"runner\": {\n        \"concurrency\": 3, \n        \"times\": 10, \n        \"type\": \"constant\"\n      }, \n      \"sla\": {\n        \"failure_rate\": {\n          \"max\": 0\n        }\n      }\n    }\n  ], \n  \"NeutronSecGroupPlugin.boot_and_delete_server_with_secgroups\": [\n    {\n      \"args\": {\n        \"flavor\": {\n          \"name\": \"m1.nano\"\n        }, \n        \"image\": {\n          \"name\": \"TestVM\"\n        }, \n        \"rules_per_security_group\": 10, \n        \"security_group_count\": 10\n      }, \n      \"context\": {\n        \"network\": {\n          \"network_create_args\": {\n            \"name\": \"c_rally_7ff3c0c5_KcR6M960\", \n            \"tenant_id\": \"3705ab2d4f9b41e483d1a1e81d29c80f\"\n          }, \n          \"networks_per_tenant\": 1, \n          \"start_cidr\": \"1.0.0.0/22\", \n          \"subnets_per_network\": 1\n        }, \n        \"quotas\": {\n          \"neutron\": {\n            \"network\": -1, \n            \"port\": -1, \n            \"security_group\": -1, \n            \"security_group_rule\": -1, \n            \"subnet\": -1\n          }, \n          \"nova\": {\n            \"cores\": -1, \n            \"floating_ips\": -1, \n            \"instances\": -1, \n            \"ram\": -1, \n            \"security_group_rules\": -1, \n            \"security_groups\": -1\n          }\n        }, \n        \"users\": {\n          \"project_domain\": \"default\", \n          \"resource_management_workers\": 20, \n          \"tenants\": 5, \n          \"user_domain\": \"default\", \n          \"users_per_tenant\": 2\n        }\n      }, \n      \"runner\": {\n        \"concurrency\": 3, \n        \"times\": 10, \n        \"type\": \"constant\"\n      }, \n      \"sla\": {\n        \"failure_rate\": {\n          \"max\": 0\n        }\n      }\n    }\n  ]\n}";
+        $scope.scenarios = [{"load_profile": [["parallel iterations", [[0.0, 0], [0.35011993718147283, 2.932323213992958], [0.7002398743629457, 3], [1.0503598115444186, 3], [1.4004797487258913, 3], [1.750599685907364, 3], [2.100719623088837, 3], [2.45083956027031, 3], [2.8009594974517826, 3], [3.1510794346332553, 3], [3.501199371814728, 3], [3.8513193089962012, 3], [4.201439246177674, 3], [4.551559183359147, 3], [4.90167912054062, 3], [5.251799057722092, 3], [5.601918994903565, 3], [5.952038932085038, 3], [6.302158869266511, 3], [6.652278806447984, 3], [7.002398743629456, 3], [7.352518680810929, 3], [7.7026386179924025, 3], [8.052758555173876, 3], [8.402878492355349, 3], [8.75299842953682, 3], [9.103118366718293, 2.9691278800368752], [9.453238303899766, 2.969107451159187], [9.80335824108124, 3], [10.153478178262713, 3], [10.503598115444184, 2.9758258280683973], [10.853718052625657, 3], [11.20383798980713, 3], [11.553957926988604, 3], [11.904077864170077, 3], [12.254197801351548, 3], [12.604317738533021, 3], [12.954437675714495, 3], [13.304557612895968, 3], [13.65467755007744, 3], [14.004797487258912, 3], [14.354917424440385, 3], [14.705037361621859, 3], [15.055157298803332, 3], [15.405277235984805, 3], [15.755397173166278, 3], [16.10551711034775, 3], [16.455637047529223, 3], [16.805756984710698, 3], [17.15587692189217, 3], [17.50599685907364, 2.9452730795598043], [17.856116796255115, 3], [18.206236733436587, 3], [18.55635667061806, 3], [18.906476607799533, 2.9713839090962897], [19.256596544981004, 2.9768506767657787], [19.60671648216248, 3], [19.95683641934395, 3], [20.306956356525426, 3], [20.657076293706897, 3], [21.00719623088837, 3], [21.357316168069843, 3], [21.707436105251315, 3], [22.05755604243279, 3], [22.40767597961426, 3], [22.757795916795732, 3], [23.107915853977207, 3], [23.45803579115868, 3], [23.808155728340154, 3], [24.158275665521625, 3], [24.508395602703096, 3], [24.85851553988457, 3], [25.208635477066043, 3], [25.558755414247518, 3], [25.90887535142899, 2.9661942932007768], [26.25899528861046, 3], [26.609115225791935, 3], [26.959235162973407, 3], [27.30935510015488, 3], [27.659475037336353, 3], [28.009594974517825, 1.9988716266029845], [28.3597149116993, 1], [28.70983484888077, 1], [29.059954786062246, 1], [29.410074723243717, 1], [29.760194660425192, 1], [30.110314597606664, 1], [30.460434534788135, 1], [30.81055447196961, 1], [31.16067440915108, 1], [31.510794346332556, 1], [31.860914283514028, 1], [32.2110342206955, 1], [32.56115415787697, 1], [32.911274095058445, 1], [33.26139403223992, 1], [33.611513969421395, 1], [33.96163390660286, 1], [34.31175384378434, 1], [34.66187378096581, 0.039215686274493726], [35.01199371814728, 0]]]], "errors": [{"type": "Conflict", "message": "Unable to complete operation on subnet 8f435cb3-a938-49b2-9088-4e7d2232fae3: One or more ports have an IP allocation from this subnet.\nNeutron server returns request_ids: ['req-4b962438-80a7-422b-822c-22856f32bd12']", "traceback": "Traceback (most recent call last):\n  File \"/opt/stack/.venv/lib/python2.7/site-packages/rally/task/runner.py\", line 64, in _run_scenario_once\n    getattr(scenario_inst, method_name)(**kwargs)\n  File \"/opt/stack/.venv/lib/python2.7/site-packages/rally/plugins/openstack/scenarios/neutron/network.py\", line 240, in create_and_delete_routers\n    self._delete_router(router)\n  File \"/opt/stack/.venv/lib/python2.7/site-packages/rally/task/atomic.py\", line 84, in func_atomic_actions\n    f = func(self, *args, **kwargs)\n  File \"/opt/stack/.venv/lib/python2.7/site-packages/rally/plugins/openstack/scenarios/neutron/utils.py\", line 182, in _delete_router\n    self.clients(\"neutron\").delete_router(router[\"router\"][\"id\"])\n  File \"/opt/stack/.venv/lib/python2.7/site-packages/neutronclient/v2_0/client.py\", line 720, in delete_router\n    return self.delete(self.router_path % (router))\n  File \"/opt/stack/.venv/lib/python2.7/site-packages/neutronclient/v2_0/client.py\", line 338, in delete\n    headers=headers, params=params)\n  File \"/opt/stack/.venv/lib/python2.7/site-packages/neutronclient/v2_0/client.py\", line 319, in retry_request\n    headers=headers, params=params)\n  File \"/opt/stack/.venv/lib/python2.7/site-packages/neutronclient/v2_0/client.py\", line 282, in do_request\n    self._handle_fault_response(status_code, replybody, resp)\n  File \"/opt/stack/.venv/lib/python2.7/site-packages/neutronclient/v2_0/client.py\", line 257, in _handle_fault_response\n    exception_handler_v20(status_code, error_body)\n  File \"/opt/stack/.venv/lib/python2.7/site-packages/neutronclient/v2_0/client.py\", line 84, in exception_handler_v20\n    request_ids=request_ids)\nConflict: Unable to complete operation on subnet 8f435cb3-a938-49b2-9088-4e7d2232fae3: One or more ports have an IP allocation from this subnet.\nNeutron server returns request_ids: ['req-4b962438-80a7-422b-822c-22856f32bd12']\n", "iteration": 3}], "name": "create_and_delete_routers", "runner": "constant", "iterations_count": 10, "output_errors": [], "pos": "0", "load_duration": 34.32548403739929, "sla_success": false, "met": "create_and_delete_routers", "atomic": {"pie": [["neutron.create_network", 0.408693790435791], ["neutron.create_subnet", 0.5018373727798462], ["neutron.create_subnet (2)", 0.47428321838378906], ["neutron.create_router", 1.1672541618347168], ["neutron.add_interface_router", 0.817733907699585], ["neutron.create_router (2)", 1.091831088066101], ["neutron.add_interface_router (2)", 0.9286282539367676], ["neutron.remove_interface_router", 0.9102032899856567], ["neutron.delete_router", 0.7914939165115357], ["neutron.remove_interface_router (2)", 0.8837299585342407], ["neutron.delete_router (2)", 1.0107345819473266]], "iter": [["neutron.create_network", [[1, 0.484389066696167], [2, 0.5273699760437012], [3, 0.5529019832611084], [4, 0.3349339962005615], [5, 0.38669800758361816], [6, 0.5204079151153564], [7, 0.374316930770874], [8, 0.29586291313171387], [9, 0.30528688430786133], [10, 0.30477023124694824]]], ["neutron.create_subnet", [[1, 0.5061419010162354], [2, 0.44104886054992676], [3, 0.5041029453277588], [4, 0.43578505516052246], [5, 0.4477999210357666], [6, 0.4653630256652832], [7, 0.6158280372619629], [8, 0.4334840774536133], [9, 0.6557579040527344], [10, 0.5130620002746582]]], ["neutron.create_subnet (2)", [[1, 0.46312713623046875], [2, 0.42194390296936035], [3, 0.5901610851287842], [4, 0.32019710540771484], [5, 0.4986419677734375], [6, 0.515949010848999], [7, 0.4260129928588867], [8, 0.5189840793609619], [9, 0.5229170322418213], [10, 0.46489787101745605]]], ["neutron.create_router", [[1, 1.3130218982696533], [2, 1.1934318542480469], [3, 1.167565107345581], [4, 1.2852799892425537], [5, 1.2404649257659912], [6, 1.304960012435913], [7, 0.9918389320373535], [8, 1.1473519802093506], [9, 0.8796219825744629], [10, 1.1490049362182617]]], ["neutron.add_interface_router", [[1, 0.8976681232452393], [2, 0.9406590461730957], [3, 0.7441620826721191], [4, 0.6365478038787842], [5, 0.9554409980773926], [6, 0.7287490367889404], [7, 0.662398099899292], [8, 0.8924579620361328], [9, 0.7850499153137207], [10, 0.9342060089111328]]], ["neutron.create_router (2)", [[1, 1.2119708061218262], [2, 0.9597170352935791], [3, 1.2409641742706299], [4, 1.016221046447754], [5, 0.920443058013916], [6, 1.1876189708709717], [7, 0.933812141418457], [8, 1.4966847896575928], [9, 0.9144608974456787], [10, 1.0364179611206055]]], ["neutron.add_interface_router (2)", [[1, 1.4092228412628174], [2, 0.8587918281555176], [3, 1.0231850147247314], [4, 0.7902989387512207], [5, 0.8433258533477783], [6, 1.0724470615386963], [7, 0.7488000392913818], [8, 0.863041877746582], [9, 0.9145779609680176], [10, 0.7625911235809326]]], ["neutron.remove_interface_router", [[1, 1.2203421592712402], [2, 0.9684000015258789], [3, 0.9152669906616211], [4, 0.7934119701385498], [5, 0.735241174697876], [6, 0.8687958717346191], [7, 0.857856035232544], [8, 0.706467866897583], [9, 1.154533863067627], [10, 0.8817169666290283]]], ["neutron.delete_router", [[1, 0.7077538967132568], [2, 0.7571470737457275], [3, 0.8514971733093262], [4, 0.9390928745269775], [5, 0.8104660511016846], [6, 0.6644401550292969], [7, 0.9584400653839111], [8, 0.7197179794311523], [9, 0.8224380016326904], [10, 0.683945894241333]]], ["neutron.remove_interface_router (2)", [[1, 0.8519687652587891], [2, 1.0522079467773438], [3, 0.6970701217651367], [4, 0.9340000152587891], [5, 1.1430020332336426], [6, 0.7721679210662842], [7, 0.8267548084259033], [8, 0.9437830448150635], [9, 0.8551249504089355], [10, 0.7612199783325195]]], ["neutron.delete_router (2)", [[1, 1.186103105545044], [2, 1.296314001083374], [3, 0.7498559951782227], [4, 0.7434489727020264], [5, 1.3168988227844238], [6, 0.8705270290374756], [7, 1.0490050315856934], [8, 1.2241499423980713], [9, 0.6226890087127686], [10, 1.048353910446167]]], ["failed_duration", [[1, 0], [2, 0], [3, 0], [4, 0.00151824951171875], [5, 0], [6, 0], [7, 0], [8, 0], [9, 0], [10, 0]]]], "histogram": {"data": [[{"disabled": 0, "values": [{"y": 4, "x": 0.3601226806640625}, {"y": 2, "x": 0.42438244819641113}, {"y": 1, "x": 0.48864221572875977}, {"y": 3, "x": 0.5529019832611084}], "key": "neutron.create_network", "view": "Square Root Choice"}, {"disabled": 1, "values": [{"y": 5, "x": 0.48905253410339355}, {"y": 3, "x": 0.5446209907531738}, {"y": 0, "x": 0.6001894474029541}, {"y": 2, "x": 0.6557579040527344}], "key": "neutron.create_subnet", "view": "Square Root Choice"}, {"disabled": 2, "values": [{"y": 1, "x": 0.3876881003379822}, {"y": 2, "x": 0.4551790952682495}, {"y": 5, "x": 0.5226700901985168}, {"y": 2, "x": 0.5901610851287842}], "key": "neutron.create_subnet (2)", "view": "Square Root Choice"}, {"disabled": 3, "values": [{"y": 1, "x": 0.9879719614982605}, {"y": 1, "x": 1.096321940422058}, {"y": 4, "x": 1.2046719193458557}, {"y": 4, "x": 1.3130218982696533}], "key": "neutron.create_router", "view": "Square Root Choice"}, {"disabled": 4, "values": [{"y": 2, "x": 0.7162711024284363}, {"y": 3, "x": 0.7959944009780884}, {"y": 0, "x": 0.8757176995277405}, {"y": 5, "x": 0.9554409980773926}], "key": "neutron.add_interface_router", "view": "Square Root Choice"}, {"disabled": 5, "values": [{"y": 6, "x": 1.0600168704986572}, {"y": 1, "x": 1.2055728435516357}, {"y": 2, "x": 1.3511288166046143}, {"y": 1, "x": 1.4966847896575928}], "key": "neutron.create_router (2)", "view": "Square Root Choice"}, {"disabled": 6, "values": [{"y": 6, "x": 0.9139057397842407}, {"y": 3, "x": 1.0790114402770996}, {"y": 0, "x": 1.2441171407699585}, {"y": 1, "x": 1.4092228412628174}], "key": "neutron.add_interface_router (2)", "view": "Square Root Choice"}, {"disabled": 7, "values": [{"y": 3, "x": 0.8349364399909973}, {"y": 4, "x": 0.9634050130844116}, {"y": 1, "x": 1.091873586177826}, {"y": 2, "x": 1.2203421592712402}], "key": "neutron.remove_interface_router", "view": "Square Root Choice"}, {"disabled": 8, "values": [{"y": 4, "x": 0.7379401326179504}, {"y": 2, "x": 0.811440110206604}, {"y": 2, "x": 0.8849400877952576}, {"y": 2, "x": 0.9584400653839111}], "key": "neutron.delete_router", "view": "Square Root Choice"}, {"disabled": 9, "values": [{"y": 3, "x": 0.8085530996322632}, {"y": 3, "x": 0.9200360774993896}, {"y": 2, "x": 1.0315190553665161}, {"y": 2, "x": 1.1430020332336426}], "key": "neutron.remove_interface_router (2)", "view": "Square Root Choice"}, {"disabled": 10, "values": [{"y": 3, "x": 0.7962414622306824}, {"y": 1, "x": 0.9697939157485962}, {"y": 2, "x": 1.14334636926651}, {"y": 4, "x": 1.3168988227844238}], "key": "neutron.delete_router (2)", "view": "Square Root Choice"}], [{"disabled": 0, "values": [{"y": 4, "x": 0.3472707271575928}, {"y": 2, "x": 0.3986785411834717}, {"y": 0, "x": 0.4500863552093506}, {"y": 1, "x": 0.5014941692352295}, {"y": 3, "x": 0.5529019832611084}], "key": "neutron.create_network", "view": "Sturges Formula"}, {"disabled": 1, "values": [{"y": 5, "x": 0.4779388427734375}, {"y": 3, "x": 0.5223936080932617}, {"y": 0, "x": 0.5668483734130859}, {"y": 0, "x": 0.6113031387329102}, {"y": 2, "x": 0.6557579040527344}], "key": "neutron.create_subnet", "view": "Sturges Formula"}, {"disabled": 2, "values": [{"y": 1, "x": 0.3741899013519287}, {"y": 2, "x": 0.42818269729614256}, {"y": 2, "x": 0.48217549324035647}, {"y": 4, "x": 0.5361682891845703}, {"y": 1, "x": 0.5901610851287842}], "key": "neutron.create_subnet (2)", "view": "Sturges Formula"}, {"disabled": 3, "values": [{"y": 1, "x": 0.966301965713501}, {"y": 1, "x": 1.0529819488525392}, {"y": 0, "x": 1.139661931991577}, {"y": 4, "x": 1.2263419151306152}, {"y": 4, "x": 1.3130218982696533}], "key": "neutron.create_router", "view": "Sturges Formula"}, {"disabled": 4, "values": [{"y": 2, "x": 0.7003264427185059}, {"y": 2, "x": 0.7641050815582275}, {"y": 1, "x": 0.8278837203979492}, {"y": 0, "x": 0.8916623592376709}, {"y": 5, "x": 0.9554409980773926}], "key": "neutron.add_interface_router", "view": "Sturges Formula"}, {"disabled": 5, "values": [{"y": 5, "x": 1.0309056758880615}, {"y": 1, "x": 1.1473504543304442}, {"y": 3, "x": 1.2637952327728272}, {"y": 0, "x": 1.38024001121521}, {"y": 1, "x": 1.4966847896575928}], "key": "neutron.create_router (2)", "view": "Sturges Formula"}, {"disabled": 6, "values": [{"y": 6, "x": 0.8808845996856689}, {"y": 1, "x": 1.012969160079956}, {"y": 2, "x": 1.1450537204742433}, {"y": 0, "x": 1.2771382808685303}, {"y": 1, "x": 1.4092228412628174}], "key": "neutron.add_interface_router (2)", "view": "Sturges Formula"}, {"disabled": 7, "values": [{"y": 3, "x": 0.8092427253723145}, {"y": 3, "x": 0.9120175838470459}, {"y": 2, "x": 1.0147924423217773}, {"y": 0, "x": 1.1175673007965088}, {"y": 2, "x": 1.2203421592712402}], "key": "neutron.remove_interface_router", "view": "Sturges Formula"}, {"disabled": 8, "values": [{"y": 4, "x": 0.7232401371002197}, {"y": 1, "x": 0.7820401191711426}, {"y": 2, "x": 0.8408401012420654}, {"y": 1, "x": 0.8996400833129883}, {"y": 2, "x": 0.9584400653839111}], "key": "neutron.delete_router", "view": "Sturges Formula"}, {"disabled": 9, "values": [{"y": 3, "x": 0.7862565040588378}, {"y": 3, "x": 0.8754428863525391}, {"y": 2, "x": 0.9646292686462402}, {"y": 1, "x": 1.0538156509399415}, {"y": 1, "x": 1.1430020332336426}], "key": "neutron.remove_interface_router (2)", "view": "Sturges Formula"}, {"disabled": 10, "values": [{"y": 3, "x": 0.7615309715270996}, {"y": 1, "x": 0.9003729343414306}, {"y": 0, "x": 1.0392148971557618}, {"y": 2, "x": 1.1780568599700927}, {"y": 4, "x": 1.3168988227844238}], "key": "neutron.delete_router (2)", "view": "Sturges Formula"}], [{"disabled": 0, "values": [{"y": 4, "x": 0.3472707271575928}, {"y": 2, "x": 0.3986785411834717}, {"y": 0, "x": 0.4500863552093506}, {"y": 1, "x": 0.5014941692352295}, {"y": 3, "x": 0.5529019832611084}], "key": "neutron.create_network", "view": "Rice Rule"}, {"disabled": 1, "values": [{"y": 5, "x": 0.4779388427734375}, {"y": 3, "x": 0.5223936080932617}, {"y": 0, "x": 0.5668483734130859}, {"y": 0, "x": 0.6113031387329102}, {"y": 2, "x": 0.6557579040527344}], "key": "neutron.create_subnet", "view": "Rice Rule"}, {"disabled": 2, "values": [{"y": 1, "x": 0.3741899013519287}, {"y": 2, "x": 0.42818269729614256}, {"y": 2, "x": 0.48217549324035647}, {"y": 4, "x": 0.5361682891845703}, {"y": 1, "x": 0.5901610851287842}], "key": "neutron.create_subnet (2)", "view": "Rice Rule"}, {"disabled": 3, "values": [{"y": 1, "x": 0.966301965713501}, {"y": 1, "x": 1.0529819488525392}, {"y": 0, "x": 1.139661931991577}, {"y": 4, "x": 1.2263419151306152}, {"y": 4, "x": 1.3130218982696533}], "key": "neutron.create_router", "view": "Rice Rule"}, {"disabled": 4, "values": [{"y": 2, "x": 0.7003264427185059}, {"y": 2, "x": 0.7641050815582275}, {"y": 1, "x": 0.8278837203979492}, {"y": 0, "x": 0.8916623592376709}, {"y": 5, "x": 0.9554409980773926}], "key": "neutron.add_interface_router", "view": "Rice Rule"}, {"disabled": 5, "values": [{"y": 5, "x": 1.0309056758880615}, {"y": 1, "x": 1.1473504543304442}, {"y": 3, "x": 1.2637952327728272}, {"y": 0, "x": 1.38024001121521}, {"y": 1, "x": 1.4966847896575928}], "key": "neutron.create_router (2)", "view": "Rice Rule"}, {"disabled": 6, "values": [{"y": 6, "x": 0.8808845996856689}, {"y": 1, "x": 1.012969160079956}, {"y": 2, "x": 1.1450537204742433}, {"y": 0, "x": 1.2771382808685303}, {"y": 1, "x": 1.4092228412628174}], "key": "neutron.add_interface_router (2)", "view": "Rice Rule"}, {"disabled": 7, "values": [{"y": 3, "x": 0.8092427253723145}, {"y": 3, "x": 0.9120175838470459}, {"y": 2, "x": 1.0147924423217773}, {"y": 0, "x": 1.1175673007965088}, {"y": 2, "x": 1.2203421592712402}], "key": "neutron.remove_interface_router", "view": "Rice Rule"}, {"disabled": 8, "values": [{"y": 4, "x": 0.7232401371002197}, {"y": 1, "x": 0.7820401191711426}, {"y": 2, "x": 0.8408401012420654}, {"y": 1, "x": 0.8996400833129883}, {"y": 2, "x": 0.9584400653839111}], "key": "neutron.delete_router", "view": "Rice Rule"}, {"disabled": 9, "values": [{"y": 3, "x": 0.7862565040588378}, {"y": 3, "x": 0.8754428863525391}, {"y": 2, "x": 0.9646292686462402}, {"y": 1, "x": 1.0538156509399415}, {"y": 1, "x": 1.1430020332336426}], "key": "neutron.remove_interface_router (2)", "view": "Rice Rule"}, {"disabled": 10, "values": [{"y": 3, "x": 0.7615309715270996}, {"y": 1, "x": 0.9003729343414306}, {"y": 0, "x": 1.0392148971557618}, {"y": 2, "x": 1.1780568599700927}, {"y": 4, "x": 1.3168988227844238}], "key": "neutron.delete_router (2)", "view": "Rice Rule"}]], "views": [{"id": 0, "name": "Square Root Choice"}, {"id": 1, "name": "Sturges Formula"}, {"id": 2, "name": "Rice Rule"}]}}, "iterations": {"pie": [["success", 9], ["errors", 1]], "iter": [["duration", [[1, 10.254027128219604], [2, 9.420361995697021], [3, 9.041588068008423], [4, 0], [5, 9.302743911743164], [6, 8.973323106765747], [7, 8.446691989898682], [8, 9.243737936019897], [9, 8.435115814208984], [10, 8.542927980422974]]], ["idle_duration", [[1, 0.0], [2, 0.0], [3, 0.0], [4, 0], [5, 0.0], [6, 0.0], [7, 0.0], [8, 0.0], [9, 0.0], [10, 0.0]]], ["failed_duration", [[1, 0], [2, 0], [3, 0], [4, 8.230736017227173], [5, 0], [6, 0], [7, 0], [8, 0], [9, 0], [10, 0]]]], "histogram": {"data": [[{"disabled": null, "values": [{"y": 4, "x": 8.88984364271164}, {"y": 4, "x": 9.344571471214294}, {"y": 1, "x": 9.79929929971695}, {"y": 1, "x": 10.254027128219604}], "key": "task", "view": "Square Root Choice"}], [{"disabled": null, "values": [{"y": 4, "x": 8.798898077011108}, {"y": 2, "x": 9.162680339813232}, {"y": 3, "x": 9.526462602615357}, {"y": 0, "x": 9.89024486541748}, {"y": 1, "x": 10.254027128219604}], "key": "task", "view": "Sturges Formula"}], [{"disabled": null, "values": [{"y": 4, "x": 8.798898077011108}, {"y": 2, "x": 9.162680339813232}, {"y": 3, "x": 9.526462602615357}, {"y": 0, "x": 9.89024486541748}, {"y": 1, "x": 10.254027128219604}], "key": "task", "view": "Rice Rule"}]], "views": [{"id": 0, "name": "Square Root Choice"}, {"id": 1, "name": "Sturges Formula"}, {"id": 2, "name": "Rice Rule"}]}}, "additive_output": [], "table": {"rows": [["neutron.create_network", 0.296, 0.387, 0.532, 0.543, 0.553, 0.417, "90.0%", 10], ["neutron.create_subnet", 0.433, 0.504, 0.624, 0.64, 0.656, 0.509, "90.0%", 10], ["neutron.create_subnet (2)", 0.422, 0.499, 0.536, 0.563, 0.59, 0.491, "90.0%", 10], ["neutron.create_router", 0.88, 1.168, 1.307, 1.31, 1.313, 1.154, "90.0%", 10], ["neutron.add_interface_router", 0.662, 0.892, 0.944, 0.95, 0.955, 0.838, "90.0%", 10], ["neutron.create_router (2)", 0.914, 1.036, 1.292, 1.394, 1.497, 1.1, "90.0%", 10], ["neutron.add_interface_router (2)", 0.749, 0.863, 1.14, 1.275, 1.409, 0.944, "90.0%", 10], ["neutron.remove_interface_router", 0.706, 0.882, 1.168, 1.194, 1.22, 0.923, "90.0%", 10], ["neutron.delete_router", 0.664, 0.757, 0.873, 0.916, 0.958, 0.775, "90.0%", 10], ["neutron.remove_interface_router (2)", 0.697, 0.852, 1.07, 1.107, 1.143, 0.878, "90.0%", 10], ["neutron.delete_router (2)", 0.623, 1.049, 1.3, 1.309, 1.317, 1.04, "90.0%", 10], ["total", 8.435, 9.042, 9.587, 9.921, 10.254, 9.073, "90.0%", 10]], "cols": ["Action", "Min (sec)", "Median (sec)", "90%ile (sec)", "95%ile (sec)", "Max (sec)", "Avg (sec)", "Success", "Count"]}, "full_duration": 48.028706789016724, "config": "{\n  \"NeutronNetworks.create_and_delete_routers\": [\n    {\n      \"runner\": {\n        \"type\": \"constant\", \n        \"concurrency\": 3, \n        \"times\": 10\n      }, \n      \"args\": {\n        \"network_create_args\": {}, \n        \"subnet_cidr_start\": \"1.1.0.0/30\", \n        \"subnets_per_network\": 2, \n        \"subnet_create_args\": {}, \n        \"router_create_args\": {}\n      }, \n      \"sla\": {\n        \"failure_rate\": {\n          \"max\": 0\n        }\n      }, \n      \"context\": {\n        \"users\": {\n          \"project_domain\": \"default\", \n          \"users_per_tenant\": 1, \n          \"tenants\": 3, \n          \"resource_management_workers\": 20, \n          \"user_domain\": \"default\"\n        }, \n        \"quotas\": {\n          \"neutron\": {\n            \"subnet\": -1, \n            \"router\": -1, \n            \"port\": -1, \n            \"network\": -1\n          }\n        }\n      }\n    }\n  ]\n}", "sla": [{"criterion": "failure_rate", "detail": "Failure rate criteria 0.00% <= 10.00% <= 0.00% - Failed", "success": false}], "complete_output": [[], [], [], [], [], [], [], [], [], []], "cls": "NeutronNetworks"}, {"load_profile": [["parallel iterations", [[0.0, 0], [0.5612435541629792, 2.962004669106971], [1.1224871083259584, 3], [1.6837306624889377, 3], [2.244974216651917, 3], [2.806217770814896, 3], [3.3674613249778753, 3], [3.9287048791408545, 3], [4.489948433303834, 3], [5.051191987466813, 3], [5.612435541629792, 3], [6.173679095792771, 3], [6.734922649955751, 3], [7.29616620411873, 3], [7.857409758281709, 3], [8.418653312444688, 3], [8.979896866607668, 3], [9.541140420770647, 3], [10.102383974933627, 3], [10.663627529096605, 3], [11.224871083259584, 3], [11.786114637422564, 3], [12.347358191585542, 3], [12.908601745748522, 2.9820027482769396], [13.469845299911501, 2.9829572831544757], [14.031088854074481, 3], [14.59233240823746, 2.9810511870283047], [15.153575962400438, 3], [15.714819516563418, 3], [16.276063070726398, 3], [16.837306624889376, 3], [17.398550179052357, 3], [17.959793733215335, 3], [18.521037287378313, 3], [19.082280841541294, 3], [19.643524395704272, 3], [20.204767949867254, 3], [20.76601150403023, 3], [21.32725505819321, 3], [21.88849861235619, 3], [22.44974216651917, 3], [23.010985720682147, 3], [23.572229274845128, 3], [24.133472829008106, 3], [24.694716383171084, 3], [25.255959937334065, 3], [25.817203491497043, 3], [26.378447045660025, 3], [26.939690599823003, 2.985587245516213], [27.50093415398598, 3], [28.062177708148962, 2.9838553190828785], [28.62342126231194, 2.9830503152586925], [29.18466481647492, 3], [29.7459083706379, 3], [30.307151924800877, 3], [30.86839547896386, 3], [31.429639033126836, 3], [31.990882587289814, 3], [32.552126141452796, 3], [33.11336969561577, 3], [33.67461324977875, 3], [34.23585680394173, 3], [34.797100358104714, 3], [35.35834391226769, 3], [35.91958746643067, 3], [36.48083102059365, 3], [37.042074574756626, 3], [37.60331812891961, 3], [38.16456168308259, 3], [38.72580523724557, 3], [39.287048791408544, 3], [39.84829234557152, 3], [40.40953589973451, 2.9842813976241263], [40.970779453897485, 3], [41.53202300806046, 3], [42.09326656222344, 3], [42.65451011638642, 3], [43.2157536705494, 3], [43.77699722471238, 3], [44.33824077887536, 2.022859318663092], [44.89948433303834, 2], [45.460727887201315, 1.1413621821072804], [46.02197144136429, 1], [46.58321499552728, 1], [47.144458549690256, 1], [47.705702103853234, 1], [48.26694565801621, 1], [48.82818921217919, 1], [49.38943276634217, 1], [49.95067632050515, 1], [50.51191987466813, 1], [51.07316342883111, 1], [51.634406982994086, 1], [52.195650537157064, 1], [52.75689409132005, 1], [53.31813764548303, 1], [53.879381199646005, 1], [54.44062475380898, 1], [55.00186830797196, 1], [55.563111862134946, 0.03921568627449829], [56.12435541629792, 0]]]], "errors": [], "name": "create_and_list_routers", "runner": "constant", "iterations_count": 10, "output_errors": [], "pos": "0", "load_duration": 55.0238778591156, "sla_success": true, "met": "create_and_list_routers", "atomic": {"pie": [["neutron.create_network", 0.4612630128860474], ["neutron.create_subnet", 0.5165481090545654], ["neutron.create_subnet (2)", 0.5539302587509155], ["neutron.create_subnet (3)", 0.525243592262268], ["neutron.create_subnet (4)", 0.49965667724609375], ["neutron.create_subnet (5)", 0.4480076789855957], ["neutron.create_router", 1.2833970785140991], ["neutron.add_interface_router", 0.8962385654449463], ["neutron.create_router (2)", 1.1660892248153687], ["neutron.add_interface_router (2)", 0.9420077800750732], ["neutron.create_router (3)", 1.2469278573989868], ["neutron.add_interface_router (3)", 0.988296389579773], ["neutron.create_router (4)", 1.2779030799865723], ["neutron.add_interface_router (4)", 1.059879755973816], ["neutron.create_router (5)", 1.3732491731643677], ["neutron.add_interface_router (5)", 0.9916215181350708], ["neutron.list_routers", 0.1370999813079834]], "iter": [["neutron.create_network", [[1, 0.5523760318756104], [2, 0.5114428997039795], [3, 0.6138510704040527], [4, 0.5017168521881104], [5, 0.46349406242370605], [6, 0.29433321952819824], [7, 0.31464600563049316], [8, 0.5175869464874268], [9, 0.3552980422973633], [10, 0.4878849983215332]]], ["neutron.create_subnet", [[1, 0.45094895362854004], [2, 0.48591184616088867], [3, 0.5167040824890137], [4, 0.5879518985748291], [5, 0.5273900032043457], [6, 0.6396961212158203], [7, 0.4939241409301758], [8, 0.4194769859313965], [9, 0.58827805519104], [10, 0.4551990032196045]]], ["neutron.create_subnet (2)", [[1, 0.352384090423584], [2, 0.4757568836212158], [3, 0.406749963760376], [4, 0.7201409339904785], [5, 0.4649388790130615], [6, 0.8565309047698975], [7, 0.4444088935852051], [8, 0.6935179233551025], [9, 0.7019801139831543], [10, 0.4228940010070801]]], ["neutron.create_subnet (3)", [[1, 0.3763251304626465], [2, 0.3860440254211426], [3, 0.4064640998840332], [4, 0.6585350036621094], [5, 0.5306441783905029], [6, 0.40857815742492676], [7, 0.5125041007995605], [8, 0.71038818359375], [9, 0.7512171268463135], [10, 0.5117359161376953]]], ["neutron.create_subnet (4)", [[1, 0.383868932723999], [2, 0.4884071350097656], [3, 0.40148186683654785], [4, 0.3926680088043213], [5, 0.34256505966186523], [6, 0.717188835144043], [7, 0.4678170680999756], [8, 0.439622163772583], [9, 0.7834398746490479], [10, 0.5795078277587891]]], ["neutron.create_subnet (5)", [[1, 0.37566184997558594], [2, 0.3631880283355713], [3, 0.40256500244140625], [4, 0.33895206451416016], [5, 0.5225479602813721], [6, 0.4421529769897461], [7, 0.41859889030456543], [8, 0.6167349815368652], [9, 0.49376702308654785], [10, 0.5059080123901367]]], ["neutron.create_router", [[1, 1.1678471565246582], [2, 1.3253049850463867], [3, 1.356633186340332], [4, 2.0411791801452637], [5, 0.833975076675415], [6, 1.0309698581695557], [7, 0.9350440502166748], [8, 1.5082480907440186], [9, 1.2810981273651123], [10, 1.3536710739135742]]], ["neutron.add_interface_router", [[1, 0.8743178844451904], [2, 0.9008941650390625], [3, 0.6515560150146484], [4, 0.8019211292266846], [5, 0.9295189380645752], [6, 1.0082461833953857], [7, 0.9617919921875], [8, 0.9805600643157959], [9, 1.0020232200622559], [10, 0.8515560626983643]]], ["neutron.create_router (2)", [[1, 1.0153250694274902], [2, 0.9722261428833008], [3, 0.9483969211578369], [4, 1.4123270511627197], [5, 1.4002530574798584], [6, 0.9082939624786377], [7, 1.1165680885314941], [8, 1.517683982849121], [9, 1.267530918121338], [10, 1.1022870540618896]]], ["neutron.add_interface_router (2)", [[1, 0.8383169174194336], [2, 0.8206901550292969], [3, 1.0606839656829834], [4, 1.1639349460601807], [5, 0.8981409072875977], [6, 0.9996271133422852], [7, 0.9642629623413086], [8, 0.9242038726806641], [9, 0.8701920509338379], [10, 0.8800249099731445]]], ["neutron.create_router (3)", [[1, 1.128014087677002], [2, 1.1026959419250488], [3, 0.9255108833312988], [4, 1.5988879203796387], [5, 1.0692219734191895], [6, 1.0163028240203857], [7, 1.0101540088653564], [8, 1.5148530006408691], [9, 1.0477099418640137], [10, 2.0559279918670654]]], ["neutron.add_interface_router (3)", [[1, 0.8547720909118652], [2, 1.1847279071807861], [3, 1.4993970394134521], [4, 1.1667890548706055], [5, 0.8872640132904053], [6, 0.8541557788848877], [7, 0.8112480640411377], [8, 0.8468718528747559], [9, 0.8009810447692871], [10, 0.9767570495605469]]], ["neutron.create_router (4)", [[1, 1.1075401306152344], [2, 1.073132038116455], [3, 1.5116899013519287], [4, 1.1863348484039307], [5, 1.1874990463256836], [6, 0.7948298454284668], [7, 1.5512888431549072], [8, 1.0681300163269043], [9, 2.1210989952087402], [10, 1.1774871349334717]]], ["neutron.add_interface_router (4)", [[1, 1.000330924987793], [2, 0.7774698734283447], [3, 0.9001538753509521], [4, 0.948538064956665], [5, 0.8285670280456543], [6, 0.7980279922485352], [7, 0.8687639236450195], [8, 1.6119539737701416], [9, 1.738415002822876], [10, 1.1265769004821777]]], ["neutron.create_router (5)", [[1, 1.4901671409606934], [2, 0.937690019607544], [3, 1.5609369277954102], [4, 1.303915023803711], [5, 1.153095006942749], [6, 1.4248600006103516], [7, 1.7292938232421875], [8, 1.7840638160705566], [9, 1.471987009048462], [10, 0.8764829635620117]]], ["neutron.add_interface_router (5)", [[1, 1.0126829147338867], [2, 0.7204849720001221], [3, 1.1749038696289062], [4, 0.7646431922912598], [5, 1.1683430671691895], [6, 1.0837221145629883], [7, 0.8762860298156738], [8, 0.6674079895019531], [9, 1.1054449081420898], [10, 1.3422961235046387]]], ["neutron.list_routers", [[1, 0.12687206268310547], [2, 0.10778594017028809], [3, 0.13933110237121582], [4, 0.13541412353515625], [5, 0.0844419002532959], [6, 0.08111977577209473], [7, 0.15813088417053223], [8, 0.08795595169067383], [9, 0.20620298385620117], [10, 0.2437450885772705]]]], "histogram": {"data": [[{"disabled": 0, "values": [{"y": 3, "x": 0.37421268224716187}, {"y": 0, "x": 0.4540921449661255}, {"y": 5, "x": 0.5339716076850891}, {"y": 2, "x": 0.6138510704040527}], "key": "neutron.create_network", "view": "Square Root Choice"}, {"disabled": 1, "values": [{"y": 3, "x": 0.47453176975250244}, {"y": 4, "x": 0.5295865535736084}, {"y": 0, "x": 0.5846413373947144}, {"y": 3, "x": 0.6396961212158203}], "key": "neutron.create_subnet", "view": "Square Root Choice"}, {"disabled": 2, "values": [{"y": 6, "x": 0.47842079401016235}, {"y": 0, "x": 0.6044574975967407}, {"y": 3, "x": 0.7304942011833191}, {"y": 1, "x": 0.8565309047698975}], "key": "neutron.create_subnet (2)", "view": "Square Root Choice"}, {"disabled": 3, "values": [{"y": 4, "x": 0.47004812955856323}, {"y": 3, "x": 0.56377112865448}, {"y": 0, "x": 0.6574941277503967}, {"y": 3, "x": 0.7512171268463135}], "key": "neutron.create_subnet (3)", "view": "Square Root Choice"}, {"disabled": 4, "values": [{"y": 5, "x": 0.4527837634086609}, {"y": 2, "x": 0.5630024671554565}, {"y": 1, "x": 0.6732211709022522}, {"y": 2, "x": 0.7834398746490479}], "key": "neutron.create_subnet (4)", "view": "Square Root Choice"}, {"disabled": 5, "values": [{"y": 4, "x": 0.4083977937698364}, {"y": 2, "x": 0.4778435230255127}, {"y": 3, "x": 0.547289252281189}, {"y": 1, "x": 0.6167349815368652}], "key": "neutron.create_subnet (5)", "view": "Square Root Choice"}, {"disabled": 6, "values": [{"y": 3, "x": 1.1357761025428772}, {"y": 5, "x": 1.4375771284103394}, {"y": 1, "x": 1.7393781542778015}, {"y": 1, "x": 2.0411791801452637}], "key": "neutron.create_router", "view": "Square Root Choice"}, {"disabled": 7, "values": [{"y": 1, "x": 0.7407285571098328}, {"y": 1, "x": 0.8299010992050171}, {"y": 3, "x": 0.9190736413002014}, {"y": 5, "x": 1.0082461833953857}], "key": "neutron.add_interface_router", "view": "Square Root Choice"}, {"disabled": 8, "values": [{"y": 4, "x": 1.0606414675712585}, {"y": 2, "x": 1.2129889726638794}, {"y": 1, "x": 1.3653364777565002}, {"y": 3, "x": 1.517683982849121}], "key": "neutron.create_router (2)", "view": "Square Root Choice"}, {"disabled": 9, "values": [{"y": 5, "x": 0.9065013527870178}, {"y": 2, "x": 0.9923125505447388}, {"y": 2, "x": 1.0781237483024597}, {"y": 1, "x": 1.1639349460601807}], "key": "neutron.add_interface_router (2)", "view": "Square Root Choice"}, {"disabled": 10, "values": [{"y": 7, "x": 1.2081151604652405}, {"y": 0, "x": 1.4907194375991821}, {"y": 2, "x": 1.7733237147331238}, {"y": 1, "x": 2.0559279918670654}], "key": "neutron.create_router (3)", "view": "Square Root Choice"}, {"disabled": 11, "values": [{"y": 6, "x": 0.9755850434303284}, {"y": 1, "x": 1.1501890420913696}, {"y": 2, "x": 1.3247930407524109}, {"y": 1, "x": 1.4993970394134521}], "key": "neutron.add_interface_router (3)", "view": "Square Root Choice"}, {"disabled": 12, "values": [{"y": 4, "x": 1.1263971328735352}, {"y": 3, "x": 1.4579644203186035}, {"y": 2, "x": 1.7895317077636719}, {"y": 1, "x": 2.1210989952087402}], "key": "neutron.create_router (4)", "view": "Square Root Choice"}, {"disabled": 13, "values": [{"y": 7, "x": 1.0177061557769775}, {"y": 1, "x": 1.2579424381256104}, {"y": 0, "x": 1.4981787204742432}, {"y": 2, "x": 1.738415002822876}], "key": "neutron.add_interface_router (4)", "view": "Square Root Choice"}, {"disabled": 14, "values": [{"y": 2, "x": 1.103378176689148}, {"y": 2, "x": 1.3302733898162842}, {"y": 3, "x": 1.5571686029434204}, {"y": 3, "x": 1.7840638160705566}], "key": "neutron.create_router (5)", "view": "Square Root Choice"}, {"disabled": 15, "values": [{"y": 3, "x": 0.8361300230026245}, {"y": 1, "x": 1.004852056503296}, {"y": 4, "x": 1.1735740900039673}, {"y": 2, "x": 1.3422961235046387}], "key": "neutron.add_interface_router (5)", "view": "Square Root Choice"}, {"disabled": 16, "values": [{"y": 4, "x": 0.12177610397338867}, {"y": 4, "x": 0.16243243217468262}, {"y": 0, "x": 0.20308876037597656}, {"y": 2, "x": 0.2437450885772705}], "key": "neutron.list_routers", "view": "Square Root Choice"}], [{"disabled": 0, "values": [{"y": 3, "x": 0.35823678970336914}, {"y": 0, "x": 0.42214035987854004}, {"y": 1, "x": 0.48604393005371094}, {"y": 4, "x": 0.5499475002288818}, {"y": 2, "x": 0.6138510704040527}], "key": "neutron.create_network", "view": "Sturges Formula"}, {"disabled": 1, "values": [{"y": 3, "x": 0.46352081298828124}, {"y": 2, "x": 0.507564640045166}, {"y": 2, "x": 0.5516084671020508}, {"y": 2, "x": 0.5956522941589355}, {"y": 1, "x": 0.6396961212158203}], "key": "neutron.create_subnet", "view": "Sturges Formula"}, {"disabled": 2, "values": [{"y": 4, "x": 0.4532134532928467}, {"y": 2, "x": 0.5540428161621094}, {"y": 0, "x": 0.6548721790313721}, {"y": 3, "x": 0.7557015419006348}, {"y": 1, "x": 0.8565309047698975}], "key": "neutron.create_subnet (2)", "view": "Sturges Formula"}, {"disabled": 3, "values": [{"y": 4, "x": 0.45130352973937987}, {"y": 2, "x": 0.5262819290161133}, {"y": 1, "x": 0.6012603282928467}, {"y": 1, "x": 0.67623872756958}, {"y": 2, "x": 0.7512171268463135}], "key": "neutron.create_subnet (3)", "view": "Sturges Formula"}, {"disabled": 4, "values": [{"y": 4, "x": 0.4307400226593018}, {"y": 3, "x": 0.5189149856567383}, {"y": 1, "x": 0.6070899486541748}, {"y": 0, "x": 0.6952649116516113}, {"y": 2, "x": 0.7834398746490479}], "key": "neutron.create_subnet (4)", "view": "Sturges Formula"}, {"disabled": 5, "values": [{"y": 3, "x": 0.39450864791870116}, {"y": 3, "x": 0.45006523132324217}, {"y": 1, "x": 0.5056218147277832}, {"y": 2, "x": 0.5611783981323242}, {"y": 1, "x": 0.6167349815368652}], "key": "neutron.create_subnet (5)", "view": "Sturges Formula"}, {"disabled": 6, "values": [{"y": 3, "x": 1.0754158973693848}, {"y": 2, "x": 1.3168567180633546}, {"y": 4, "x": 1.5582975387573241}, {"y": 0, "x": 1.799738359451294}, {"y": 1, "x": 2.0411791801452637}], "key": "neutron.create_router", "view": "Sturges Formula"}, {"disabled": 7, "values": [{"y": 1, "x": 0.7228940486907959}, {"y": 0, "x": 0.7942320823669433}, {"y": 2, "x": 0.8655701160430909}, {"y": 3, "x": 0.9369081497192383}, {"y": 4, "x": 1.0082461833953857}], "key": "neutron.add_interface_router", "view": "Sturges Formula"}, {"disabled": 8, "values": [{"y": 4, "x": 1.0301719665527345}, {"y": 2, "x": 1.152049970626831}, {"y": 1, "x": 1.2739279747009278}, {"y": 0, "x": 1.3958059787750243}, {"y": 3, "x": 1.517683982849121}], "key": "neutron.create_router (2)", "view": "Sturges Formula"}, {"disabled": 9, "values": [{"y": 4, "x": 0.8893391132354737}, {"y": 2, "x": 0.9579880714416504}, {"y": 2, "x": 1.026637029647827}, {"y": 1, "x": 1.095285987854004}, {"y": 1, "x": 1.1639349460601807}], "key": "neutron.add_interface_router (2)", "view": "Sturges Formula"}, {"disabled": 10, "values": [{"y": 7, "x": 1.151594305038452}, {"y": 0, "x": 1.3776777267456055}, {"y": 2, "x": 1.6037611484527587}, {"y": 0, "x": 1.8298445701599122}, {"y": 1, "x": 2.0559279918670654}], "key": "neutron.create_router (3)", "view": "Sturges Formula"}, {"disabled": 11, "values": [{"y": 6, "x": 0.9406642436981201}, {"y": 1, "x": 1.080347442626953}, {"y": 2, "x": 1.2200306415557862}, {"y": 0, "x": 1.3597138404846192}, {"y": 1, "x": 1.4993970394134521}], "key": "neutron.add_interface_router (3)", "view": "Sturges Formula"}, {"disabled": 12, "values": [{"y": 1, "x": 1.0600836753845215}, {"y": 6, "x": 1.3253375053405763}, {"y": 2, "x": 1.5905913352966308}, {"y": 0, "x": 1.8558451652526855}, {"y": 1, "x": 2.1210989952087402}], "key": "neutron.create_router (4)", "view": "Sturges Formula"}, {"disabled": 13, "values": [{"y": 6, "x": 0.969658899307251}, {"y": 2, "x": 1.1618479251861573}, {"y": 0, "x": 1.3540369510650634}, {"y": 0, "x": 1.5462259769439697}, {"y": 2, "x": 1.738415002822876}], "key": "neutron.add_interface_router (4)", "view": "Sturges Formula"}, {"disabled": 14, "values": [{"y": 2, "x": 1.0579991340637207}, {"y": 1, "x": 1.2395153045654297}, {"y": 1, "x": 1.4210314750671387}, {"y": 4, "x": 1.6025476455688477}, {"y": 2, "x": 1.7840638160705566}], "key": "neutron.create_router (5)", "view": "Sturges Formula"}, {"disabled": 15, "values": [{"y": 3, "x": 0.8023856163024903}, {"y": 1, "x": 0.9373632431030273}, {"y": 1, "x": 1.0723408699035644}, {"y": 4, "x": 1.2073184967041015}, {"y": 1, "x": 1.3422961235046387}], "key": "neutron.add_interface_router (5)", "view": "Sturges Formula"}, {"disabled": 16, "values": [{"y": 4, "x": 0.11364483833312988}, {"y": 3, "x": 0.14616990089416504}, {"y": 1, "x": 0.1786949634552002}, {"y": 1, "x": 0.21122002601623535}, {"y": 1, "x": 0.2437450885772705}], "key": "neutron.list_routers", "view": "Sturges Formula"}], [{"disabled": 0, "values": [{"y": 3, "x": 0.35823678970336914}, {"y": 0, "x": 0.42214035987854004}, {"y": 1, "x": 0.48604393005371094}, {"y": 4, "x": 0.5499475002288818}, {"y": 2, "x": 0.6138510704040527}], "key": "neutron.create_network", "view": "Rice Rule"}, {"disabled": 1, "values": [{"y": 3, "x": 0.46352081298828124}, {"y": 2, "x": 0.507564640045166}, {"y": 2, "x": 0.5516084671020508}, {"y": 2, "x": 0.5956522941589355}, {"y": 1, "x": 0.6396961212158203}], "key": "neutron.create_subnet", "view": "Rice Rule"}, {"disabled": 2, "values": [{"y": 4, "x": 0.4532134532928467}, {"y": 2, "x": 0.5540428161621094}, {"y": 0, "x": 0.6548721790313721}, {"y": 3, "x": 0.7557015419006348}, {"y": 1, "x": 0.8565309047698975}], "key": "neutron.create_subnet (2)", "view": "Rice Rule"}, {"disabled": 3, "values": [{"y": 4, "x": 0.45130352973937987}, {"y": 2, "x": 0.5262819290161133}, {"y": 1, "x": 0.6012603282928467}, {"y": 1, "x": 0.67623872756958}, {"y": 2, "x": 0.7512171268463135}], "key": "neutron.create_subnet (3)", "view": "Rice Rule"}, {"disabled": 4, "values": [{"y": 4, "x": 0.4307400226593018}, {"y": 3, "x": 0.5189149856567383}, {"y": 1, "x": 0.6070899486541748}, {"y": 0, "x": 0.6952649116516113}, {"y": 2, "x": 0.7834398746490479}], "key": "neutron.create_subnet (4)", "view": "Rice Rule"}, {"disabled": 5, "values": [{"y": 3, "x": 0.39450864791870116}, {"y": 3, "x": 0.45006523132324217}, {"y": 1, "x": 0.5056218147277832}, {"y": 2, "x": 0.5611783981323242}, {"y": 1, "x": 0.6167349815368652}], "key": "neutron.create_subnet (5)", "view": "Rice Rule"}, {"disabled": 6, "values": [{"y": 3, "x": 1.0754158973693848}, {"y": 2, "x": 1.3168567180633546}, {"y": 4, "x": 1.5582975387573241}, {"y": 0, "x": 1.799738359451294}, {"y": 1, "x": 2.0411791801452637}], "key": "neutron.create_router", "view": "Rice Rule"}, {"disabled": 7, "values": [{"y": 1, "x": 0.7228940486907959}, {"y": 0, "x": 0.7942320823669433}, {"y": 2, "x": 0.8655701160430909}, {"y": 3, "x": 0.9369081497192383}, {"y": 4, "x": 1.0082461833953857}], "key": "neutron.add_interface_router", "view": "Rice Rule"}, {"disabled": 8, "values": [{"y": 4, "x": 1.0301719665527345}, {"y": 2, "x": 1.152049970626831}, {"y": 1, "x": 1.2739279747009278}, {"y": 0, "x": 1.3958059787750243}, {"y": 3, "x": 1.517683982849121}], "key": "neutron.create_router (2)", "view": "Rice Rule"}, {"disabled": 9, "values": [{"y": 4, "x": 0.8893391132354737}, {"y": 2, "x": 0.9579880714416504}, {"y": 2, "x": 1.026637029647827}, {"y": 1, "x": 1.095285987854004}, {"y": 1, "x": 1.1639349460601807}], "key": "neutron.add_interface_router (2)", "view": "Rice Rule"}, {"disabled": 10, "values": [{"y": 7, "x": 1.151594305038452}, {"y": 0, "x": 1.3776777267456055}, {"y": 2, "x": 1.6037611484527587}, {"y": 0, "x": 1.8298445701599122}, {"y": 1, "x": 2.0559279918670654}], "key": "neutron.create_router (3)", "view": "Rice Rule"}, {"disabled": 11, "values": [{"y": 6, "x": 0.9406642436981201}, {"y": 1, "x": 1.080347442626953}, {"y": 2, "x": 1.2200306415557862}, {"y": 0, "x": 1.3597138404846192}, {"y": 1, "x": 1.4993970394134521}], "key": "neutron.add_interface_router (3)", "view": "Rice Rule"}, {"disabled": 12, "values": [{"y": 1, "x": 1.0600836753845215}, {"y": 6, "x": 1.3253375053405763}, {"y": 2, "x": 1.5905913352966308}, {"y": 0, "x": 1.8558451652526855}, {"y": 1, "x": 2.1210989952087402}], "key": "neutron.create_router (4)", "view": "Rice Rule"}, {"disabled": 13, "values": [{"y": 6, "x": 0.969658899307251}, {"y": 2, "x": 1.1618479251861573}, {"y": 0, "x": 1.3540369510650634}, {"y": 0, "x": 1.5462259769439697}, {"y": 2, "x": 1.738415002822876}], "key": "neutron.add_interface_router (4)", "view": "Rice Rule"}, {"disabled": 14, "values": [{"y": 2, "x": 1.0579991340637207}, {"y": 1, "x": 1.2395153045654297}, {"y": 1, "x": 1.4210314750671387}, {"y": 4, "x": 1.6025476455688477}, {"y": 2, "x": 1.7840638160705566}], "key": "neutron.create_router (5)", "view": "Rice Rule"}, {"disabled": 15, "values": [{"y": 3, "x": 0.8023856163024903}, {"y": 1, "x": 0.9373632431030273}, {"y": 1, "x": 1.0723408699035644}, {"y": 4, "x": 1.2073184967041015}, {"y": 1, "x": 1.3422961235046387}], "key": "neutron.add_interface_router (5)", "view": "Rice Rule"}, {"disabled": 16, "values": [{"y": 4, "x": 0.11364483833312988}, {"y": 3, "x": 0.14616990089416504}, {"y": 1, "x": 0.1786949634552002}, {"y": 1, "x": 0.21122002601623535}, {"y": 1, "x": 0.2437450885772705}], "key": "neutron.list_routers", "view": "Rice Rule"}]], "views": [{"id": 0, "name": "Square Root Choice"}, {"id": 1, "name": "Sturges Formula"}, {"id": 2, "name": "Rice Rule"}]}}, "iterations": {"pie": [["success", 10], ["errors", 0]], "iter": [["duration", [[1, 13.11159086227417], [2, 12.637033224105835], [3, 14.482385158538818], [4, 15.72609806060791], [5, 13.293975830078125], [6, 13.361892938613892], [7, 13.637047052383423], [8, 15.911742925643921], [9, 16.588863134384155], [10, 14.954787969589233]]], ["idle_duration", [[1, 0.0], [2, 0.0], [3, 0.0], [4, 0.0], [5, 0.0], [6, 0.0], [7, 0.0], [8, 0.0], [9, 0.0], [10, 0.0]]]], "histogram": {"data": [[{"disabled": null, "values": [{"y": 4, "x": 13.624990701675415}, {"y": 2, "x": 14.612948179244995}, {"y": 1, "x": 15.600905656814575}, {"y": 3, "x": 16.588863134384155}], "key": "task", "view": "Square Root Choice"}], [{"disabled": null, "values": [{"y": 4, "x": 13.4273992061615}, {"y": 1, "x": 14.217765188217163}, {"y": 2, "x": 15.008131170272828}, {"y": 1, "x": 15.79849715232849}, {"y": 2, "x": 16.588863134384155}], "key": "task", "view": "Sturges Formula"}], [{"disabled": null, "values": [{"y": 4, "x": 13.4273992061615}, {"y": 1, "x": 14.217765188217163}, {"y": 2, "x": 15.008131170272828}, {"y": 1, "x": 15.79849715232849}, {"y": 2, "x": 16.588863134384155}], "key": "task", "view": "Rice Rule"}]], "views": [{"id": 0, "name": "Square Root Choice"}, {"id": 1, "name": "Sturges Formula"}, {"id": 2, "name": "Rice Rule"}]}}, "additive_output": [], "table": {"rows": [["neutron.create_network", 0.294, 0.495, 0.559, 0.586, 0.614, 0.461, "100.0%", 10], ["neutron.create_subnet", 0.419, 0.505, 0.593, 0.617, 0.64, 0.517, "100.0%", 10], ["neutron.create_subnet (2)", 0.352, 0.47, 0.734, 0.795, 0.857, 0.554, "100.0%", 10], ["neutron.create_subnet (3)", 0.376, 0.512, 0.714, 0.733, 0.751, 0.525, "100.0%", 10], ["neutron.create_subnet (4)", 0.343, 0.454, 0.724, 0.754, 0.783, 0.5, "100.0%", 10], ["neutron.create_subnet (5)", 0.339, 0.43, 0.532, 0.574, 0.617, 0.448, "100.0%", 10], ["neutron.create_router", 0.834, 1.303, 1.562, 1.801, 2.041, 1.283, "100.0%", 10], ["neutron.add_interface_router", 0.652, 0.915, 1.003, 1.005, 1.008, 0.896, "100.0%", 10], ["neutron.create_router (2)", 0.908, 1.109, 1.423, 1.47, 1.518, 1.166, "100.0%", 10], ["neutron.add_interface_router (2)", 0.821, 0.911, 1.071, 1.117, 1.164, 0.942, "100.0%", 10], ["neutron.create_router (3)", 0.926, 1.086, 1.645, 1.85, 2.056, 1.247, "100.0%", 10], ["neutron.add_interface_router (3)", 0.801, 0.871, 1.216, 1.358, 1.499, 0.988, "100.0%", 10], ["neutron.create_router (4)", 0.795, 1.182, 1.608, 1.865, 2.121, 1.278, "100.0%", 10], ["neutron.add_interface_router (4)", 0.777, 0.924, 1.625, 1.682, 1.738, 1.06, "100.0%", 10], ["neutron.create_router (5)", 0.876, 1.448, 1.735, 1.759, 1.784, 1.373, "100.0%", 10], ["neutron.add_interface_router (5)", 0.667, 1.048, 1.192, 1.267, 1.342, 0.992, "100.0%", 10], ["neutron.list_routers", 0.081, 0.131, 0.21, 0.227, 0.244, 0.137, "100.0%", 10], ["total", 12.637, 14.06, 15.979, 16.284, 16.589, 14.371, "100.0%", 10]], "cols": ["Action", "Min (sec)", "Median (sec)", "90%ile (sec)", "95%ile (sec)", "Max (sec)", "Avg (sec)", "Success", "Count"]}, "full_duration": 91.28697204589844, "config": "{\n  \"NeutronNetworks.create_and_list_routers\": [\n    {\n      \"runner\": {\n        \"type\": \"constant\", \n        \"concurrency\": 3, \n        \"times\": 10\n      }, \n      \"args\": {\n        \"network_create_args\": {}, \n        \"subnet_cidr_start\": \"1.1.0.0/30\", \n        \"subnets_per_network\": 5, \n        \"subnet_create_args\": {}, \n        \"router_create_args\": {}\n      }, \n      \"sla\": {\n        \"failure_rate\": {\n          \"max\": 0\n        }\n      }, \n      \"context\": {\n        \"users\": {\n          \"project_domain\": \"default\", \n          \"users_per_tenant\": 2, \n          \"tenants\": 4, \n          \"resource_management_workers\": 20, \n          \"user_domain\": \"default\"\n        }, \n        \"quotas\": {\n          \"neutron\": {\n            \"subnet\": -1, \n            \"network\": -1, \n            \"router\": -1\n          }\n        }\n      }\n    }\n  ]\n}", "sla": [{"criterion": "failure_rate", "detail": "Failure rate criteria 0.00% <= 0.00% <= 0.00% - Passed", "success": true}], "complete_output": [[], [], [], [], [], [], [], [], [], []], "cls": "NeutronNetworks"}, {"load_profile": [["parallel iterations", [[0.0, 0], [0.2454170090675354, 2.947928483488579], [0.4908340181350708, 3], [0.7362510272026063, 3], [0.9816680362701417, 3], [1.2270850453376771, 3], [1.4725020544052125, 3], [1.717919063472748, 3], [1.9633360725402833, 3], [2.208753081607819, 3], [2.4541700906753543, 3], [2.6995870997428897, 3], [2.945004108810425, 3], [3.1904211178779605, 3], [3.435838126945496, 3], [3.6812551360130312, 3], [3.9266721450805666, 3], [4.172089154148102, 3], [4.417506163215638, 3], [4.662923172283173, 3], [4.908340181350709, 3], [5.1537571904182435, 3], [5.399174199485779, 3], [5.644591208553314, 3], [5.89000821762085, 3], [6.135425226688385, 3], [6.380842235755921, 2.9130289096237267], [6.626259244823456, 2.9591879774506546], [6.871676253890992, 3], [7.117093262958527, 3], [7.3625102720260625, 3], [7.607927281093597, 3], [7.853344290161133, 3], [8.098761299228668, 3], [8.344178308296204, 3], [8.58959531736374, 3], [8.835012326431276, 3], [9.08042933549881, 3], [9.325846344566346, 3], [9.571263353633881, 3], [9.816680362701417, 3], [10.062097371768951, 3], [10.307514380836487, 3], [10.552931389904023, 3], [10.798348398971559, 3], [11.043765408039093, 3], [11.289182417106629, 3], [11.534599426174164, 3], [11.7800164352417, 3], [12.025433444309236, 3], [12.27085045337677, 2.9635518814090336], [12.516267462444306, 3], [12.761684471511842, 3], [13.007101480579378, 3], [13.252518489646912, 2.9719212119080245], [13.497935498714448, 2.9683480955324906], [13.743352507781983, 3], [13.98876951684952, 3], [14.234186525917053, 3], [14.479603534984589, 3], [14.725020544052125, 3], [14.97043755311966, 3], [15.215854562187195, 3], [15.46127157125473, 3], [15.706688580322266, 3], [15.952105589389802, 3], [16.197522598457336, 3], [16.442939607524874, 3], [16.688356616592408, 3], [16.933773625659942, 3], [17.17919063472748, 3], [17.424607643795014, 3], [17.67002465286255, 3], [17.915441661930085, 3], [18.16085867099762, 2.971106137237258], [18.406275680065157, 3], [18.65169268913269, 3], [18.897109698200225, 3], [19.142526707267763, 3], [19.387943716335297, 3], [19.633360725402834, 3], [19.87877773447037, 2.0427574921248817], [20.124194743537902, 2], [20.36961175260544, 1.3965551906390168], [20.615028761672974, 1], [20.86044577074051, 1], [21.105862779808046, 1], [21.35127978887558, 1], [21.596696797943117, 1], [21.84211380701065, 1], [22.087530816078186, 1], [22.332947825145723, 1], [22.578364834213257, 1], [22.823781843280795, 1], [23.06919885234833, 1], [23.314615861415863, 1], [23.5600328704834, 1], [23.805449879550935, 1], [24.050866888618472, 1], [24.296283897686006, 0.03921568627449767], [24.54170090675354, 0]]]], "errors": [], "name": "create_and_update_routers", "runner": "constant", "iterations_count": 10, "output_errors": [], "pos": "0", "load_duration": 24.06049108505249, "sla_success": true, "met": "create_and_update_routers", "atomic": {"pie": [["neutron.create_network", 0.41126236915588377], ["neutron.create_subnet", 0.48005406856536864], ["neutron.create_subnet (2)", 0.5007086038589478], ["neutron.create_router", 1.0895271062850953], ["neutron.add_interface_router", 0.9010499000549317], ["neutron.create_router (2)", 1.044784140586853], ["neutron.add_interface_router (2)", 0.9487566947937012], ["neutron.update_router", 0.54499831199646], ["neutron.update_router (2)", 0.4619776248931885]], "iter": [["neutron.create_network", [[1, 0.5137791633605957], [2, 0.49321508407592773], [3, 0.6022138595581055], [4, 0.3431129455566406], [5, 0.3048069477081299], [6, 0.34859299659729004], [7, 0.3549039363861084], [8, 0.4642188549041748], [9, 0.2994070053100586], [10, 0.38837289810180664]]], ["neutron.create_subnet", [[1, 0.4822208881378174], [2, 0.4114348888397217], [3, 0.4368469715118408], [4, 0.46510791778564453], [5, 0.4873850345611572], [6, 0.45709705352783203], [7, 0.5180189609527588], [8, 0.5369880199432373], [9, 0.405364990234375], [10, 0.6000759601593018]]], ["neutron.create_subnet (2)", [[1, 0.5091650485992432], [2, 0.47496700286865234], [3, 0.41267895698547363], [4, 0.5669248104095459], [5, 0.4722449779510498], [6, 0.5207312107086182], [7, 0.3777151107788086], [8, 0.7003319263458252], [9, 0.49653005599975586], [10, 0.4757969379425049]]], ["neutron.create_router", [[1, 1.2059509754180908], [2, 1.197303056716919], [3, 1.1746728420257568], [4, 1.116866111755371], [5, 1.1162049770355225], [6, 0.9790771007537842], [7, 1.0329859256744385], [8, 1.1911981105804443], [9, 0.9298529624938965], [10, 0.9511590003967285]]], ["neutron.add_interface_router", [[1, 0.8892190456390381], [2, 0.7816410064697266], [3, 0.7105600833892822], [4, 1.2440569400787354], [5, 0.8096380233764648], [6, 0.7105329036712646], [7, 0.8327450752258301], [8, 1.1677908897399902], [9, 0.909358024597168], [10, 0.9549570083618164]]], ["neutron.create_router (2)", [[1, 0.9375388622283936], [2, 1.003709077835083], [3, 1.1944050788879395], [4, 1.018036127090454], [5, 0.9570000171661377], [6, 1.3937091827392578], [7, 0.9605889320373535], [8, 0.9525220394134521], [9, 1.076828956604004], [10, 0.9535031318664551]]], ["neutron.add_interface_router (2)", [[1, 0.8637919425964355], [2, 1.1948678493499756], [3, 0.7146580219268799], [4, 1.1706700325012207], [5, 0.7613680362701416], [6, 1.0887658596038818], [7, 0.7331209182739258], [8, 1.1582632064819336], [9, 1.0114490985870361], [10, 0.790611982345581]]], ["neutron.update_router", [[1, 0.5499329566955566], [2, 0.545583963394165], [3, 0.5650830268859863], [4, 0.6898648738861084], [5, 0.43270111083984375], [6, 0.5398008823394775], [7, 0.5294649600982666], [8, 0.4573822021484375], [9, 0.7004570960998535], [10, 0.4397120475769043]]], ["neutron.update_router (2)", [[1, 0.3611299991607666], [2, 0.42955589294433594], [3, 0.45758700370788574], [4, 0.43393492698669434], [5, 0.5398571491241455], [6, 0.5510890483856201], [7, 0.5237901210784912], [8, 0.4439210891723633], [9, 0.46227002143859863], [10, 0.4166409969329834]]]], "histogram": {"data": [[{"disabled": 0, "values": [{"y": 5, "x": 0.3751087188720703}, {"y": 1, "x": 0.45081043243408203}, {"y": 3, "x": 0.5265121459960938}, {"y": 1, "x": 0.6022138595581055}], "key": "neutron.create_network", "view": "Square Root Choice"}, {"disabled": 1, "values": [{"y": 3, "x": 0.4540427327156067}, {"y": 4, "x": 0.5027204751968384}, {"y": 2, "x": 0.5513982176780701}, {"y": 1, "x": 0.6000759601593018}], "key": "neutron.create_subnet", "view": "Square Root Choice"}, {"disabled": 2, "values": [{"y": 2, "x": 0.45836931467056274}, {"y": 6, "x": 0.5390235185623169}, {"y": 1, "x": 0.619677722454071}, {"y": 1, "x": 0.7003319263458252}], "key": "neutron.create_subnet (2)", "view": "Square Root Choice"}, {"disabled": 3, "values": [{"y": 3, "x": 0.9988774657249451}, {"y": 1, "x": 1.0679019689559937}, {"y": 2, "x": 1.1369264721870422}, {"y": 4, "x": 1.2059509754180908}], "key": "neutron.create_router", "view": "Square Root Choice"}, {"disabled": 4, "values": [{"y": 5, "x": 0.8439139127731323}, {"y": 3, "x": 0.977294921875}, {"y": 0, "x": 1.1106759309768677}, {"y": 2, "x": 1.2440569400787354}], "key": "neutron.add_interface_router", "view": "Square Root Choice"}, {"disabled": 5, "values": [{"y": 7, "x": 1.0515814423561096}, {"y": 1, "x": 1.1656240224838257}, {"y": 1, "x": 1.2796666026115417}, {"y": 1, "x": 1.3937091827392578}], "key": "neutron.create_router (2)", "view": "Square Root Choice"}, {"disabled": 6, "values": [{"y": 4, "x": 0.8347104787826538}, {"y": 1, "x": 0.9547629356384277}, {"y": 1, "x": 1.0748153924942017}, {"y": 4, "x": 1.1948678493499756}], "key": "neutron.add_interface_router (2)", "view": "Square Root Choice"}, {"disabled": 7, "values": [{"y": 3, "x": 0.4996401071548462}, {"y": 5, "x": 0.5665791034698486}, {"y": 0, "x": 0.6335180997848511}, {"y": 2, "x": 0.7004570960998535}], "key": "neutron.update_router", "view": "Square Root Choice"}, {"disabled": 8, "values": [{"y": 1, "x": 0.40861976146698}, {"y": 4, "x": 0.45610952377319336}, {"y": 2, "x": 0.5035992860794067}, {"y": 3, "x": 0.5510890483856201}], "key": "neutron.update_router (2)", "view": "Square Root Choice"}], [{"disabled": 0, "values": [{"y": 5, "x": 0.359968376159668}, {"y": 1, "x": 0.42052974700927737}, {"y": 1, "x": 0.4810911178588867}, {"y": 2, "x": 0.5416524887084961}, {"y": 1, "x": 0.6022138595581055}], "key": "neutron.create_network", "view": "Sturges Formula"}, {"disabled": 1, "values": [{"y": 3, "x": 0.44430718421936033}, {"y": 3, "x": 0.4832493782043457}, {"y": 2, "x": 0.5221915721893311}, {"y": 1, "x": 0.5611337661743164}, {"y": 1, "x": 0.6000759601593018}], "key": "neutron.create_subnet", "view": "Sturges Formula"}, {"disabled": 2, "values": [{"y": 2, "x": 0.44223847389221194}, {"y": 4, "x": 0.5067618370056153}, {"y": 3, "x": 0.5712852001190185}, {"y": 0, "x": 0.6358085632324219}, {"y": 1, "x": 0.7003319263458252}], "key": "neutron.create_subnet (2)", "view": "Sturges Formula"}, {"disabled": 3, "values": [{"y": 3, "x": 0.9850725650787353}, {"y": 1, "x": 1.0402921676635741}, {"y": 0, "x": 1.0955117702484132}, {"y": 2, "x": 1.150731372833252}, {"y": 4, "x": 1.2059509754180908}], "key": "neutron.create_router", "view": "Sturges Formula"}, {"disabled": 4, "values": [{"y": 4, "x": 0.8172377109527588}, {"y": 3, "x": 0.9239425182342529}, {"y": 1, "x": 1.0306473255157471}, {"y": 0, "x": 1.1373521327972411}, {"y": 2, "x": 1.2440569400787354}], "key": "neutron.add_interface_router", "view": "Sturges Formula"}, {"disabled": 5, "values": [{"y": 7, "x": 1.0287729263305665}, {"y": 1, "x": 1.1200069904327392}, {"y": 1, "x": 1.2112410545349122}, {"y": 0, "x": 1.3024751186370849}, {"y": 1, "x": 1.3937091827392578}], "key": "neutron.create_router (2)", "view": "Sturges Formula"}, {"disabled": 6, "values": [{"y": 4, "x": 0.8106999874114991}, {"y": 1, "x": 0.9067419528961181}, {"y": 0, "x": 1.0027839183807372}, {"y": 2, "x": 1.0988258838653564}, {"y": 3, "x": 1.1948678493499756}], "key": "neutron.add_interface_router (2)", "view": "Sturges Formula"}, {"disabled": 7, "values": [{"y": 3, "x": 0.4862523078918457}, {"y": 2, "x": 0.5398035049438477}, {"y": 3, "x": 0.5933547019958496}, {"y": 0, "x": 0.6469058990478516}, {"y": 2, "x": 0.7004570960998535}], "key": "neutron.update_router", "view": "Sturges Formula"}, {"disabled": 8, "values": [{"y": 1, "x": 0.3991218090057373}, {"y": 3, "x": 0.437113618850708}, {"y": 3, "x": 0.47510542869567873}, {"y": 0, "x": 0.5130972385406494}, {"y": 3, "x": 0.5510890483856201}], "key": "neutron.update_router (2)", "view": "Sturges Formula"}], [{"disabled": 0, "values": [{"y": 5, "x": 0.359968376159668}, {"y": 1, "x": 0.42052974700927737}, {"y": 1, "x": 0.4810911178588867}, {"y": 2, "x": 0.5416524887084961}, {"y": 1, "x": 0.6022138595581055}], "key": "neutron.create_network", "view": "Rice Rule"}, {"disabled": 1, "values": [{"y": 3, "x": 0.44430718421936033}, {"y": 3, "x": 0.4832493782043457}, {"y": 2, "x": 0.5221915721893311}, {"y": 1, "x": 0.5611337661743164}, {"y": 1, "x": 0.6000759601593018}], "key": "neutron.create_subnet", "view": "Rice Rule"}, {"disabled": 2, "values": [{"y": 2, "x": 0.44223847389221194}, {"y": 4, "x": 0.5067618370056153}, {"y": 3, "x": 0.5712852001190185}, {"y": 0, "x": 0.6358085632324219}, {"y": 1, "x": 0.7003319263458252}], "key": "neutron.create_subnet (2)", "view": "Rice Rule"}, {"disabled": 3, "values": [{"y": 3, "x": 0.9850725650787353}, {"y": 1, "x": 1.0402921676635741}, {"y": 0, "x": 1.0955117702484132}, {"y": 2, "x": 1.150731372833252}, {"y": 4, "x": 1.2059509754180908}], "key": "neutron.create_router", "view": "Rice Rule"}, {"disabled": 4, "values": [{"y": 4, "x": 0.8172377109527588}, {"y": 3, "x": 0.9239425182342529}, {"y": 1, "x": 1.0306473255157471}, {"y": 0, "x": 1.1373521327972411}, {"y": 2, "x": 1.2440569400787354}], "key": "neutron.add_interface_router", "view": "Rice Rule"}, {"disabled": 5, "values": [{"y": 7, "x": 1.0287729263305665}, {"y": 1, "x": 1.1200069904327392}, {"y": 1, "x": 1.2112410545349122}, {"y": 0, "x": 1.3024751186370849}, {"y": 1, "x": 1.3937091827392578}], "key": "neutron.create_router (2)", "view": "Rice Rule"}, {"disabled": 6, "values": [{"y": 4, "x": 0.8106999874114991}, {"y": 1, "x": 0.9067419528961181}, {"y": 0, "x": 1.0027839183807372}, {"y": 2, "x": 1.0988258838653564}, {"y": 3, "x": 1.1948678493499756}], "key": "neutron.add_interface_router (2)", "view": "Rice Rule"}, {"disabled": 7, "values": [{"y": 3, "x": 0.4862523078918457}, {"y": 2, "x": 0.5398035049438477}, {"y": 3, "x": 0.5933547019958496}, {"y": 0, "x": 0.6469058990478516}, {"y": 2, "x": 0.7004570960998535}], "key": "neutron.update_router", "view": "Rice Rule"}, {"disabled": 8, "values": [{"y": 1, "x": 0.3991218090057373}, {"y": 3, "x": 0.437113618850708}, {"y": 3, "x": 0.47510542869567873}, {"y": 0, "x": 0.5130972385406494}, {"y": 3, "x": 0.5510890483856201}], "key": "neutron.update_router (2)", "view": "Rice Rule"}]], "views": [{"id": 0, "name": "Square Root Choice"}, {"id": 1, "name": "Sturges Formula"}, {"id": 2, "name": "Rice Rule"}]}}, "iterations": {"pie": [["success", 10], ["errors", 0]], "iter": [["duration", [[1, 6.315191030502319], [2, 6.534986972808838], [3, 6.270997047424316], [4, 7.050019979476929], [5, 5.882814884185791], [6, 6.5911688804626465], [7, 5.865167140960693], [8, 7.07417106628418], [9, 6.294438123703003], [10, 5.972071886062622]]], ["idle_duration", [[1, 0.0], [2, 0.0], [3, 0.0], [4, 0.0], [5, 0.0], [6, 0.0], [7, 0.0], [8, 0.0], [9, 0.0], [10, 0.0]]]], "histogram": {"data": [[{"disabled": null, "values": [{"y": 3, "x": 6.167418122291565}, {"y": 3, "x": 6.4696691036224365}, {"y": 2, "x": 6.771920084953308}, {"y": 2, "x": 7.07417106628418}], "key": "task", "view": "Square Root Choice"}], [{"disabled": null, "values": [{"y": 3, "x": 6.106967926025391}, {"y": 3, "x": 6.348768711090088}, {"y": 1, "x": 6.590569496154785}, {"y": 1, "x": 6.832370281219482}, {"y": 2, "x": 7.07417106628418}], "key": "task", "view": "Sturges Formula"}], [{"disabled": null, "values": [{"y": 3, "x": 6.106967926025391}, {"y": 3, "x": 6.348768711090088}, {"y": 1, "x": 6.590569496154785}, {"y": 1, "x": 6.832370281219482}, {"y": 2, "x": 7.07417106628418}], "key": "task", "view": "Rice Rule"}]], "views": [{"id": 0, "name": "Square Root Choice"}, {"id": 1, "name": "Sturges Formula"}, {"id": 2, "name": "Rice Rule"}]}}, "additive_output": [], "table": {"rows": [["neutron.create_network", 0.299, 0.372, 0.523, 0.562, 0.602, 0.411, "100.0%", 10], ["neutron.create_subnet", 0.405, 0.474, 0.543, 0.572, 0.6, 0.48, "100.0%", 10], ["neutron.create_subnet (2)", 0.378, 0.486, 0.58, 0.64, 0.7, 0.501, "100.0%", 10], ["neutron.create_router", 0.93, 1.117, 1.198, 1.202, 1.206, 1.09, "100.0%", 10], ["neutron.add_interface_router", 0.711, 0.861, 1.175, 1.21, 1.244, 0.901, "100.0%", 10], ["neutron.create_router (2)", 0.938, 0.982, 1.214, 1.304, 1.394, 1.045, "100.0%", 10], ["neutron.add_interface_router (2)", 0.715, 0.938, 1.173, 1.184, 1.195, 0.949, "100.0%", 10], ["neutron.update_router", 0.433, 0.543, 0.691, 0.696, 0.7, 0.545, "100.0%", 10], ["neutron.update_router (2)", 0.361, 0.451, 0.541, 0.546, 0.551, 0.462, "100.0%", 10], ["total", 5.865, 6.305, 7.052, 7.063, 7.074, 6.385, "100.0%", 10]], "cols": ["Action", "Min (sec)", "Median (sec)", "90%ile (sec)", "95%ile (sec)", "Max (sec)", "Avg (sec)", "Success", "Count"]}, "full_duration": 42.32140278816223, "config": "{\n  \"NeutronNetworks.create_and_update_routers\": [\n    {\n      \"runner\": {\n        \"type\": \"constant\", \n        \"concurrency\": 3, \n        \"times\": 10\n      }, \n      \"args\": {\n        \"subnets_per_network\": 2, \n        \"router_create_args\": {}, \n        \"network_create_args\": {}, \n        \"subnet_create_args\": {}, \n        \"router_update_args\": {\n          \"name\": \"_router_updated\", \n          \"admin_state_up\": false\n        }, \n        \"subnet_cidr_start\": \"1.1.0.0/30\"\n      }, \n      \"sla\": {\n        \"failure_rate\": {\n          \"max\": 0\n        }\n      }, \n      \"context\": {\n        \"users\": {\n          \"project_domain\": \"default\", \n          \"users_per_tenant\": 1, \n          \"tenants\": 3, \n          \"resource_management_workers\": 20, \n          \"user_domain\": \"default\"\n        }, \n        \"quotas\": {\n          \"neutron\": {\n            \"subnet\": -1, \n            \"port\": -1, \n            \"network\": -1, \n            \"router\": -1\n          }\n        }\n      }\n    }\n  ]\n}", "sla": [{"criterion": "failure_rate", "detail": "Failure rate criteria 0.00% <= 0.00% <= 0.00% - Passed", "success": true}], "complete_output": [[], [], [], [], [], [], [], [], [], []], "cls": "NeutronNetworks"}, {"load_profile": [["parallel iterations", [[0.0, 0], [1.3253403456687929, 2.9783884535677574], [2.6506806913375858, 3], [3.9760210370063787, 3], [5.3013613826751715, 3], [6.626701728343964, 3], [7.952042074012757, 3], [9.277382419681551, 3], [10.602722765350343, 3], [11.928063111019135, 3], [13.253403456687929, 3], [14.578743802356723, 3], [15.904084148025515, 3], [17.229424493694307, 3], [18.554764839363102, 3], [19.880105185031894, 3], [21.205445530700686, 3], [22.530785876369478, 3], [23.85612622203827, 3], [25.181466567707066, 3], [26.506806913375858, 3], [27.83214725904465, 3], [29.157487604713445, 3], [30.482827950382237, 3], [31.80816829605103, 3], [33.13350864171982, 3], [34.45884898738861, 2.9802262337364964], [35.784189333057405, 2.9886685813597333], [37.109529678726204, 3], [38.434870024394996, 3], [39.76021037006379, 3], [41.08555071573258, 3], [42.41089106140137, 3], [43.736231407070164, 3], [45.061571752738956, 3], [46.38691209840775, 3], [47.71225244407654, 3], [49.03759278974534, 3], [50.36293313541413, 3], [51.68827348108292, 3], [53.013613826751715, 3], [54.33895417242051, 3], [55.6642945180893, 3], [56.98963486375809, 3], [58.31497520942689, 3], [59.64031555509568, 3], [60.965655900764474, 3], [62.29099624643327, 3], [63.61633659210206, 3], [64.94167693777085, 3], [66.26701728343964, 2.972356483438739], [67.59235762910843, 3], [68.91769797477723, 3], [70.24303832044602, 3], [71.56837866611481, 3], [72.8937190117836, 3], [74.21905935745241, 3], [75.5443997031212, 3], [76.86974004878999, 3], [78.19508039445878, 3], [79.52042074012758, 3], [80.84576108579637, 3], [82.17110143146516, 3], [83.49644177713395, 3], [84.82178212280274, 3], [86.14712246847154, 3], [87.47246281414033, 3], [88.79780315980912, 3], [90.12314350547791, 3], [91.4484838511467, 3], [92.7738241968155, 3], [94.09916454248429, 3], [95.42450488815308, 3], [96.74984523382189, 3], [98.07518557949068, 2.99138945303673], [99.40052592515947, 2.398654890614875], [100.72586627082826, 1.590864045444642], [102.05120661649705, 1], [103.37654696216585, 1], [104.70188730783464, 1], [106.02722765350343, 1], [107.35256799917222, 1], [108.67790834484101, 1], [110.0032486905098, 1], [111.3285890361786, 1], [112.65392938184739, 1], [113.97926972751618, 1], [115.30461007318497, 1], [116.62995041885378, 1], [117.95529076452257, 1], [119.28063111019136, 1], [120.60597145586016, 1], [121.93131180152895, 1], [123.25665214719774, 1], [124.58199249286653, 1], [125.90733283853532, 1], [127.23267318420412, 1], [128.5580135298729, 1], [129.8833538755417, 1], [131.2086942212105, 0.03921568627449926], [132.53403456687928, 0]]]], "errors": [], "name": "boot_and_delete_server_with_secgroups", "runner": "constant", "iterations_count": 10, "output_errors": [], "pos": "0", "load_duration": 129.93532800674438, "sla_success": true, "met": "boot_and_delete_server_with_secgroups", "atomic": {"pie": [["neutron.create_10_security_groups", 1.4732608079910279], ["neutron.create_100_rules", 11.566508841514587], ["nova.boot_server", 13.608568382263183], ["neutron.get_attached_security_groups", 0.25526330471038816], ["nova.delete_server", 4.829210829734802], ["neutron.delete_10_security_groups", 1.126232957839966]], "iter": [["neutron.create_10_security_groups", [[1, 1.5192971229553223], [2, 1.525757074356079], [3, 1.771785020828247], [4, 1.3182909488677979], [5, 1.4820659160614014], [6, 1.23978590965271], [7, 1.404961109161377], [8, 1.4638450145721436], [9, 1.3801910877227783], [10, 1.6266288757324219]]], ["neutron.create_100_rules", [[1, 12.26851201057434], [2, 12.209776878356934], [3, 11.966984033584595], [4, 11.403289794921875], [5, 11.194551944732666], [6, 11.484185934066772], [7, 11.38211703300476], [8, 11.63236689567566], [9, 11.639567852020264], [10, 10.483736038208008]]], ["nova.boot_server", [[1, 13.635114908218384], [2, 14.741966962814331], [3, 13.862391948699951], [4, 13.48660397529602], [5, 13.582844972610474], [6, 12.421429872512817], [7, 13.675572156906128], [8, 14.778931140899658], [9, 11.930830955505371], [10, 13.969996929168701]]], ["neutron.get_attached_security_groups", [[1, 0.2359330654144287], [2, 0.1999988555908203], [3, 0.2384648323059082], [4, 0.22549104690551758], [5, 0.23284912109375], [6, 0.24729108810424805], [7, 0.2533731460571289], [8, 0.3213989734649658], [9, 0.34967589378356934], [10, 0.24815702438354492]]], ["nova.delete_server", [[1, 4.762012004852295], [2, 4.7882490158081055], [3, 4.802253007888794], [4, 4.926110029220581], [5, 4.809858083724976], [6, 4.795583009719849], [7, 4.911746025085449], [8, 4.794991970062256], [9, 4.807505130767822], [10, 4.8938000202178955]]], ["neutron.delete_10_security_groups", [[1, 1.0358200073242188], [2, 1.1191461086273193], [3, 1.104215145111084], [4, 1.3168878555297852], [5, 1.1614608764648438], [6, 1.137232780456543], [7, 1.0256788730621338], [8, 1.0291948318481445], [9, 1.0295541286468506], [10, 1.3031389713287354]]]], "histogram": {"data": [[{"disabled": 0, "values": [{"y": 2, "x": 1.3727856874465942}, {"y": 4, "x": 1.5057854652404785}, {"y": 3, "x": 1.6387852430343628}, {"y": 1, "x": 1.771785020828247}], "key": "neutron.create_10_security_groups", "view": "Square Root Choice"}, {"disabled": 1, "values": [{"y": 1, "x": 10.929930031299591}, {"y": 1, "x": 11.376124024391174}, {"y": 5, "x": 11.822318017482758}, {"y": 3, "x": 12.26851201057434}], "key": "neutron.create_100_rules", "view": "Square Root Choice"}, {"disabled": 2, "values": [{"y": 2, "x": 12.642856001853943}, {"y": 0, "x": 13.354881048202515}, {"y": 6, "x": 14.066906094551086}, {"y": 2, "x": 14.778931140899658}], "key": "nova.boot_server", "view": "Square Root Choice"}, {"disabled": 3, "values": [{"y": 4, "x": 0.23741811513900757}, {"y": 4, "x": 0.2748373746871948}, {"y": 0, "x": 0.3122566342353821}, {"y": 2, "x": 0.34967589378356934}], "key": "neutron.get_attached_security_groups", "view": "Square Root Choice"}, {"disabled": 4, "values": [{"y": 5, "x": 4.8030365109443665}, {"y": 2, "x": 4.844061017036438}, {"y": 0, "x": 4.8850855231285095}, {"y": 3, "x": 4.926110029220581}], "key": "nova.delete_server", "view": "Square Root Choice"}, {"disabled": 5, "values": [{"y": 4, "x": 1.0984811186790466}, {"y": 4, "x": 1.1712833642959595}, {"y": 0, "x": 1.2440856099128723}, {"y": 2, "x": 1.3168878555297852}], "key": "neutron.delete_10_security_groups", "view": "Square Root Choice"}], [{"disabled": 0, "values": [{"y": 2, "x": 1.3461857318878174}, {"y": 2, "x": 1.452585554122925}, {"y": 4, "x": 1.5589853763580321}, {"y": 1, "x": 1.6653851985931396}, {"y": 1, "x": 1.771785020828247}], "key": "neutron.create_10_security_groups", "view": "Sturges Formula"}, {"disabled": 1, "values": [{"y": 1, "x": 10.840691232681275}, {"y": 1, "x": 11.197646427154542}, {"y": 3, "x": 11.554601621627807}, {"y": 2, "x": 11.911556816101074}, {"y": 3, "x": 12.26851201057434}], "key": "neutron.create_100_rules", "view": "Sturges Formula"}, {"disabled": 2, "values": [{"y": 2, "x": 12.500450992584229}, {"y": 0, "x": 13.070071029663087}, {"y": 3, "x": 13.639691066741943}, {"y": 3, "x": 14.2093111038208}, {"y": 2, "x": 14.778931140899658}], "key": "nova.boot_server", "view": "Sturges Formula"}, {"disabled": 3, "values": [{"y": 2, "x": 0.2299342632293701}, {"y": 6, "x": 0.2598696708679199}, {"y": 0, "x": 0.28980507850646975}, {"y": 0, "x": 0.31974048614501954}, {"y": 2, "x": 0.34967589378356934}], "key": "neutron.get_attached_security_groups", "view": "Sturges Formula"}, {"disabled": 4, "values": [{"y": 2, "x": 4.794831609725952}, {"y": 5, "x": 4.8276512145996096}, {"y": 0, "x": 4.860470819473266}, {"y": 0, "x": 4.893290424346924}, {"y": 3, "x": 4.926110029220581}], "key": "nova.delete_server", "view": "Sturges Formula"}, {"disabled": 5, "values": [{"y": 4, "x": 1.083920669555664}, {"y": 3, "x": 1.1421624660491942}, {"y": 1, "x": 1.2004042625427247}, {"y": 0, "x": 1.258646059036255}, {"y": 2, "x": 1.3168878555297852}], "key": "neutron.delete_10_security_groups", "view": "Sturges Formula"}], [{"disabled": 0, "values": [{"y": 2, "x": 1.3461857318878174}, {"y": 2, "x": 1.452585554122925}, {"y": 4, "x": 1.5589853763580321}, {"y": 1, "x": 1.6653851985931396}, {"y": 1, "x": 1.771785020828247}], "key": "neutron.create_10_security_groups", "view": "Rice Rule"}, {"disabled": 1, "values": [{"y": 1, "x": 10.840691232681275}, {"y": 1, "x": 11.197646427154542}, {"y": 3, "x": 11.554601621627807}, {"y": 2, "x": 11.911556816101074}, {"y": 3, "x": 12.26851201057434}], "key": "neutron.create_100_rules", "view": "Rice Rule"}, {"disabled": 2, "values": [{"y": 2, "x": 12.500450992584229}, {"y": 0, "x": 13.070071029663087}, {"y": 3, "x": 13.639691066741943}, {"y": 3, "x": 14.2093111038208}, {"y": 2, "x": 14.778931140899658}], "key": "nova.boot_server", "view": "Rice Rule"}, {"disabled": 3, "values": [{"y": 2, "x": 0.2299342632293701}, {"y": 6, "x": 0.2598696708679199}, {"y": 0, "x": 0.28980507850646975}, {"y": 0, "x": 0.31974048614501954}, {"y": 2, "x": 0.34967589378356934}], "key": "neutron.get_attached_security_groups", "view": "Rice Rule"}, {"disabled": 4, "values": [{"y": 2, "x": 4.794831609725952}, {"y": 5, "x": 4.8276512145996096}, {"y": 0, "x": 4.860470819473266}, {"y": 0, "x": 4.893290424346924}, {"y": 3, "x": 4.926110029220581}], "key": "nova.delete_server", "view": "Rice Rule"}, {"disabled": 5, "values": [{"y": 4, "x": 1.083920669555664}, {"y": 3, "x": 1.1421624660491942}, {"y": 1, "x": 1.2004042625427247}, {"y": 0, "x": 1.258646059036255}, {"y": 2, "x": 1.3168878555297852}], "key": "neutron.delete_10_security_groups", "view": "Rice Rule"}]], "views": [{"id": 0, "name": "Square Root Choice"}, {"id": 1, "name": "Sturges Formula"}, {"id": 2, "name": "Rice Rule"}]}}, "iterations": {"pie": [["success", 10], ["errors", 0]], "iter": [["duration", [[1, 33.459319829940796], [2, 34.58640098571777], [3, 33.74786400794983], [4, 32.67776703834534], [5, 32.46466612815857], [6, 31.32668709754944], [7, 32.65475606918335], [8, 34.02189898490906], [9, 31.138694047927856], [10, 32.52651810646057]]], ["idle_duration", [[1, 0.0], [2, 0.0], [3, 0.0], [4, 0.0], [5, 0.0], [6, 0.0], [7, 0.0], [8, 0.0], [9, 0.0], [10, 0.0]]]], "histogram": {"data": [[{"disabled": null, "values": [{"y": 2, "x": 32.000620782375336}, {"y": 4, "x": 32.862547516822815}, {"y": 1, "x": 33.724474251270294}, {"y": 3, "x": 34.58640098571777}], "key": "task", "view": "Square Root Choice"}], [{"disabled": null, "values": [{"y": 2, "x": 31.82823543548584}, {"y": 1, "x": 32.517776823043825}, {"y": 3, "x": 33.207318210601805}, {"y": 2, "x": 33.89685959815979}, {"y": 2, "x": 34.58640098571777}], "key": "task", "view": "Sturges Formula"}], [{"disabled": null, "values": [{"y": 2, "x": 31.82823543548584}, {"y": 1, "x": 32.517776823043825}, {"y": 3, "x": 33.207318210601805}, {"y": 2, "x": 33.89685959815979}, {"y": 2, "x": 34.58640098571777}], "key": "task", "view": "Rice Rule"}]], "views": [{"id": 0, "name": "Square Root Choice"}, {"id": 1, "name": "Sturges Formula"}, {"id": 2, "name": "Rice Rule"}]}}, "additive_output": [], "table": {"rows": [["neutron.create_10_security_groups", 1.24, 1.473, 1.641, 1.706, 1.772, 1.473, "100.0%", 10], ["neutron.create_100_rules", 10.484, 11.558, 12.216, 12.242, 12.269, 11.567, "100.0%", 10], ["nova.boot_server", 11.931, 13.655, 14.746, 14.762, 14.779, 13.609, "100.0%", 10], ["neutron.get_attached_security_groups", 0.2, 0.243, 0.324, 0.337, 0.35, 0.255, "100.0%", 10], ["nova.delete_server", 4.762, 4.805, 4.913, 4.92, 4.926, 4.829, "100.0%", 10], ["neutron.delete_10_security_groups", 1.026, 1.112, 1.305, 1.311, 1.317, 1.126, "100.0%", 10], ["total", 31.139, 32.666, 34.078, 34.332, 34.586, 32.86, "100.0%", 10]], "cols": ["Action", "Min (sec)", "Median (sec)", "90%ile (sec)", "95%ile (sec)", "Max (sec)", "Avg (sec)", "Success", "Count"]}, "full_duration": 177.8376669883728, "config": "{\n  \"NeutronSecGroupPlugin.boot_and_delete_server_with_secgroups\": [\n    {\n      \"runner\": {\n        \"type\": \"constant\", \n        \"concurrency\": 3, \n        \"times\": 10\n      }, \n      \"args\": {\n        \"rules_per_security_group\": 10, \n        \"flavor\": {\n          \"name\": \"m1.nano\"\n        }, \n        \"image\": {\n          \"name\": \"TestVM\"\n        }, \n        \"security_group_count\": 10\n      }, \n      \"sla\": {\n        \"failure_rate\": {\n          \"max\": 0\n        }\n      }, \n      \"context\": {\n        \"users\": {\n          \"project_domain\": \"default\", \n          \"users_per_tenant\": 2, \n          \"tenants\": 5, \n          \"resource_management_workers\": 20, \n          \"user_domain\": \"default\"\n        }, \n        \"quotas\": {\n          \"neutron\": {\n            \"security_group\": -1, \n            \"subnet\": -1, \n            \"security_group_rule\": -1, \n            \"port\": -1, \n            \"network\": -1\n          }, \n          \"nova\": {\n            \"ram\": -1, \n            \"floating_ips\": -1, \n            \"security_group_rules\": -1, \n            \"instances\": -1, \n            \"cores\": -1, \n            \"security_groups\": -1\n          }\n        }, \n        \"network\": {\n          \"network_create_args\": {\n            \"tenant_id\": \"3705ab2d4f9b41e483d1a1e81d29c80f\", \n            \"name\": \"c_rally_7ff3c0c5_KcR6M960\"\n          }, \n          \"subnets_per_network\": 1, \n          \"start_cidr\": \"1.0.0.0/22\", \n          \"networks_per_tenant\": 1\n        }\n      }\n    }\n  ]\n}", "sla": [{"criterion": "failure_rate", "detail": "Failure rate criteria 0.00% <= 0.00% <= 0.00% - Passed", "success": true}], "complete_output": [[], [], [], [], [], [], [], [], [], []], "cls": "NeutronSecGroupPlugin"}];
+
+      $scope.location = {
+        /* #/path/hash/sub/div */
+        normalize: function(str) {
+          /* Remove unwanted characters from string */
+          if (typeof str !== "string") { return "" }
+          return str.replace(/[^\w\-\.]/g, "")
+        },
+        uri: function(obj) {
+          /* Getter/Setter */
+          if (! obj) {
+            var uri = {path: "", hash: "", sub: "", div: ""};
+            var arr = ["div", "sub", "hash", "path"];
+            angular.forEach($location.url().split("/"), function(value){
+              var v = $scope.location.normalize(value);
+              if (v) { var k = arr.pop(); if (k) { this[k] = v }}
+            }, uri);
+            return uri
+          }
+          var arr = [obj.path, obj.hash, obj.sub, obj.div], res = [];
+          for (var i in arr) { if (! arr[i]) { break }; res.push(arr[i]) }
+          return $location.url("/" + res.join("/"))
+        },
+        path: function(path, hash) {
+          /* Getter/Setter */
+          if (path === "") { return this.uri({}) }
+          path = this.normalize(path);
+          var uri = this.uri();
+          if (! path) { return uri.path }
+          uri.path = path;
+          var _hash = this.normalize(hash);
+          if (_hash || hash === "") { uri.hash = _hash }
+          return this.uri(uri)
+        },
+        hash: function(hash) {
+          /* Getter/Setter */
+          if (hash) { this.uri({path:this.uri().path, hash:hash}) }
+          return this.uri().hash
+        }
+      }
+
+      /* Dispatch */
+
+      $scope.route = function(uri) {
+        if (! $scope.scenarios_map) { return }
+        if (uri.path in $scope.scenarios_map) {
+          $scope.view = {is_scenario:true};
+          $scope.scenario = $scope.scenarios_map[uri.path];
+          $scope.nav_idx = $scope.nav_map[uri.path];
+          if ($scope.scenario.iterations.histogram.views.length) {
+            $scope.mainHistogram = $scope.scenario.iterations.histogram.views[0]
+          }
+          if ($scope.scenario.atomic.histogram.views.length) {
+            $scope.atomicHistogram = $scope.scenario.atomic.histogram.views[0]
+          }
+          $scope.outputIteration = 0;
+          $scope.showTab(uri);
+        } else {
+          $scope.scenario = null;
+          if (uri.path === "source") {
+            $scope.view = {is_source:true}
+          } else {
+            $scope.view = {is_main:true}
+          }
+        }
+      }
+
+      $scope.$on("$locationChangeSuccess", function (event, newUrl, oldUrl) {
+        $scope.route($scope.location.uri())
+      });
+
+      $scope.showNav = function(nav_idx) { $scope.nav_idx = nav_idx }
+
+      /* Tabs */
+
+      $scope.tabs = [
+        {
+          id: "overview",
+          name: "Overview",
+          visible: function(){ return !! $scope.scenario.iterations.pie.length }
+        },{
+          id: "details",
+          name: "Details",
+          visible: function(){ return !! $scope.scenario.atomic.pie.length }
+        },{
+          id: "output",
+          name: "Scenario Data",
+          visible: function(){ return $scope.scenario.output.length }
+        },{
+          id: "failures",
+          name: "Failures",
+          visible: function(){ return !! $scope.scenario.errors.length }
+        },{
+          id: "task",
+          name: "Input task",
+          visible: function(){ return !! $scope.scenario.config }
+        }
+      ];
+      $scope.tabs_map = {};
+      angular.forEach($scope.tabs,
+                      function(tab){ this[tab.id] = tab }, $scope.tabs_map);
+
+      $scope.showTab = function(uri) {
+        $scope.tab = uri.hash in $scope.tabs_map ? uri.hash : "overview";
+        if (! $scope.scenario.output) {
+          var has_additive = !! $scope.scenario.additive_output.length;
+          var has_complete = !! ($scope.scenario.complete_output.length
+                                 && $scope.scenario.complete_output[0].length);
+          $scope.scenario.output = {
+            has_additive: has_additive,
+            has_complete: has_complete,
+            length: has_additive + has_complete,
+            active: has_additive ? "additive" : (has_complete ? "complete" : "")
+          }
+        }
+        if (uri.hash === "output") {
+          if (uri.sub && $scope.scenario.output["has_" + uri.sub]) {
+            $scope.scenario.output.active = uri.sub
+          }
+        }
+      }
+
+      for (var i in $scope.tabs) {
+        if ($scope.tabs[i].id === $scope.location.hash()) {
+          $scope.tab = $scope.tabs[i].id
+        }
+        $scope.tabs[i].isVisible = function() {
+          if ($scope.scenario) {
+            if (this.visible()) { return true }
+            /* If tab should be hidden but is selected - show another one */
+            if (this.id === $scope.location.hash()) {
+              for (var i in $scope.tabs) {
+                var tab = $scope.tabs[i];
+                if (tab.id != this.id && tab.visible()) {
+                  $scope.tab = tab.id;
+                  return false
+                }
+              }
+            }
+          }
+          return false
+        }
+      }
+
+      $scope.showError = function(message) {
+          return (function (e) {
+            e.style.display = "block";
+            e.textContent = message
+          })(document.getElementById("page-error"))
+      }
+
+      /* Initialization */
+
+      angular.element(document).ready(function(){
+        if (! $scope.scenarios.length) {
+          return $scope.showError("No data...")
+        }
+
+        /* Compose data mapping */
+
+        $scope.nav = [];
+        $scope.nav_map = {};
+        $scope.scenarios_map = {};
+        var met = [], itr = 0, cls_idx = 0;
+        var prev_cls, prev_met;
+
+        for (var idx in $scope.scenarios) {
+          var sc = $scope.scenarios[idx];
+          if (! prev_cls) {
+            prev_cls = sc.cls
+          }
+          else if (prev_cls !== sc.cls) {
+            $scope.nav.push({cls:prev_cls, met:met, idx:cls_idx});
+            prev_cls = sc.cls;
+            met = [];
+            itr = 1;
+            cls_idx += 1
+          }
+
+          if (prev_met !== sc.met) { itr = 1 };
+          sc.ref = $scope.location.normalize(sc.cls+"."+sc.met+(itr > 1 ? "-"+itr : ""));
+          $scope.scenarios_map[sc.ref] = sc;
+          $scope.nav_map[sc.ref] = cls_idx;
+          met.push({name:sc.name, itr:itr, idx:idx, ref:sc.ref});
+          prev_met = sc.met;
+          itr += 1;
+        }
+
+        if (met.length) {
+          $scope.nav.push({cls:prev_cls, met:met, idx:cls_idx})
+        }
+
+        /* Start */
+
+        var uri = $scope.location.uri();
+        uri.path = $scope.location.path();
+        $scope.route(uri);
+        $scope.$digest()
+      })
+    };
+
+    if (typeof angular === "object") {
+      angular.module("App", [])
+        .controller("Controller", ["$scope", "$location", controllerFunction])
+        .directive("widget", widgetDirective)
+    }
+
+
+</script>
+  <style>
+    body { margin:0; padding:0 0 50px; font-size:14px; font-family:Helvetica,Arial,sans-serif }
+    a, a:active, a:focus, a:visited { text-decoration:none; outline:none }
+    p { margin:0; padding:5px 0 }
+    p.thesis { padding:10px 0 }
+    h1 { color:#666; margin:0 0 20px; font-size:30px; font-weight:normal }
+    h2, .h2 { color:#666; margin:24px 0 6px; font-size:25px; font-weight:normal }
+    h3, .h3 { color:#777; margin:12px 0 4px; font-size:18px; font-weight:normal }
+    table { border-collapse:collapse; border-spacing:0; width:100%; font-size:12px; margin:0 0 10px }
+    table th { text-align:left; padding:8px; color:#000; border:2px solid #ddd; border-width:0 0 2px 0 }
+    table th.sortable { cursor:pointer }
+    table td { text-align:left; border-top:1px solid #ddd; padding:8px; color:#333 }
+    table.compact td { padding:4px 8px }
+    table.striped tr:nth-child(odd) td { background:#f9f9f9 }
+    table.linked tbody tr:hover { background:#f9f9f9; cursor:pointer }
+    .rich, .rich td { font-weight:bold }
+    .code { padding:10px; font-size:13px; color:#333; background:#f6f6f6; border:1px solid #e5e5e5; border-radius:4px }
+
+    .header { text-align:left; background:#333; font-size:18px; padding:13px 0; margin-bottom:20px; color:#fff; background-image:linear-gradient(to bottom, #444 0px, #222 100%) }
+    .header a, .header a:visited, .header a:focus { color:#999 }
+
+    .notify-error { padding:5px 10px; background:#fee; color:red }
+    .status-skip, .status-skip td { color:grey }
+    .status-pass, .status-pass td { color:green }
+    .status-fail, .status-fail td { color:red }
+    .capitalize { text-transform:capitalize }
+    
+    .aside { margin:0 20px 0 0; display:block; width:255px; float:left }
+    .aside > div { margin-bottom: 15px }
+    .aside > div div:first-child { border-top-left-radius:4px; border-top-right-radius:4px }
+    .aside > div div:last-child { border-bottom-left-radius:4px; border-bottom-right-radius:4px }
+    .navcls { color:#678; background:#eee; border:1px solid #ddd; margin-bottom:-1px; display:block; padding:8px 9px; font-weight:bold; text-align:left; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; cursor:pointer }
+    .navcls.expanded { color:#469 }
+    .navcls.active { background:#428bca; background-image:linear-gradient(to bottom, #428bca 0px, #3278b3 100%); border-color:#3278b3; color:#fff }
+    .navmet { color:#555; background:#fff; border:1px solid #ddd; font-size:12px; display:block; margin-bottom:-1px; padding:8px 10px; text-align:left; text-overflow:ellipsis; white-space:nowrap; overflow:hidden; cursor:pointer }
+    .navmet:hover { background:#f8f8f8 }
+    .navmet.active, .navmet.active:hover { background:#428bca; background-image:linear-gradient(to bottom, #428bca 0px, #3278b3 100%); border-color:#3278b3; color:#fff }
+
+    .tabs { list-style:outside none none; margin:0 0 5px; padding:0; border-bottom:1px solid #ddd }
+    .tabs:after { clear:both }
+    .tabs li { float:left; margin-bottom:-1px; display:block; position:relative }
+    .tabs li div { border:1px solid transparent; border-radius:4px 4px 0 0; line-height:20px; margin-right:2px; padding:10px 15px; color:#428bca }
+    .tabs li div:hover { border-color:#eee #eee #ddd; background:#eee; cursor:pointer; }
+    .tabs li.active div { background:#fff; border-color:#ddd #ddd transparent; border-style:solid; border-width:1px; color:#555; cursor:default }
+    .failure-mesg { color:#900 }
+    .failure-trace { color:#333; white-space:pre; overflow:auto }
+
+    .link { color:#428BCA; padding:5px 15px 5px 5px; text-decoration:underline; cursor:pointer }
+    .link.active { color:#333; text-decoration:none }
+
+    .chart { padding:0; margin:0; width:890px }
+    .chart svg { height:300px; padding:0; margin:0; overflow:visible; float:right }
+    .chart.lower svg { height:180px }
+    .chart-label-y { font-size:12px; position:relative; top:5px; padding:0; margin:0 }
+
+    .expandable { cursor:pointer }
+    .clearfix { clear:both }
+    .sortable > .arrow { display:inline-block; width:12px; height:inherit; color:#c90 }
+    .content-main { margin:0 5px; display:block; float:left }
+
+    .content-wrap {  margin:0 auto; padding:0 5px </%block>}
+    
+    @media only screen and (min-width: 320px)  { .content-wrap { width:900px  } .content-main { width:600px } }
+    @media only screen and (min-width: 900px)  { .content-wrap { width:880px  } .content-main { width:590px } }
+    @media only screen and (min-width: 1000px) { .content-wrap { width:980px  } .content-main { width:690px } }
+    @media only screen and (min-width: 1100px) { .content-wrap { width:1080px } .content-main { width:790px } }
+    @media only screen and (min-width: 1200px) { .content-wrap { width:1180px } .content-main { width:890px } }
+
+  </style>
+</head>
+<body ng-controller="Controller">
+
+  <div class="header">
+    <div class="content-wrap">
+      <a href="https://github.com/openstack/rally">Rally</a>&nbsp;
+      <span>task results</span>
+    </div>
+  </div>
+
+  <div class="content-wrap">
+    
+
+    <p id="page-error" class="notify-error" style="display:none"></p>
+
+    <div id="content-nav" class="aside" ng-show="scenarios.length" ng-cloack>
+      <div>
+        <div class="navcls"
+             ng-class="{active:view.is_main}"
+             ng-click="location.path('')">Task overview</div>
+        <div class="navcls"
+             ng-class="{active:view.is_source}"
+             ng-click="location.path('source', '')">Input file</div>
+      </div>
+      <div>
+        <div class="navcls" title="{{n.cls}}"
+             ng-repeat-start="n in nav track by $index"
+             ng-click="showNav(n.idx)"
+             ng-class="{expanded:n.idx==nav_idx}">
+                <span ng-hide="n.idx==nav_idx">&#9658;</span>
+                <span ng-show="n.idx==nav_idx">&#9660;</span>
+                {{n.cls}}</div>
+        <div class="navmet" title="{{m.name}}"
+             ng-show="n.idx==nav_idx"
+             ng-class="{active:m.ref==scenario.ref}"
+             ng-click="location.path(m.ref)"
+             ng-repeat="m in n.met track by $index"
+             ng-repeat-end>{{m.name}}</div>
+      </div>
+    </div>
+
+    <div id="content-main" class="content-main" ng-show="scenarios.length" ng-cloak>
+
+      <div ng-show="view.is_main">
+        <h1>Task overview</h1>
+        <table class="linked compact"
+               ng-init="ov_srt='ref'; ov_dir=false">
+          <thead>
+            <tr>
+              <th class="sortable"
+                  title="Scenario name, with optional suffix of call number"
+                  ng-click="ov_srt='ref'; ov_dir=!ov_dir">
+                Scenario
+                <span class="arrow">
+                  <b ng-show="ov_srt=='ref' && !ov_dir">&#x25b4;</b>
+                  <b ng-show="ov_srt=='ref' && ov_dir">&#x25be;</b>
+                </span>
+              <th class="sortable"
+                  title="How long the scenario run, without context duration"
+                  ng-click="ov_srt='load_duration'; ov_dir=!ov_dir">
+                Load duration (s)
+                <span class="arrow">
+                  <b ng-show="ov_srt=='load_duration' && !ov_dir">&#x25b4;</b>
+                  <b ng-show="ov_srt=='load_duration' && ov_dir">&#x25be;</b>
+                </span>
+              <th class="sortable"
+                  title="Scenario duration plus context duration"
+                  ng-click="ov_srt='full_duration'; ov_dir=!ov_dir">
+                Full duration (s)
+                <span class="arrow">
+                  <b ng-show="ov_srt=='full_duration' && !ov_dir">&#x25b4;</b>
+                  <b ng-show="ov_srt=='full_duration' && ov_dir">&#x25be;</b>
+                </span>
+              <th class="sortable" title="Number of iterations"
+                  ng-click="ov_srt='iterations_count'; ov_dir=!ov_dir">
+                Iterations
+                <span class="arrow">
+                  <b ng-show="ov_srt=='iterations_count' && !ov_dir">&#x25b4;</b>
+                  <b ng-show="ov_srt=='iterations_count' && ov_dir">&#x25be;</b>
+                </span>
+              <th class="sortable" title="Scenario runner type"
+                  ng-click="ov_srt='runner'; ov_dir=!ov_dir">
+                Runner
+                <span class="arrow">
+                  <b ng-show="ov_srt=='runner' && !ov_dir">&#x25b4;</b>
+                  <b ng-show="ov_srt=='runner' && ov_dir">&#x25be;</b>
+                </span>
+              <th class="sortable" title="Number of errors occurred"
+                  ng-click="ov_srt='errors.length'; ov_dir=!ov_dir">
+                Errors
+                <span class="arrow">
+                  <b ng-show="ov_srt=='errors.length' && !ov_dir">&#x25b4;</b>
+                  <b ng-show="ov_srt=='errors.length' && ov_dir">&#x25be;</b>
+                </span>
+              <th class="sortable" title="Whether SLA check is successful"
+                  ng-click="ov_srt='sla_success'; ov_dir=!ov_dir">
+                Success (SLA)
+                <span class="arrow">
+                  <b ng-show="ov_srt=='sla_success' && !ov_dir">&#x25b4;</b>
+                  <b ng-show="ov_srt=='sla_success' && ov_dir">&#x25be;</b>
+                </span>
+            <tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="sc in scenarios | orderBy:ov_srt:ov_dir"
+                ng-click="location.path(sc.ref)">
+              <td>{{sc.ref}}
+              <td>{{sc.load_duration | number:3}}
+              <td>{{sc.full_duration | number:3}}
+              <td>{{sc.iterations_count}}
+              <td>{{sc.runner}}
+              <td>{{sc.errors.length}}
+              <td>
+                <span ng-show="sc.sla_success" class="status-pass">&#x2714;</span>
+                <span ng-hide="sc.sla_success" class="status-fail">&#x2716;</span>
+            <tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div ng-show="view.is_source">
+        <h1>Input file</h1>
+        <pre class="code">{{source}}</pre>
+      </div>
+
+      <div ng-show="view.is_scenario">
+        <h1>{{scenario.cls}}.<wbr>{{scenario.name}} ({{scenario.full_duration | number:3}}s)</h1>
+        <ul class="tabs">
+          <li ng-repeat="t in tabs"
+              ng-show="t.isVisible()"
+              ng-class="{active:t.id == tab}"
+              ng-click="location.hash(t.id)">
+            <div>{{t.name}}</div>
+          </li>
+          <div class="clearfix"></div>
+        </ul>
+        <div ng-include="tab"></div>
+
+        <script type="text/ng-template" id="overview">
+          <p class="thesis">
+            Load duration: <b>{{scenario.load_duration | number:3}} s</b> &nbsp;
+            Full duration: <b>{{scenario.full_duration | number:3}} s</b> &nbsp;
+            Iterations: <b>{{scenario.iterations_count}}</b> &nbsp;
+            Failures: <b>{{scenario.errors.length}}</b>
+          </p>
+
+          <div ng-show="scenario.sla.length">
+            <h2>Service-level agreement</h2>
+            <table class="striped">
+              <thead>
+                <tr>
+                  <th>Criterion
+                  <th>Detail
+                  <th>Success
+                <tr>
+              </thead>
+              <tbody>
+                <tr class="rich"
+                    ng-repeat="row in scenario.sla track by $index"
+                    ng-class="{'status-fail':!row.success, 'status-pass':row.success}">
+                  <td>{{row.criterion}}
+                  <td>{{row.detail}}
+                  <td class="capitalize">{{row.success}}
+                <tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div widget="Table"
+               data="scenario.table"
+               lastrow-class="rich"
+               title="Total durations">
+          </div>
+
+          <div widget="StackedArea"
+               data="scenario.iterations.iter"
+               name-x="Iteration sequence number"
+               controls="true"
+               guide="true">
+          </div>
+
+          <div widget="StackedArea"
+               data="scenario.load_profile"
+               title="Load Profile"
+               title-class="h3"
+               name-x="Timeline (seconds)"
+               format-y="d"
+               format-x=",.2f"
+               class="lower">
+          </div>
+
+          <div widget="Pie"
+               data="scenario.iterations.pie"
+               title="Distribution"
+               title-class="h3"
+               style="float:left; width:40%; margin-top:15px">
+          </div>
+
+          <div widget="Histogram"
+               ng-if="scenario.iterations.histogram.data.length"
+               data="scenario.iterations.histogram.data[mainHistogram.id]"
+               style="float:left; width:59%; margin-top:15px; position:relative; top:40px">
+          </div>
+
+          <select ng-model="mainHistogram"
+                  ng-show="scenario.iterations.histogram.data.length"
+                  ng-options="i.name for i in scenario.iterations.histogram.views track by i.id"
+                  style="float:right; margin:45px 35px 0">
+          </select>
+
+          <div class="clearfix"></div>
+
+        </script>
+
+        <script type="text/ng-template" id="details">
+
+          <div widget="StackedArea"
+               data="scenario.atomic.iter"
+               title="Atomic Action Durations"
+               name-x="Iteration sequence number"
+               controls="true"
+               guide="true">
+          </div>
+
+          <div widget="Pie"
+               data="scenario.atomic.pie"
+               title="Distribution"
+               title-class="h3"
+               style="float:left; width:40%; margin-top:15px">
+          </div>
+
+          <div widget="Histogram" data="scenario.atomic.histogram.data[atomicHistogram.id]"
+               ng-if="scenario.atomic.histogram.data.length"
+               style="float:left; width:59%; margin-top:15px; position:relative; top:40px">
+          </div>
+
+          <select ng-show="scenario.atomic.histogram.data.length"
+                  ng-model="atomicHistogram"
+                  ng-options="i.name for i in scenario.atomic.histogram.views track by i.id"
+                  style="float:right; margin:45px 35px 0">
+          </select>
+
+          <div class="clearfix"></div>
+
+        </script>
+
+        <script type="text/ng-template" id="output">
+
+          <div style="padding:10px 0 0">
+            <span class="link"
+                  ng-click="location.hash('output/additive')"
+                  ng-class="{active:scenario.output.active === 'additive'}"
+                  ng-if="scenario.output.has_additive">Aggregated</span>
+            <span class="link"
+                  ng-click="location.hash('output/complete')"
+                  ng-class="{active:scenario.output.active === 'complete'}"
+                  ng-if="scenario.output.has_complete">Per iteration</span>
+          </div>
+
+          <div ng-repeat="chart in scenario.additive_output"
+               ng-if="scenario.output.active === 'additive'">
+            <div widget="{{chart.widget}}"
+                 title="{{chart.title}}"
+                 description="{{chart.description}}"
+                 name-x="{{chart.axis_label}}"
+                 name-y="{{chart.label}}"
+                 data="chart.data">
+            </div>
+          </div>
+
+          <div ng-if="scenario.output.active === 'complete'" style="padding:10px 0 0">
+            <select ng-model="outputIteration">
+              <option ng-repeat="i in scenario.complete_output track by $index"
+                      value="{{$index}}">
+                Iteration {{$index}}
+            </select>
+
+            <div ng-repeat="chart in scenario.complete_output[outputIteration]">
+              <div widget="{{chart.widget}}"
+                   title="{{chart.title}}"
+                   description="{{chart.description}}"
+                   name-x="{{chart.axis_label}}"
+                   name-y="{{chart.label}}"
+                   data="chart.data">
+              </div>
+            </div>
+          </div>
+        </script>
+
+        <script type="text/ng-template" id="failures">
+          <h2>Task failures (<ng-pluralize
+            count="scenario.errors.length"
+            when="{'1': '1 iteration', 'other': '{} iterations'}"></ng-pluralize> failed)
+          </h2>
+          <table class="striped">
+            <thead>
+              <tr>
+                <th>
+                <th>Iteration
+                <th>Exception type
+                <th>Exception message
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="expandable"
+                  ng-repeat-start="i in scenario.errors track by $index"
+                  ng-click="i.expanded = ! i.expanded">
+                <td>
+                  <span ng-hide="i.expanded">&#9658;</span>
+                  <span ng-show="i.expanded">&#9660;</span>
+                <td>{{i.iteration}}
+                <td>{{i.type}}
+                <td class="failure-mesg">{{i.message}}
+              </tr>
+              <tr ng-show="i.expanded" ng-repeat-end>
+                <td colspan="4" class="failure-trace">{{i.traceback}}
+              </tr>
+            </tbody>
+          </table>
+        </script>
+
+        <script type="text/ng-template" id="task">
+          <h2>Subtask Configuration</h2>
+          <pre class="code">{{scenario.config}}</pre>
+        </script>
+      </div>
+
+    </div>
+    <div class="clearfix"></div>
+
+
+  </div>
+
+  <script type="text/javascript">
+    if (! window.angular) {(function(f){
+      f(document.getElementById("content-nav"), "none");
+      f(document.getElementById("content-main"), "none");
+      f(document.getElementById("page-error"), "block").textContent = "Failed to load AngularJS framework"
+    })(function(e, s){e.style.display = s; return e})}
+</script>
+</body>
+</html>
