@@ -66,24 +66,32 @@ def shaker_get_max_min_stats(records):
 def main():
     print("Shaker:")
     for fname, res in all_shaker_results():
-        print(
-            fname,
-            shaker_get_max_min_stats(res['records']),
-            list(res['scenarios']),
-            collections.Counter(r.get('status')
-                                for r in res['records'].itervalues()),
-        )
+        try:
+            print(
+                fname,
+                shaker_get_max_min_stats(res['records']),
+                list(res['scenarios']),
+                collections.Counter(r.get('status')
+                                    for r in res['records'].itervalues()),
+            )
+        except Exception:
+            import traceback
+            traceback.print_exc()
     print("Rally:")
     for fname, res in all_rally_results():
-        print(
-            fname,
-            [[
-                name,
-                task[0]['runner']['concurrency'],
-                task[0]['runner']['times'],
-            ] for name, task in res['source'].iteritems()],
-            [len(s['errors']) for s in res['scenarios']],
-        )
+        try:
+            print(
+                fname,
+                [[
+                    name,
+                    task[0]['runner']['concurrency'],
+                    task[0]['runner']['times'],
+                ] for name, task in res['source'].iteritems()],
+                [len(s['errors']) for s in res['scenarios']],
+            )
+        except Exception:
+            import traceback
+            traceback.print_exc()
 
 if __name__ == '__main__':
     try:
