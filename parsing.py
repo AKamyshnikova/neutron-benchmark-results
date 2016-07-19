@@ -56,7 +56,11 @@ def shaker_get_max_min_stats(records):
                 t_stats['max'] = r_stats['max']
             if t_stats['min'] is None or t_stats['min'] > r_stats['min']:
                 t_stats['min'] = r_stats['min']
-            t_stats['sum'] += r_stats['mean']
+            try:
+                mean = r_stats['mean']
+            except KeyError:
+                mean = r_stats['avg']
+            t_stats['sum'] += mean
             t_stats['count'] += 1
             t_stats['unit'] = r_stats['unit']
     for t_stats in stats.itervalues():
@@ -66,24 +70,32 @@ def shaker_get_max_min_stats(records):
 def main():
     print("Shaker:")
     for fname, res in all_shaker_results():
-        print(
-            fname,
-            shaker_get_max_min_stats(res['records']),
-            list(res['scenarios']),
-            collections.Counter(r.get('status')
-                                for r in res['records'].itervalues()),
-        )
+        try:
+            print(
+                fname,
+                shaker_get_max_min_stats(res['records']),
+                list(res['scenarios']),
+                collections.Counter(r.get('status')
+                                    for r in res['records'].itervalues()),
+            )
+        except Exception:
+            import traceback
+            traceback.print_exc()
     print("Rally:")
     for fname, res in all_rally_results():
-        print(
-            fname,
-            [[
-                name,
-                task[0]['runner']['concurrency'],
-                task[0]['runner']['times'],
-            ] for name, task in res['source'].iteritems()],
-            [len(s['errors']) for s in res['scenarios']],
-        )
+        try:
+            print(
+                fname,
+                [[
+                    name,
+                    task[0]['runner']['concurrency'],
+                    task[0]['runner']['times'],
+                ] for name, task in res['source'].iteritems()],
+                [len(s['errors']) for s in res['scenarios']],
+            )
+        except Exception:
+            import traceback
+            traceback.print_exc()
 
 if __name__ == '__main__':
     try:
