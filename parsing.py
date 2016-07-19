@@ -56,7 +56,11 @@ def shaker_get_max_min_stats(records):
                 t_stats['max'] = r_stats['max']
             if t_stats['min'] is None or t_stats['min'] > r_stats['min']:
                 t_stats['min'] = r_stats['min']
-            t_stats['sum'] += r_stats['mean']
+            try:
+                mean = r_stats['mean']
+            except KeyError:
+                mean = r_stats['avg']
+            t_stats['sum'] += mean
             t_stats['count'] += 1
             t_stats['unit'] = r_stats['unit']
     for t_stats in stats.itervalues():
