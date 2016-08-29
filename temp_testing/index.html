@@ -1,0 +1,65 @@
+<html>
+<head><title>Benchmark results</title></head>
+<body>
+    <h1>Shaker</h1>
+    <table border="1">
+    <thead style="text-align: center; font-weight: bold">
+        <tr>
+            <td rowspan="2">Scenario</td>
+            <td rowspan="2">restart</td>
+            <td rowspan="2">ha</td>
+            <td rowspan="2">lost</td>
+            <td rowspan="2">errors</td>
+            <td colspan="5">stats</td>
+            <td rowspan="2">link</td>
+        </tr>
+        <tr>
+            <td>name</td>
+            <td>units</td>
+            <td>min</td>
+            <td>mean</td>
+            <td>max</td>
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
+    </table>
+
+    <h1>Rally</h1>
+    <table border="1">
+    <thead style="text-align: center; font-weight: bold">
+        <td>Scenario</td><td>concurrency</td><td>times</td><td>errors</td><td>link</td>
+    </thead>
+    <tbody>
+        <tr>
+            <td>NeutronNetworks.create_and_delete_routers</td>
+            <td>5</td>
+            <td>30</td>
+            <td>0</td>
+            <td rowspan=1><a href="rally/res1.html">res1.html</a></td>
+        </tr>
+        <tr>
+            <td>NeutronNetworks.create_and_delete_routers</td>
+            <td>5</td>
+            <td>30</td>
+            <td>1</td>
+            <td rowspan=1><a href="rally/res2.html">res2.html</a></td>
+        </tr>
+        <tr>
+            <td>NeutronNetworks.create_and_delete_routers</td>
+            <td>10</td>
+            <td>30</td>
+            <td>7</td>
+            <td rowspan=1><a href="rally/res3.html">res3.html</a></td>
+        </tr>
+        <tr>
+            <td>NeutronNetworks.create_and_delete_routers</td>
+            <td>5</td>
+            <td>35</td>
+            <td>0</td>
+            <td rowspan=1><a href="rally/res4.html">res4.html</a></td>
+        </tr>
+    </tbody>
+    </table>
+</body>
+</html>
